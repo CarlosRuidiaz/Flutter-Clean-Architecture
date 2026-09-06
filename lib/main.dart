@@ -11,6 +11,8 @@ import 'core/local_preferences_shared.dart';
 
 import 'features/auth/auth_dependencies.dart';
 import 'features/product/product_dependencies.dart';
+import 'features/profile/profile_dependencies.dart';
+import 'features/project/project_dependencies.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +25,8 @@ void main() async {
 
   registerAuth();
   registerProduct();
+  registerProfile();
+  registerProject();
   runApp(const MyApp());
 }
 
@@ -32,7 +36,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Clean template',
+      title: 'Innovation Hub',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       debugShowCheckedModeBanner: false,
