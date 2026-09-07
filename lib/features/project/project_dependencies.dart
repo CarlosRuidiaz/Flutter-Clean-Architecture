@@ -1,14 +1,13 @@
-/// ESQUELETO. Lo completa la PAREJA PROJECT (persona 2), al final.
-///
-/// Este es el "composition root" del feature: el UNICO archivo autorizado a
-/// conocer las clases concretas de las tres capas a la vez. Por eso no se
-/// puede terminar hasta que las tres existan.
-///
-/// Vacio, la app compila y arranca. Asi los cuatro pueden correrla desde
-/// el dia uno mientras cada quien construye su parte.
+﻿import 'package:get/get.dart';
+
+import 'data/datasources/i_project_source.dart';
+import 'data/datasources/local/local_project_source.dart';
+import 'data/repositories/project_repository.dart';
+import 'domain/repositories/i_project_repository.dart';
+import 'ui/viewmodels/project_controller.dart';
+
 void registerProject() {
-  // TODO(project persona 2): armar la cadena.
-  //   Get.put<IProjectSource>(LocalProjectSource());
-  //   Get.put<IProjectRepository>(ProjectRepository(Get.find()));
-  //   Get.lazyPut(() => ProjectController(Get.find()));
+  Get.put<IProjectSource>(LocalProjectSource());
+  Get.put<IProjectRepository>(ProjectRepository(Get.find()));
+  Get.lazyPut(() => ProjectController(Get.find()));
 }
