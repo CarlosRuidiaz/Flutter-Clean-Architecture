@@ -1,26 +1,62 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-/// ESQUELETO. A partir de aqui es de la PAREJA PROJECT (persona 2).
-///
-/// Existe desde el primer dia para que los cuatro puedan correr la app
-/// mientras trabajan. Todavia no pide datos a nadie: no llama a Get.find(),
-/// porque ningun controlador esta registrado aun.
+import '../viewmodels/project_controller.dart';
+import 'widgets/project_card.dart';
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final ProjectController controller = Get.find();
+
     return Scaffold(
       appBar: AppBar(title: const Text('Innovation Hub')),
       body: Column(
-        children: const [
+        children: [
           // AQUI VA el widget de la pareja PROFILE:
           //     const ProfileSkillsLine(),
           // Se pone cuando esa pareja lo haya mergeado. Mientras tanto:
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
 
           Expanded(
-            child: Center(child: Text('Aqui va la lista de proyectos')),
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              return ListView.builder(
+                itemCount: controller.projects.length,
+                itemBuilder: (context, i) =>
+                    ProjectCard(project: controller.projects[i]),
+              );
+            }),
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: 0,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Inicio',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.folder_outlined),
+            label: 'Mis proyectos',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle_outline),
+            label: 'Crear',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications_outlined),
+            label: 'Notificaciones',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'Perfil',
           ),
         ],
       ),
