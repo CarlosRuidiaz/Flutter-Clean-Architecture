@@ -1,3 +1,4 @@
+
 class Profile {
   Profile({
     this.id,
@@ -7,11 +8,15 @@ class Profile {
     required this.skills,
   });
 
-  String? id;
-  String fullName;
-  String academicProgram;
-  int semester;
-  List<String> skills;
-
-  bool get isComplete => fullName.isNotEmpty && skills.isNotEmpty;
+  final String? id;
+  final String fullName;
+  final String academicProgram;
+  final int semester;
+  final List<String> skills;
+  
+  bool get isComplete =>
+      fullName.isNotEmpty &&
+      academicProgram.isNotEmpty &&
+      semester > 0 &&
+      skills.isNotEmpty;
 }
