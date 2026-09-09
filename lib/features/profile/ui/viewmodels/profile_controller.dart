@@ -8,8 +8,6 @@ class ProfileController extends GetxController with UiLoggy {
   ProfileController(this.repository);
 
   final IProfileRepository repository;
-
-  // Rxn = observable que PUEDE ser nulo. Al arrancar todavía no hay perfil.
   final Rxn<Profile> _profile = Rxn<Profile>();
   final RxBool isLoading = false.obs;
 

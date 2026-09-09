@@ -28,12 +28,9 @@ class HomePage extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            // Tab 1: Para tus habilidades
+
             Column(
               children: [
-                // AQUI VA el widget de la pareja PROFILE:
-                //     const ProfileSkillsLine(),
-                // Se pone cuando esa pareja lo haya mergeado. Mientras tanto:
                 const SizedBox(height: 8),
                 Expanded(
                   child: Obx(() {
@@ -49,7 +46,6 @@ class HomePage extends StatelessWidget {
                 ),
               ],
             ),
-            // Tab 2: Explorar proyectos
             Column(
               children: [
                 const SizedBox(height: 8),
