@@ -1,4 +1,4 @@
-﻿import 'package:get/get.dart';
+import 'package:get/get.dart';
 import 'package:loggy/loggy.dart';
 
 import '../../domain/models/project.dart';

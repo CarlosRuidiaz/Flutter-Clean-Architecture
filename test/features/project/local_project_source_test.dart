@@ -1,4 +1,4 @@
-﻿import 'package:f_clean_template/features/project/data/datasources/local/local_project_source.dart';
+import 'package:f_clean_template/features/project/data/datasources/local/local_project_source.dart';
 import 'package:f_clean_template/features/project/domain/models/project.dart';
 import 'package:flutter_test/flutter_test.dart';
 

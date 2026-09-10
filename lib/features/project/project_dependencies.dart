@@ -1,4 +1,4 @@
-﻿import 'package:get/get.dart';
+import 'package:get/get.dart';
 
 import 'data/datasources/i_project_source.dart';
 import 'data/datasources/local/local_project_source.dart';

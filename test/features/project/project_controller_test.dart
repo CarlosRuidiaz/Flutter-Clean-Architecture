@@ -1,4 +1,4 @@
-﻿import 'package:f_clean_template/features/project/domain/models/project.dart';
+import 'package:f_clean_template/features/project/domain/models/project.dart';
 import 'package:f_clean_template/features/project/domain/repositories/i_project_repository.dart';
 import 'package:f_clean_template/features/project/ui/viewmodels/project_controller.dart';
 import 'package:flutter_test/flutter_test.dart';

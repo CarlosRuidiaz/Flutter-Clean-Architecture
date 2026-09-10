@@ -1,4 +1,4 @@
-﻿import '../../domain/models/project.dart';
+import '../../domain/models/project.dart';
 import '../../domain/repositories/i_project_repository.dart';
 import '../datasources/i_project_source.dart';
 

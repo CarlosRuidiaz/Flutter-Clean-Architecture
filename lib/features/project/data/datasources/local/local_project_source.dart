@@ -1,4 +1,4 @@
-﻿import '../../../domain/models/project.dart';
+import '../../../domain/models/project.dart';
 import '../i_project_source.dart';
 
 class LocalProjectSource implements IProjectSource {

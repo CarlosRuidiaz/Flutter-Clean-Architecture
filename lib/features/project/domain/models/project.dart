@@ -1,4 +1,4 @@
-﻿enum ProjectStage { idea, teamFormation, research, prototype, testing, finished }
+enum ProjectStage { idea, teamFormation, research, prototype, testing, finished }
 
 class Project {
   Project({
