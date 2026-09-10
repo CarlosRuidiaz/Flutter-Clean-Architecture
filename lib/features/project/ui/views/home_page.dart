@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/app_routes.dart';
+import '../../../../core/app_tokens.dart';
 import '../../../profile/ui/views/widgets/profile_skills_line.dart';
 
 import '../../domain/models/project.dart';
@@ -11,13 +12,10 @@ import 'widgets/project_card.dart';
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  // TODO(carril diseno): quitar, esto es solo para poder navegar durante el
-  // desarrollo. El onTap definitivo va dentro de ProjectCard.
   Widget _tappableCard(Project project) {
-    return InkWell(
-      onTap: () =>
-          Get.toNamed(AppRoutes.projectDetail, arguments: project),
-      child: ProjectCard(project: project),
+    return ProjectCard(
+      project: project,
+      onTap: () => Get.toNamed(AppRoutes.projectDetail, arguments: project),
     );
   }
 
@@ -27,6 +25,7 @@ class HomePage extends StatelessWidget {
         return const Center(child: CircularProgressIndicator());
       }
       return ListView.builder(
+        padding: const EdgeInsets.only(top: AppTokens.gapM),
         itemCount: controller.projects.length,
         itemBuilder: (context, i) => _tappableCard(controller.projects[i]),
       );
@@ -43,9 +42,6 @@ class HomePage extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Innovation Hub'),
           bottom: const TabBar(
-            indicatorColor: Colors.deepOrange,
-            labelColor: Colors.black,
-            unselectedLabelColor: Colors.grey,
             tabs: [
               Tab(text: 'Para tus habilidades'),
               Tab(text: 'Explorar proyectos'),
@@ -63,14 +59,13 @@ class HomePage extends StatelessWidget {
             ),
             Column(
               children: [
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTokens.gapS),
                 Expanded(child: _projectList(controller)),
               ],
             ),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
           currentIndex: 0,
           // TODO(carril diseno): quitar cuando la barra haga lo de Figma. Por
           // ahora el item "Crear" es la unica entrada a /create-idea.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../../core/app_tokens.dart';
 import '../../viewmodels/profile_controller.dart';
 
 class ProfileSkillsLine extends StatelessWidget {
@@ -16,10 +17,17 @@ class ProfileSkillsLine extends StatelessWidget {
       if (profile.skills.isEmpty) return const SizedBox.shrink();
 
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.fromLTRB(
+          AppTokens.gapL,
+          AppTokens.gapM,
+          AppTokens.gapL,
+          AppTokens.gapS,
+        ),
         child: Text(
           'Proyectos que buscan: ${profile.skills.join(" · ")}',
-          style: const TextStyle(fontSize: 13),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.secondary,
+              ),
         ),
       );
     });

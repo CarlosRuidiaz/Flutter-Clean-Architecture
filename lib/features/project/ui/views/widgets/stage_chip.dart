@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../core/app_tokens.dart';
+import '../../../../../core/widgets/pill.dart';
 import '../../../domain/models/project.dart';
 
+/// La etapa de un proyecto, pintada como pildora.
+///
+/// Traducir la etapa a espaniol y darle un color es trabajo de la UI: la
+/// entidad no sabe de idiomas ni de `Color`.
 class StageChip extends StatelessWidget {
   const StageChip({super.key, required this.stage});
 
@@ -27,45 +33,22 @@ class StageChip extends StatelessWidget {
   static Color _color(ProjectStage s) {
     switch (s) {
       case ProjectStage.idea:
-        return const Color(0xFFF2B705);
+        return AppStageColors.idea;
       case ProjectStage.teamFormation:
-        return const Color(0xFFE8552F);
+        return AppStageColors.teamFormation;
       case ProjectStage.research:
-        return const Color(0xFF2D5BFF);
+        return AppStageColors.research;
       case ProjectStage.prototype:
-        return const Color(0xFF0F5C56);
+        return AppStageColors.prototype;
       case ProjectStage.testing:
-        return const Color(0xFF6B4EE6);
+        return AppStageColors.testing;
       case ProjectStage.finished:
-        return const Color(0xFF17150F);
-    }
-  }
-
-  static Color _textColor(ProjectStage s) {
-    switch (s) {
-      case ProjectStage.idea:
-        return Colors.black87;
-      default:
-        return Colors.white;
+        return AppStageColors.finished;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: _color(stage),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        _label(stage),
-        style: TextStyle(
-          color: _textColor(stage),
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
+    return Pill(label: _label(stage), background: _color(stage));
   }
 }
