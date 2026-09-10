@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../profile/ui/views/widgets/profile_skills_line.dart';
+
 import '../viewmodels/project_controller.dart';
 import 'widgets/project_card.dart';
 
@@ -31,7 +33,7 @@ class HomePage extends StatelessWidget {
 
             Column(
               children: [
-                const SizedBox(height: 8),
+                const ProfileSkillsLine(),
                 Expanded(
                   child: Obx(() {
                     if (controller.isLoading.value) {
