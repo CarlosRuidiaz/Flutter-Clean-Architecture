@@ -9,4 +9,12 @@ class ProjectRepository implements IProjectRepository {
 
   @override
   Future<List<Project>> getProjects() async => await source.getProjects();
+
+  @override
+  Future<Project> createProject(Project project) async =>
+      await source.createProject(project);
+
+  @override
+  Future<void> closeRecruitment(String projectId) async =>
+      await source.closeRecruitment(projectId);
 }

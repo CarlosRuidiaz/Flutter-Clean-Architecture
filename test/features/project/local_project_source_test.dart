@@ -41,6 +41,13 @@ void main() {
       }
     });
 
+    test('el proyecto lleno no acepta postulaciones', () async {
+      final projects = await source.getProjects();
+      for (final p in projects.where((p) => p.isFull)) {
+        expect(p.acceptsApplications, isFalse);
+      }
+    });
+
     test('al menos un proyecto tiene skillsWanted vacia', () async {
       final projects = await source.getProjects();
       expect(projects.any((p) => p.skillsWanted.isEmpty), isTrue);
