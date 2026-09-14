@@ -15,7 +15,7 @@ class ProjectDetailPage extends StatelessWidget {
   const ProjectDetailPage({super.key});
 
   Widget _buildTeamAvatars() {
-    // TODO(semana siguiente): avatares quemados; Project no tiene lista de miembros todavía.
+    //Project no tiene lista de miembros todavía
     const initials = ['SR', 'MC', 'AP', 'CS'];
     return Row(
       children: [
@@ -85,8 +85,9 @@ class ProjectDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Project? project =
-        Get.arguments is Project ? Get.arguments as Project : null;
+    final Project? project = Get.arguments is Project
+        ? Get.arguments as Project
+        : null;
 
     if (project == null) {
       return Scaffold(
@@ -130,8 +131,9 @@ class ProjectDetailPage extends StatelessWidget {
               '${project.currentMembers} de ${project.maxMembers} miembros',
               style: textTheme.bodyMedium?.copyWith(
                 color: project.isFull ? AppColors.persimmon : AppColors.ink,
-                fontWeight:
-                    project.isFull ? FontWeight.w600 : FontWeight.normal,
+                fontWeight: project.isFull
+                    ? FontWeight.w600
+                    : FontWeight.normal,
               ),
             ),
             const SizedBox(height: AppTokens.gapL),
@@ -162,8 +164,10 @@ class ProjectDetailPage extends StatelessWidget {
                     .toList(),
               )
             else
-              Text('No se requieren habilidades específicas',
-                  style: textTheme.bodySmall),
+              Text(
+                'No se requieren habilidades específicas',
+                style: textTheme.bodySmall,
+              ),
             const SizedBox(height: AppTokens.gapL),
 
             // Equipo actual
