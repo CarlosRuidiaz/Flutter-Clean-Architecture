@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../project/domain/repositories/i_project_repository.dart';
 import 'data/datasources/i_application_source.dart';
 import 'data/datasources/local/local_application_source.dart';
 import 'data/repositories/application_repository.dart';
@@ -13,5 +14,10 @@ import 'ui/viewmodels/application_controller.dart';
 void registerApplication() {
   Get.put<IApplicationSource>(LocalApplicationSource());
   Get.put<IApplicationRepository>(ApplicationRepository(Get.find()));
-  Get.lazyPut(() => ApplicationController(Get.find()));
+  Get.lazyPut(
+    () => ApplicationController(
+      Get.find<IApplicationRepository>(),
+      Get.find<IProjectRepository>(),
+    ),
+  );
 }
