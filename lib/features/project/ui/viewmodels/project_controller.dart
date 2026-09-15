@@ -26,4 +26,13 @@ class ProjectController extends GetxController with UiLoggy {
     _projects.value = await repository.getProjects();
     isLoading.value = false;
   }
+
+  Future<Project> createProject(Project project) async {
+    loggy.debug('ProjectController: creando proyecto');
+    isLoading.value = true;
+    final creado = await repository.createProject(project);
+    await getProjects();   // para que el homepage se entere
+    isLoading.value = false;
+    return creado;
+  }
 }
