@@ -52,5 +52,53 @@ void main() {
       final projects = await source.getProjects();
       expect(projects.any((p) => p.skillsWanted.isEmpty), isTrue);
     });
+
+    test('createProject asigna un id nuevo', () async {
+      final project = Project(
+        title: 'Title',
+        problem: 'P',
+        description: 'D',
+        stage: ProjectStage.idea,
+        academicProgram: 'A',
+        currentMembers: 1,
+        maxMembers: 3,
+        skillsWanted: [],
+        leaderId: '1',
+      );
+      final created = await source.createProject(project);
+      expect(created.id, '7');
+    });
+
+    test('createProject deja el proyecto en la lista', () async {
+      final project = Project(
+        title: 'Title',
+        problem: 'P',
+        description: 'D',
+        stage: ProjectStage.idea,
+        academicProgram: 'A',
+        currentMembers: 1,
+        maxMembers: 3,
+        skillsWanted: [],
+        leaderId: '1',
+      );
+      await source.createProject(project);
+      final projects = await source.getProjects();
+      expect(projects.length, 7);
+      expect(projects.first.title, 'Title');
+    });
+
+    test('closeRecruitment deja recruitmentOpen en false', () async {
+      await source.closeRecruitment('1');
+      final projects = await source.getProjects();
+      final p1 = projects.firstWhere((p) => p.id == '1');
+      expect(p1.recruitmentOpen, isFalse);
+    });
+
+    test('un proyecto con reclutamiento cerrado no acepta postulaciones', () async {
+      await source.closeRecruitment('1');
+      final projects = await source.getProjects();
+      final p1 = projects.firstWhere((p) => p.id == '1');
+      expect(p1.acceptsApplications, isFalse);
+    });
   });
 }
