@@ -106,7 +106,7 @@ class IdeaPublishedPage extends StatelessWidget {
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.ink,
-                  side: AppTokens.border(),
+                  side: const BorderSide(color: AppColors.ink, width: AppTokens.borderWidth),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: AppTokens.borderRadius,

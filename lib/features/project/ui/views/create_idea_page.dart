@@ -87,7 +87,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
       maxMembers: _maxMembers,
       skillsWanted: List.from(_skillsWanted),
       tags: List.from(_tags),
-      leaderId: profile.id,
+      leaderId: profile.id ?? '',
       recruitmentOpen: true,
     );
 
@@ -184,7 +184,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.ink,
-                      side: AppTokens.border(),
+                      side: const BorderSide(color: AppColors.ink, width: AppTokens.borderWidth),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: AppTokens.borderRadius,
