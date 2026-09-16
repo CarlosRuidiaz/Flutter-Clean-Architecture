@@ -211,17 +211,16 @@ class ProjectDetailPage extends StatelessWidget {
 
             // Botones del pie
             _buildFooterButtons(context, project),
-            const SizedBox(height: AppTokens.gapM),
 
-            // TODO(carril management): quitar, esto es solo para poder
-            // navegar durante el desarrollo.
-            Center(
-              child: TextButton(
+            // Solo el lider del proyecto gestiona sus postulantes.
+            if (project.leaderId == _applicantId()) ...[
+              const SizedBox(height: AppTokens.gapM),
+              OutlinedButton(
                 onPressed: () =>
                     Get.toNamed(AppRoutes.applicants, arguments: project),
-                child: const Text('/applicants'),
+                child: const Text('Gestionar postulantes'),
               ),
-            ),
+            ],
           ],
         ),
       ),
