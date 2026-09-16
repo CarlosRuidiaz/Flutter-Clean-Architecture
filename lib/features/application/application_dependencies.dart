@@ -14,10 +14,14 @@ import 'ui/viewmodels/application_controller.dart';
 void registerApplication() {
   Get.put<IApplicationSource>(LocalApplicationSource());
   Get.put<IApplicationRepository>(ApplicationRepository(Get.find()));
+  // fenix: GetX descarta el controlador al cerrarse la ruta que lo uso. Sin
+  // esto, el segundo `Get.find` tras volver de la pantalla 14 lanza
+  // "ApplicationController not found".
   Get.lazyPut(
     () => ApplicationController(
       Get.find<IApplicationRepository>(),
       Get.find<IProjectRepository>(),
     ),
+    fenix: true,
   );
 }

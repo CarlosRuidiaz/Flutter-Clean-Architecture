@@ -44,43 +44,70 @@ class ProjectDetailPage extends StatelessWidget {
     );
   }
 
+  /// El estudiante en sesión. El perfil de prueba es el '1'.
+  String _applicantId() {
+    final profile = Get.isRegistered<ProfileController>()
+        ? Get.find<ProfileController>().profile
+        : null;
+    return profile?.id ?? '1';
+  }
+
   Widget _buildFooterButtons(BuildContext context, Project project) {
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton(
-            onPressed: () {}, // Decorativo según especificación Figma
-            child: const Text('Seguir'),
-          ),
-        ),
-        if (project.acceptsApplications) ...[
-          const SizedBox(width: AppTokens.gapM),
+    final controller = Get.find<ApplicationController>();
+
+    return Obx(() {
+      // Si ya hay una postulación viva a este proyecto, la pantalla 07 lleva a
+      // verla en vez de ofrecer postularse otra vez. Es la única entrada a la
+      // pantalla 19 mientras la 18 no exista, y evita duplicados.
+      final vigente = controller.vigenteEn(project.id ?? '');
+
+      return Row(
+        children: [
           Expanded(
-            child: ElevatedButton(
-              onPressed: () async {
-                final profile = Get.isRegistered<ProfileController>()
-                    ? Get.find<ProfileController>().profile
-                    : null;
-                final application = Application(
-                  projectId: project.id ?? '',
-                  applicantId: profile?.id ?? '1',
-                  applicantName: profile?.fullName ?? 'Carlos Ruidíaz',
-                  applicantProgram:
-                      profile?.academicProgram ?? 'Ingeniería de Sistemas',
-                  applicantSemester: profile?.semester ?? 8,
-                  skillsOffered: profile?.skills ?? const [],
-                  status: ApplicationStatus.pending,
-                );
-                final controller = Get.find<ApplicationController>();
-                final created = await controller.apply(application);
-                Get.toNamed(AppRoutes.applicationStatus, arguments: created);
-              },
-              child: const Text('Postularme'),
+            child: OutlinedButton(
+              onPressed: () {}, // Decorativo según especificación Figma
+              child: const Text('Seguir'),
             ),
           ),
+          if (vigente != null) ...[
+            const SizedBox(width: AppTokens.gapM),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => Get.toNamed(
+                  AppRoutes.applicationStatus,
+                  arguments: vigente,
+                ),
+                child: const Text('Ver mi postulación'),
+              ),
+            ),
+          ] else if (project.acceptsApplications) ...[
+            const SizedBox(width: AppTokens.gapM),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () async {
+                  final profile = Get.isRegistered<ProfileController>()
+                      ? Get.find<ProfileController>().profile
+                      : null;
+                  final application = Application(
+                    projectId: project.id ?? '',
+                    applicantId: _applicantId(),
+                    applicantName: profile?.fullName ?? 'Carlos Ruidíaz',
+                    applicantProgram:
+                        profile?.academicProgram ?? 'Ingeniería de Sistemas',
+                    applicantSemester: profile?.semester ?? 8,
+                    skillsOffered: profile?.skills ?? const [],
+                    status: ApplicationStatus.pending,
+                  );
+                  final created = await controller.apply(application);
+                  Get.toNamed(AppRoutes.applicationStatus, arguments: created);
+                },
+                child: const Text('Postularme'),
+              ),
+            ),
+          ],
         ],
-      ],
-    );
+      );
+    });
   }
 
   @override
@@ -99,6 +126,12 @@ class ProjectDetailPage extends StatelessWidget {
     }
 
     final TextTheme textTheme = Theme.of(context).textTheme;
+
+    // Al abrir el detalle hay que saber si ya existe una postulación a este
+    // proyecto. Va despues del primer frame para no cambiar un Rx durante build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.find<ApplicationController>().ensureMyApplications(_applicantId());
+    });
 
     return Scaffold(
       appBar: AppBar(title: Text(project.title)),

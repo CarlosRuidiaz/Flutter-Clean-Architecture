@@ -16,12 +16,35 @@ class ApplicationController extends GetxController with UiLoggy {
   final RxList<Application> _myApplications = <Application>[].obs;
   final RxBool isLoading = false.obs;
 
+  /// Estudiante cuyas postulaciones ya estan en [_myApplications].
+  String? _cargadasPara;
+
   List<Application> get myApplications => _myApplications;
+
+  /// Carga las postulaciones del estudiante solo la primera vez. La pantalla 07
+  /// la llama en cada apertura para saber si ya se postulo a ese proyecto, y
+  /// [apply] y [withdraw] mantienen la lista al dia despues.
+  Future<void> ensureMyApplications(String applicantId) async {
+    if (_cargadasPara == applicantId) return;
+    _cargadasPara = applicantId;
+    await getMyApplications(applicantId);
+  }
+
+  /// La postulacion vigente del estudiante a [projectId], si la hay. Una
+  /// cancelada o rechazada no cuenta: puede volver a postularse.
+  Application? vigenteEn(String projectId) =>
+      _myApplications.firstWhereOrNull(
+        (a) =>
+            a.projectId == projectId &&
+            (a.status == ApplicationStatus.pending ||
+                a.status == ApplicationStatus.accepted),
+      );
 
   Future<void> getMyApplications(String applicantId) async {
     loggy.debug('ApplicationController: pidiendo mis postulaciones');
     isLoading.value = true;
     _myApplications.value = await repository.getMyApplications(applicantId);
+    _cargadasPara = applicantId;
     isLoading.value = false;
   }
 

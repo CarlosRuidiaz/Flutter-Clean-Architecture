@@ -1,6 +1,17 @@
 import '../../../domain/models/application.dart';
 import '../i_application_source.dart';
 
+/// Centinela de "no hay postulacion vigente", para no depender de paquetes
+/// externos en la capa de datos.
+final Application _sinPostulacion = Application(
+  projectId: '',
+  applicantId: '',
+  applicantName: '',
+  applicantProgram: '',
+  applicantSemester: 0,
+  skillsOffered: const [],
+);
+
 /// Fuente de datos local en memoria para las postulaciones.
 class LocalApplicationSource implements IApplicationSource {
   // apply, withdraw y decide modifican esta misma lista.
@@ -61,6 +72,19 @@ class LocalApplicationSource implements IApplicationSource {
 
   @override
   Future<Application> apply(Application application) async {
+    // Un estudiante no puede tener dos postulaciones vivas al mismo proyecto.
+    // Si ya la tiene, se devuelve esa en vez de crear un duplicado: la pantalla
+    // 18 mostraria al mismo candidato repetido.
+    final vigente = _applications.firstWhere(
+      (a) =>
+          a.projectId == application.projectId &&
+          a.applicantId == application.applicantId &&
+          (a.status == ApplicationStatus.pending ||
+              a.status == ApplicationStatus.accepted),
+      orElse: () => _sinPostulacion,
+    );
+    if (!identical(vigente, _sinPostulacion)) return vigente;
+
     final creada = Application(
       id: '${_nextId++}',
       projectId: application.projectId,
