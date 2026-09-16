@@ -42,6 +42,8 @@ class _FakeRepository implements IProjectRepository {
   Future<void> closeRecruitment(String projectId) async =>
       throw UnimplementedError();
 
+  @override
+  Future<void> addMember(String projectId) async => throw UnimplementedError();
 }
 
 /// Repositorio falso que se comporta como la fuente local: guarda en una lista
@@ -87,6 +89,14 @@ class _FakeMutableRepository implements IProjectRepository {
     }
   }
 
+  @override
+  Future<void> addMember(String projectId) async {
+    final index = _projects.indexWhere((p) => p.id == projectId);
+    if (index == -1 || _projects[index].isFull) return;
+    _projects[index] = _projects[index].copyWith(
+      currentMembers: _projects[index].currentMembers + 1,
+    );
+  }
 }
 
 /// Perfil falso: el controlador necesita las habilidades del estudiante para

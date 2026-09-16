@@ -17,4 +17,8 @@ class ProjectRepository implements IProjectRepository {
   @override
   Future<void> closeRecruitment(String projectId) async =>
       await source.closeRecruitment(projectId);
+
+  @override
+  Future<void> addMember(String projectId) async =>
+      await source.addMember(projectId);
 }

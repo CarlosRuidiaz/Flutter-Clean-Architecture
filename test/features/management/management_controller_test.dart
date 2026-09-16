@@ -56,6 +56,8 @@ class _FakeApplicationRepository implements IApplicationRepository {
 
 class _FakeProjectRepository implements IProjectRepository {
   bool recruitmentOpen = true;
+  int currentMembers = 2;
+  static const int maxMembers = 4;
 
   @override
   Future<List<Project>> getProjects() async => [
@@ -66,8 +68,8 @@ class _FakeProjectRepository implements IProjectRepository {
           description: 'Una descripcion',
           stage: ProjectStage.idea,
           academicProgram: 'Ingeniería de Sistemas',
-          currentMembers: 2,
-          maxMembers: 4,
+          currentMembers: currentMembers,
+          maxMembers: maxMembers,
           skillsWanted: ['Flutter'],
           leaderId: '1',
           recruitmentOpen: recruitmentOpen,
@@ -81,6 +83,11 @@ class _FakeProjectRepository implements IProjectRepository {
   @override
   Future<void> closeRecruitment(String projectId) async {
     recruitmentOpen = false;
+  }
+
+  @override
+  Future<void> addMember(String projectId) async {
+    if (currentMembers < maxMembers) currentMembers++;
   }
 }
 
@@ -132,6 +139,36 @@ void main() {
       await controller.closeRecruitment('2');
 
       expect(controller.project?.recruitmentOpen, isFalse);
+    });
+
+    test('aceptar una postulacion sube el contador de miembros', () async {
+      await controller.getApplicants('2');
+      expect(controller.project?.currentMembers, 2);
+
+      await controller.decide('1', ApplicationStatus.accepted);
+
+      expect(controller.project?.currentMembers, 3);
+    });
+
+    test('rechazar no toca el contador de miembros', () async {
+      await controller.getApplicants('2');
+
+      await controller.decide('1', ApplicationStatus.rejected);
+
+      expect(controller.project?.currentMembers, 2);
+    });
+
+    test('aceptar hasta el ultimo cupo deja el proyecto lleno y cerrado a '
+        'postulaciones', () async {
+      await controller.getApplicants('2');
+      // El equipo va 2 de 4: las dos pendientes lo llenan.
+      await controller.decide('1', ApplicationStatus.accepted);
+      await controller.decide('2', ApplicationStatus.accepted);
+
+      expect(controller.project?.currentMembers, 4);
+      expect(controller.project?.isFull, isTrue);
+      expect(controller.project?.acceptsApplications, isFalse);
+      expect(controller.pendingCount, 0);
     });
 
     test('isLoading se pone en true y vuelve a false', () async {

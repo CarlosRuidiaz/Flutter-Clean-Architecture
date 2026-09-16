@@ -8,6 +8,7 @@ import '../../../application/domain/models/application.dart';
 import '../../../application/ui/viewmodels/application_controller.dart';
 import '../../../profile/ui/viewmodels/profile_controller.dart';
 import '../../domain/models/project.dart';
+import '../viewmodels/project_controller.dart';
 import 'widgets/stage_chip.dart';
 
 /// Pantalla 07 de Figma: Detalle de un proyecto con el flujo de postulación.
@@ -112,11 +113,11 @@ class ProjectDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Project? project = Get.arguments is Project
+    final Project? argumento = Get.arguments is Project
         ? Get.arguments as Project
         : null;
 
-    if (project == null) {
+    if (argumento == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Detalle')),
         body: const Center(
@@ -128,102 +129,117 @@ class ProjectDetailPage extends StatelessWidget {
     final TextTheme textTheme = Theme.of(context).textTheme;
 
     // Al abrir el detalle hay que saber si ya existe una postulación a este
-    // proyecto. Va despues del primer frame para no cambiar un Rx durante build.
+    // proyecto, y ademas releer el proyecto: mientras se gestionaban los
+    // postulantes pudo cambiar su numero de miembros. Va despues del primer
+    // frame para no cambiar un Rx durante build.
+    final ProjectController projectController = Get.find();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Get.find<ApplicationController>().ensureMyApplications(_applicantId());
+      projectController.getProjects();
     });
 
     return Scaffold(
-      appBar: AppBar(title: Text(project.title)),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppTokens.gapL),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Cabecera: Etapa + tags del proyecto
-            Wrap(
-              spacing: AppTokens.gapS,
-              runSpacing: AppTokens.gapXs,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                StageChip(stage: project.stage),
-                for (final tag in project.tags)
-                  Pill(label: tag, background: AppColors.card),
-              ],
-            ),
-            const SizedBox(height: AppTokens.gapM),
+      appBar: AppBar(title: Text(argumento.title)),
+      body: Obx(() {
+        // El proyecto del argumento es la foto que tenia la cartelera al
+        // abrirlo. La copia viva es la del controlador: por eso se prefiere
+        // esa, y el argumento queda solo de respaldo.
+        final Project project =
+            projectController.projects.firstWhereOrNull(
+              (p) => p.id == argumento.id,
+            ) ??
+            argumento;
 
-            // Título del proyecto y programa académico
-            Text(project.title, style: textTheme.headlineMedium),
-            const SizedBox(height: AppTokens.gapXs),
-            Text(project.academicProgram, style: textTheme.bodySmall),
-            const SizedBox(height: AppTokens.gapM),
-
-            // Contador de miembros
-            Text(
-              '${project.currentMembers} de ${project.maxMembers} miembros',
-              style: textTheme.bodyMedium?.copyWith(
-                color: project.isFull ? AppColors.persimmon : AppColors.ink,
-                fontWeight: project.isFull
-                    ? FontWeight.w600
-                    : FontWeight.normal,
-              ),
-            ),
-            const SizedBox(height: AppTokens.gapL),
-
-            // Problema a resolver (si existe)
-            if (project.problem.isNotEmpty) ...[
-              Text('Problema a resolver', style: textTheme.titleMedium),
-              const SizedBox(height: AppTokens.gapS),
-              Text(project.problem, style: textTheme.bodyLarge),
-              const SizedBox(height: AppTokens.gapL),
-            ],
-
-            // Descripción
-            Text('Descripción', style: textTheme.titleMedium),
-            const SizedBox(height: AppTokens.gapS),
-            Text(project.description, style: textTheme.bodyLarge),
-            const SizedBox(height: AppTokens.gapL),
-
-            // Habilidades requeridas
-            Text('Habilidades requeridas', style: textTheme.titleMedium),
-            const SizedBox(height: AppTokens.gapS),
-            if (project.skillsWanted.isNotEmpty)
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppTokens.gapL),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Cabecera: Etapa + tags del proyecto
               Wrap(
                 spacing: AppTokens.gapS,
-                runSpacing: AppTokens.gapS,
-                children: project.skillsWanted
-                    .map((s) => Pill(label: s, background: AppColors.card))
-                    .toList(),
-              )
-            else
-              Text(
-                'No se requieren habilidades específicas',
-                style: textTheme.bodySmall,
+                runSpacing: AppTokens.gapXs,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  StageChip(stage: project.stage),
+                  for (final tag in project.tags)
+                    Pill(label: tag, background: AppColors.card),
+                ],
               ),
-            const SizedBox(height: AppTokens.gapL),
-
-            // Equipo actual
-            Text('Equipo actual', style: textTheme.titleMedium),
-            const SizedBox(height: AppTokens.gapS),
-            _buildTeamAvatars(),
-            const SizedBox(height: AppTokens.gapXl),
-
-            // Botones del pie
-            _buildFooterButtons(context, project),
-
-            // Solo el lider del proyecto gestiona sus postulantes.
-            if (project.leaderId == _applicantId()) ...[
               const SizedBox(height: AppTokens.gapM),
-              OutlinedButton(
-                onPressed: () =>
-                    Get.toNamed(AppRoutes.applicants, arguments: project),
-                child: const Text('Gestionar postulantes'),
+
+              // Título del proyecto y programa académico
+              Text(project.title, style: textTheme.headlineMedium),
+              const SizedBox(height: AppTokens.gapXs),
+              Text(project.academicProgram, style: textTheme.bodySmall),
+              const SizedBox(height: AppTokens.gapM),
+
+              // Contador de miembros
+              Text(
+                '${project.currentMembers} de ${project.maxMembers} miembros',
+                style: textTheme.bodyMedium?.copyWith(
+                  color: project.isFull ? AppColors.persimmon : AppColors.ink,
+                  fontWeight: project.isFull
+                      ? FontWeight.w600
+                      : FontWeight.normal,
+                ),
               ),
+              const SizedBox(height: AppTokens.gapL),
+
+              // Problema a resolver (si existe)
+              if (project.problem.isNotEmpty) ...[
+                Text('Problema a resolver', style: textTheme.titleMedium),
+                const SizedBox(height: AppTokens.gapS),
+                Text(project.problem, style: textTheme.bodyLarge),
+                const SizedBox(height: AppTokens.gapL),
+              ],
+
+              // Descripción
+              Text('Descripción', style: textTheme.titleMedium),
+              const SizedBox(height: AppTokens.gapS),
+              Text(project.description, style: textTheme.bodyLarge),
+              const SizedBox(height: AppTokens.gapL),
+
+              // Habilidades requeridas
+              Text('Habilidades requeridas', style: textTheme.titleMedium),
+              const SizedBox(height: AppTokens.gapS),
+              if (project.skillsWanted.isNotEmpty)
+                Wrap(
+                  spacing: AppTokens.gapS,
+                  runSpacing: AppTokens.gapS,
+                  children: project.skillsWanted
+                      .map((s) => Pill(label: s, background: AppColors.card))
+                      .toList(),
+                )
+              else
+                Text(
+                  'No se requieren habilidades específicas',
+                  style: textTheme.bodySmall,
+                ),
+              const SizedBox(height: AppTokens.gapL),
+
+              // Equipo actual
+              Text('Equipo actual', style: textTheme.titleMedium),
+              const SizedBox(height: AppTokens.gapS),
+              _buildTeamAvatars(),
+              const SizedBox(height: AppTokens.gapXl),
+
+              // Botones del pie
+              _buildFooterButtons(context, project),
+
+              // Solo el lider del proyecto gestiona sus postulantes.
+              if (project.leaderId == _applicantId()) ...[
+                const SizedBox(height: AppTokens.gapM),
+                OutlinedButton(
+                  onPressed: () =>
+                      Get.toNamed(AppRoutes.applicants, arguments: project),
+                  child: const Text('Gestionar postulantes'),
+                ),
+              ],
             ],
-          ],
-        ),
-      ),
+          ),
+        );
+      }),
     );
   }
 }

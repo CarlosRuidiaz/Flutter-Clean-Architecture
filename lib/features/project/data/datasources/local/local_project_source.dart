@@ -140,4 +140,17 @@ class LocalProjectSource implements IProjectSource {
       _projects[index] = _projects[index].copyWith(recruitmentOpen: false);
     }
   }
+
+  @override
+  Future<void> addMember(String projectId) async {
+    final index = _projects.indexWhere((p) => p.id == projectId);
+    if (index == -1) return;
+
+    final actual = _projects[index];
+    // Un equipo lleno no crece: maxMembers es el tope y nadie lo pasa.
+    if (actual.isFull) return;
+    _projects[index] = actual.copyWith(
+      currentMembers: actual.currentMembers + 1,
+    );
+  }
 }

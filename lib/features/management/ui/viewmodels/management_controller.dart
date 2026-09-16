@@ -39,11 +39,17 @@ class ManagementController extends GetxController with UiLoggy {
   }
 
   Future<void> decide(String applicationId, ApplicationStatus decision) async {
+    loggy.debug('ManagementController: decidiendo la postulacion $applicationId');
     await applicationRepository.decide(applicationId, decision);
     final projectId = _project.value?.id;
-    if (projectId != null) {
-      await getApplicants(projectId);
+    if (projectId == null) return;
+
+    // Aceptar a alguien lo suma al equipo: es lo que enciende isFull y apaga
+    // acceptsApplications cuando se llena el ultimo cupo.
+    if (decision == ApplicationStatus.accepted) {
+      await projectRepository.addMember(projectId);
     }
+    await getApplicants(projectId);
   }
 
   Future<void> closeRecruitment(String projectId) async {

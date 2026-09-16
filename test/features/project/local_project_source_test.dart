@@ -100,5 +100,38 @@ void main() {
       final p1 = projects.firstWhere((p) => p.id == '1');
       expect(p1.acceptsApplications, isFalse);
     });
+    test('addMember sube el contador de miembros del proyecto pedido', () async {
+      final antes = (await source.getProjects()).firstWhere((p) => p.id == '2');
+      expect(antes.currentMembers, 2);
+
+      await source.addMember('2');
+
+      final despues =
+          (await source.getProjects()).firstWhere((p) => p.id == '2');
+      expect(despues.currentMembers, 3);
+      expect(despues.maxMembers, antes.maxMembers);
+    });
+
+    test('addMember no pasa de maxMembers', () async {
+      // El proyecto '4' nace lleno: 5 de 5.
+      await source.addMember('4');
+
+      final p4 = (await source.getProjects()).firstWhere((p) => p.id == '4');
+      expect(p4.currentMembers, 5);
+      expect(p4.isFull, isTrue);
+      expect(p4.acceptsApplications, isFalse);
+    });
+
+    test('al llenar el ultimo cupo el proyecto deja de aceptar postulaciones',
+        () async {
+      // El '2' va 2 de 4: dos aceptaciones lo llenan.
+      await source.addMember('2');
+      await source.addMember('2');
+
+      final p2 = (await source.getProjects()).firstWhere((p) => p.id == '2');
+      expect(p2.currentMembers, 4);
+      expect(p2.isFull, isTrue);
+      expect(p2.acceptsApplications, isFalse);
+    });
   });
 }
