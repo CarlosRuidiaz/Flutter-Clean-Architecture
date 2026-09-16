@@ -66,7 +66,14 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
     return count;
   }
 
-  bool get _canPublish => _completedRequiredFieldsCount == 6;
+  /// Sin un id de perfil utilizable no se puede publicar: el proyecto naceria
+  /// sin lider y su autor no podria gestionar los postulantes de su propia idea.
+  bool get _hasValidLeader {
+    final id = _profileController.profile?.id;
+    return id != null && id.isNotEmpty;
+  }
+
+  bool get _canPublish => _completedRequiredFieldsCount == 6 && _hasValidLeader;
 
   Future<void> _publish() async {
     if (!_canPublish) return;
@@ -74,6 +81,12 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
     final profile = _profileController.profile;
     if (profile == null) {
       loggy.error('No se encontro el perfil activo');
+      return;
+    }
+
+    final leaderId = profile.id;
+    if (leaderId == null || leaderId.isEmpty) {
+      loggy.error('El perfil activo no tiene id: la idea nacería sin líder');
       return;
     }
 
@@ -87,7 +100,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
       maxMembers: _maxMembers,
       skillsWanted: List.from(_skillsWanted),
       tags: List.from(_tags),
-      leaderId: profile.id ?? '',
+      leaderId: leaderId,
       recruitmentOpen: true,
     );
 
