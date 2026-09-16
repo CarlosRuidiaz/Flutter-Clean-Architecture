@@ -1,3 +1,5 @@
+import 'package:f_clean_template/features/profile/domain/models/profile.dart';
+import 'package:f_clean_template/features/profile/domain/repositories/i_profile_repository.dart';
 import 'package:f_clean_template/features/project/domain/models/project.dart';
 import 'package:f_clean_template/features/project/domain/repositories/i_project_repository.dart';
 import 'package:f_clean_template/features/project/ui/viewmodels/project_controller.dart';
@@ -87,6 +89,23 @@ class _FakeMutableRepository implements IProjectRepository {
 
 }
 
+/// Perfil falso: el controlador necesita las habilidades del estudiante para
+/// la pestania "Para tus habilidades".
+class _FakeProfileRepository implements IProfileRepository {
+  _FakeProfileRepository([this.skills = const ['Dart', 'Diseño UX']]);
+
+  final List<String> skills;
+
+  @override
+  Future<Profile> getCurrentProfile() async => Profile(
+        id: '1',
+        fullName: 'Carlos Ruidíaz',
+        academicProgram: 'Ingeniería de Sistemas',
+        semester: 8,
+        skills: skills,
+      );
+}
+
 Project _ideaNueva() => Project(
       title: 'Huerta urbana en la terraza',
       problem: 'La terraza del bloque B lleva tres anios sin uso.',
@@ -102,7 +121,7 @@ Project _ideaNueva() => Project(
 void main() {
   group('ProjectController', () {
     test('el controlador expone lo que le da el repositorio', () async {
-      final controller = ProjectController(_FakeRepository());
+      final controller = ProjectController(_FakeRepository(), _FakeProfileRepository());
       await controller.getProjects();
       expect(controller.projects.length, 2);
       expect(controller.isLoading.value, isFalse);
@@ -110,7 +129,7 @@ void main() {
 
     test('createProject deja el proyecto nuevo en la lista del controlador',
         () async {
-      final controller = ProjectController(_FakeMutableRepository([]));
+      final controller = ProjectController(_FakeMutableRepository([]), _FakeProfileRepository());
       await controller.getProjects();
       expect(controller.projects, isEmpty);
 
@@ -144,6 +163,7 @@ void main() {
             leaderId: 'u1',
           ),
         ]),
+        _FakeProfileRepository(),
       );
       await controller.getProjects();
 
@@ -152,6 +172,163 @@ void main() {
       expect(controller.projects.length, 2);
       expect(controller.projects.first.id, creado.id);
       expect(controller.projects.first.title, 'Huerta urbana en la terraza');
+    });
+  });
+
+  group('ProjectController · filtros', () {
+    /// Cuatro proyectos elegidos para que cada filtro deje un subconjunto
+    /// distinto: dos etapas, uno lleno y uno con el reclutamiento cerrado.
+    List<Project> catalogo() => [
+          Project(
+            id: '1',
+            title: 'App de movilidad',
+            problem: 'p',
+            description: 'd',
+            stage: ProjectStage.research,
+            academicProgram: 'Ingeniería Civil',
+            currentMembers: 4,
+            maxMembers: 6,
+            skillsWanted: ['Diseño UX'],
+            leaderId: 'u3',
+          ),
+          Project(
+            id: '2',
+            title: 'Tutorías entre pares',
+            problem: 'p',
+            description: 'd',
+            stage: ProjectStage.idea,
+            academicProgram: 'Ingeniería de Sistemas',
+            currentMembers: 2,
+            maxMembers: 4,
+            skillsWanted: ['Flutter', 'Backend'],
+            leaderId: '1',
+          ),
+          Project(
+            id: '3',
+            title: 'Reciclaje textil',
+            problem: 'p',
+            description: 'd',
+            stage: ProjectStage.idea,
+            academicProgram: 'Diseño Industrial',
+            currentMembers: 5,
+            maxMembers: 5, // lleno: no acepta postulaciones
+            skillsWanted: ['Logística'],
+            leaderId: 'u2',
+          ),
+          Project(
+            id: '4',
+            title: 'Biblioteca accesible',
+            problem: 'p',
+            description: 'd',
+            stage: ProjectStage.finished,
+            academicProgram: 'Psicología',
+            currentMembers: 3,
+            maxMembers: 4,
+            skillsWanted: ['Diseño UX'],
+            leaderId: 'u6',
+            recruitmentOpen: false, // cerrado: tampoco acepta
+          ),
+        ];
+
+    Future<ProjectController> cargado({
+      List<String> skills = const ['Diseño UX'],
+    }) async {
+      final controller = ProjectController(
+        _FakeMutableRepository(catalogo()),
+        _FakeProfileRepository(skills),
+      );
+      await controller.getProjects();
+      await controller.getCurrentProfile();
+      return controller;
+    }
+
+    test('sin filtros, allVisibleProjects son todos', () async {
+      final controller = await cargado();
+      expect(controller.allVisibleProjects.length, 4);
+      expect(controller.hasActiveFilters, isFalse);
+    });
+
+    test('la busqueda por titulo no distingue mayusculas', () async {
+      final controller = await cargado();
+      controller.setSearchQuery('  TUTORÍAS  ');
+
+      expect(controller.allVisibleProjects.length, 1);
+      expect(controller.allVisibleProjects.single.id, '2');
+      expect(controller.hasActiveFilters, isTrue);
+    });
+
+    test('el filtro de etapa deja solo los de esa etapa, y null los devuelve',
+        () async {
+      final controller = await cargado();
+      controller.setStageFilter(ProjectStage.idea);
+      expect(controller.allVisibleProjects.map((p) => p.id), ['2', '3']);
+
+      controller.setStageFilter(null);
+      expect(controller.allVisibleProjects.length, 4);
+    });
+
+    test('onlyOpen esconde el lleno y el de reclutamiento cerrado', () async {
+      final controller = await cargado();
+      controller.toggleOnlyOpen();
+
+      expect(controller.allVisibleProjects.map((p) => p.id), ['1', '2']);
+    });
+
+    test('projectsForMySkills cruza los filtros con las habilidades del perfil',
+        () async {
+      final controller = await cargado(skills: ['diseño ux']);
+
+      // El 1 y el 4 piden "Diseño UX"; el 4 se cae al exigir abiertos.
+      expect(controller.projectsForMySkills.map((p) => p.id), ['1', '4']);
+      controller.toggleOnlyOpen();
+      expect(controller.projectsForMySkills.map((p) => p.id), ['1']);
+    });
+
+    test('sin habilidades en el perfil, la pestania de habilidades va vacia',
+        () async {
+      final controller = await cargado(skills: const []);
+
+      expect(controller.mySkills, isEmpty);
+      expect(controller.projectsForMySkills, isEmpty);
+      expect(controller.allVisibleProjects.length, 4);
+    });
+
+    test('clearFilters devuelve la cartelera completa', () async {
+      final controller = await cargado();
+      controller.setSearchQuery('biblioteca');
+      controller.setStageFilter(ProjectStage.finished);
+      controller.toggleOnlyOpen();
+      expect(controller.allVisibleProjects, isEmpty);
+
+      controller.clearFilters();
+
+      expect(controller.hasActiveFilters, isFalse);
+      expect(controller.allVisibleProjects.length, 4);
+    });
+
+    test('un proyecto creado entra en las listas derivadas sin recalcular nada',
+        () async {
+      final controller = await cargado();
+      controller.setStageFilter(ProjectStage.idea);
+      final antes = controller.allVisibleProjects.length;
+
+      await controller.createProject(
+        Project(
+          title: 'Huerta urbana',
+          problem: 'p',
+          description: 'd',
+          stage: ProjectStage.idea,
+          academicProgram: 'Ingeniería Ambiental',
+          currentMembers: 1,
+          maxMembers: 5,
+          skillsWanted: const ['Diseño UX'],
+          leaderId: '1',
+        ),
+      );
+
+      expect(controller.allVisibleProjects.length, antes + 1);
+      expect(controller.allVisibleProjects.first.title, 'Huerta urbana');
+      expect(controller.projectsForMySkills.first.title, 'Huerta urbana');
     });
   });
 }

@@ -8,7 +8,12 @@ import '../../../profile/ui/views/widgets/profile_skills_line.dart';
 import '../../domain/models/project.dart';
 import '../viewmodels/project_controller.dart';
 import 'widgets/project_card.dart';
+import 'widgets/project_filters.dart';
 
+/// La cartelera. Dos pestanias sobre los mismos proyectos con dos criterios
+/// distintos: la primera cruza con las habilidades del perfil, la segunda no.
+///
+/// Ninguna de las dos filtra aqui: piden al controlador la lista ya derivada.
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -19,16 +24,100 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _projectList(ProjectController controller) {
+  /// Estado vacio del sistema: una lista vacia sin explicacion se lee como un
+  /// error de la app.
+  Widget _emptyState({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String message,
+    required String actionLabel,
+    required VoidCallback onAction,
+  }) {
+    final TextTheme textTheme = Theme.of(context).textTheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppTokens.gapXl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 48, color: AppColors.secondary),
+            const SizedBox(height: AppTokens.gapM),
+            Text(title, style: textTheme.titleMedium, textAlign: TextAlign.center),
+            const SizedBox(height: AppTokens.gapS),
+            Text(message, style: textTheme.bodyMedium, textAlign: TextAlign.center),
+            const SizedBox(height: AppTokens.gapL),
+            OutlinedButton(onPressed: onAction, child: Text(actionLabel)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _projectList(List<Project> projects) {
+    return ListView.builder(
+      padding: const EdgeInsets.only(top: AppTokens.gapM),
+      itemCount: projects.length,
+      itemBuilder: (context, i) => _tappableCard(projects[i]),
+    );
+  }
+
+  /// Pestania "Para tus habilidades".
+  Widget _skillsTab(BuildContext context, ProjectController controller) {
     return Obx(() {
       if (controller.isLoading.value) {
         return const Center(child: CircularProgressIndicator());
       }
-      return ListView.builder(
-        padding: const EdgeInsets.only(top: AppTokens.gapM),
-        itemCount: controller.projects.length,
-        itemBuilder: (context, i) => _tappableCard(controller.projects[i]),
-      );
+
+      final List<Project> projects = controller.projectsForMySkills;
+      if (projects.isEmpty) {
+        // Sin habilidades registradas el problema es el perfil; con ellas, que
+        // ningun proyecto pide las suyas. Son dos vacios distintos.
+        final bool sinHabilidades = controller.mySkills.isEmpty;
+        return _emptyState(
+          context: context,
+          icon: sinHabilidades
+              ? Icons.person_search_outlined
+              : Icons.search_off_rounded,
+          title: sinHabilidades
+              ? 'Todavía no tienes habilidades registradas'
+              : 'Ningún proyecto pide tus habilidades',
+          message: sinHabilidades
+              ? 'Sin habilidades en tu perfil no podemos saber qué proyectos '
+                  'te sirven. Mientras tanto, puedes mirarlos todos.'
+              : 'Ninguno de los proyectos que pasan los filtros busca alguna '
+                  'de tus habilidades. Prueba a mirar la cartelera completa.',
+          actionLabel: 'Explorar proyectos',
+          onAction: () => DefaultTabController.of(context).animateTo(1),
+        );
+      }
+
+      return _projectList(projects);
+    });
+  }
+
+  /// Pestania "Explorar proyectos": todo lo que pasa los filtros, sin cruzar
+  /// con el perfil.
+  Widget _exploreTab(BuildContext context, ProjectController controller) {
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      final List<Project> projects = controller.allVisibleProjects;
+      if (projects.isEmpty) {
+        return _emptyState(
+          context: context,
+          icon: Icons.filter_alt_off_outlined,
+          title: 'Ningún proyecto pasa los filtros',
+          message: 'Prueba a quitar alguno o a buscar con otras palabras.',
+          actionLabel: 'Limpiar filtros',
+          onAction: controller.clearFilters,
+        );
+      }
+
+      return _projectList(projects);
     });
   }
 
@@ -50,17 +139,23 @@ class HomePage extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-
-            Column(
-              children: [
-                const ProfileSkillsLine(),
-                Expanded(child: _projectList(controller)),
-              ],
+            // Builder a proposito: el boton del estado vacio salta a la otra
+            // pestania con DefaultTabController.of, que necesita un contexto
+            // por debajo del DefaultTabController. El de build esta por
+            // encima y la busqueda fallaria.
+            Builder(
+              builder: (tabContext) => Column(
+                children: [
+                  const ProfileSkillsLine(),
+                  const ProjectFilters(),
+                  Expanded(child: _skillsTab(tabContext, controller)),
+                ],
+              ),
             ),
             Column(
               children: [
-                const SizedBox(height: AppTokens.gapS),
-                Expanded(child: _projectList(controller)),
+                const ProjectFilters(),
+                Expanded(child: _exploreTab(context, controller)),
               ],
             ),
           ],

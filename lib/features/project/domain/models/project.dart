@@ -35,6 +35,23 @@ class Project {
   /// solo aparece si esto es true.
   bool get acceptsApplications => recruitmentOpen && !isFull;
 
+  /// Un proyecto encaja con un estudiante si alguna habilidad buscada coincide
+  /// con alguna de las suyas. Comparacion sin distinguir mayusculas ni espacios
+  /// de sobra, porque las habilidades se escriben a mano.
+  ///
+  /// Con [studentSkills] vacia devuelve false: sin habilidades registradas no
+  /// se puede afirmar que un proyecto le sirva a nadie.
+  bool matchesAnySkill(List<String> studentSkills) {
+    final suyas = studentSkills.map(_normalizar).where((s) => s.isNotEmpty).toSet();
+    if (suyas.isEmpty) return false;
+    return skillsWanted
+        .map(_normalizar)
+        .any((buscada) => buscada.isNotEmpty && suyas.contains(buscada));
+  }
+
+  static String _normalizar(String habilidad) =>
+      habilidad.trim().toLowerCase();
+
   Project copyWith({bool? recruitmentOpen, int? currentMembers}) => Project(
         id: id,
         title: title,

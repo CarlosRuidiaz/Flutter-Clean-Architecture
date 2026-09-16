@@ -13,7 +13,9 @@ class StageChip extends StatelessWidget {
 
   final ProjectStage stage;
 
-  static String _label(ProjectStage s) {
+  /// Publicas a proposito: la fila de filtros pinta las mismas seis etapas y
+  /// tiene que usar este color y esta traduccion, no una copia suya.
+  static String labelOf(ProjectStage s) {
     switch (s) {
       case ProjectStage.idea:
         return 'Idea';
@@ -30,7 +32,7 @@ class StageChip extends StatelessWidget {
     }
   }
 
-  static Color _color(ProjectStage s) {
+  static Color colorOf(ProjectStage s) {
     switch (s) {
       case ProjectStage.idea:
         return AppStageColors.idea;
@@ -49,6 +51,6 @@ class StageChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Pill(label: _label(stage), background: _color(stage));
+    return Pill(label: labelOf(stage), background: colorOf(stage));
   }
 }
