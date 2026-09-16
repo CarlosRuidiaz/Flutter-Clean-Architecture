@@ -200,7 +200,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.persimmon,
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor: Colors.grey.shade400,
+                      disabledBackgroundColor: AppColors.secondary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: AppTokens.borderRadius,
@@ -270,7 +270,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
           borderSide: const BorderSide(color: AppColors.ink, width: AppTokens.borderWidth),
         ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.card,
       ),
     );
   }
@@ -293,7 +293,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
               borderSide: const BorderSide(color: AppColors.ink, width: AppTokens.borderWidth),
             ),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: AppColors.card,
           ),
         ),
         if (_skillsWanted.isNotEmpty) ...[
@@ -329,7 +329,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
           decoration: BoxDecoration(
             border: AppTokens.border(),
             borderRadius: AppTokens.borderRadius,
-            color: Colors.white,
+            color: AppColors.card,
           ),
           child: Row(
             children: [
@@ -408,7 +408,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
               borderSide: const BorderSide(color: AppColors.ink, width: AppTokens.borderWidth),
             ),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: AppColors.card,
           ),
         ),
         if (_tags.isNotEmpty) ...[
@@ -436,8 +436,8 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
       width: double.infinity,
       padding: const EdgeInsets.all(AppTokens.gapXl),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: AppColors.ink, width: 1, style: BorderStyle.solid),
+        color: AppColors.card,
+        border: Border.all(color: AppColors.ink, width: AppTokens.borderWidth, style: BorderStyle.solid),
         borderRadius: AppTokens.borderRadius,
       ),
       child: Column(
