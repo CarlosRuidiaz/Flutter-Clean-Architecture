@@ -5,6 +5,7 @@ import 'package:f_clean_template/features/application/data/datasources/i_applica
 import 'package:f_clean_template/features/application/data/datasources/local/local_application_source.dart';
 import 'package:f_clean_template/features/application/data/repositories/application_repository.dart';
 import 'package:f_clean_template/features/application/domain/repositories/i_application_repository.dart';
+import 'package:f_clean_template/features/management/management_dependencies.dart';
 import 'package:f_clean_template/features/management/ui/viewmodels/management_controller.dart';
 import 'package:f_clean_template/features/profile/data/datasources/i_profile_source.dart';
 import 'package:f_clean_template/features/profile/data/datasources/local/local_profile_source.dart';
@@ -89,6 +90,60 @@ Future<String> _proyectoPropioSinPostulantes() async {
 
 void main() {
   tearDown(() => Get.deleteAll(force: true));
+
+  group('ApplicantsPage · ciclo de vida del controlador', () {
+    testWidgets('entrar, volver y entrar otra vez no revienta',
+        (tester) async {
+      Get.testMode = true;
+      await Get.deleteAll(force: true);
+      tester.view.physicalSize = const Size(1200, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      // Con el cableado de verdad: registerManagement() y sin tocar el
+      // controlador antes de navegar. Instanciarlo a mano aqui lo desligaria
+      // de la ruta y taparia el fallo.
+      Get.put<IProfileSource>(LocalProfileSource());
+      Get.put<IProfileRepository>(ProfileRepository(Get.find()));
+      Get.put(ProfileController(Get.find()));
+      Get.put<IProjectSource>(LocalProjectSource());
+      Get.put<IProjectRepository>(ProjectRepository(Get.find()));
+      Get.put<IApplicationSource>(LocalApplicationSource());
+      Get.put<IApplicationRepository>(ApplicationRepository(Get.find()));
+      registerManagement();
+
+      final Project project =
+          (await Get.find<IProjectRepository>().getProjects())
+              .firstWhere((p) => p.id == '2');
+
+      await tester.pumpWidget(
+        GetMaterialApp(
+          theme: AppTheme.light,
+          home: const Scaffold(),
+          getPages: AppRoutes.pages,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Primera visita.
+      Get.toNamed(AppRoutes.applicants, arguments: project);
+      await tester.pumpAndSettle();
+      expect(find.text('Mariana Pérez'), findsOneWidget);
+
+      // Se sale: GetX descarta lo que se instancio en esa ruta.
+      Get.back();
+      await tester.pumpAndSettle();
+
+      // Segunda visita: aqui es donde crasheaba con
+      // "ManagementController not found".
+      Get.toNamed(AppRoutes.applicants, arguments: project);
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Mariana Pérez'), findsOneWidget);
+      expect(find.text('2 postulaciones pendientes'), findsOneWidget);
+    });
+  });
 
   group('ApplicantsPage · gestion de postulantes', () {
     testWidgets('10 · lista las postulaciones con nombre, programa, semestre '
