@@ -22,36 +22,35 @@ class ProjectCard extends StatelessWidget {
         children: [
           Text(project.title, style: text.titleMedium),
           const SizedBox(height: AppTokens.gapS),
-          Row(
-            children: [
-              StageChip(stage: project.stage),
-              const SizedBox(width: AppTokens.gapS),
-              Expanded(
-                child: Text(
-                  project.academicProgram,
-                  style: text.bodySmall,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
+          StageChip(stage: project.stage),
           const SizedBox(height: AppTokens.gapS),
           Text(
-            project.isFull
-                ? 'Equipo completo (${project.currentMembers}/${project.maxMembers})'
-                : '${project.currentMembers} de ${project.maxMembers} miembros',
-            style: text.bodyMedium?.copyWith(
-              color: project.isFull ? AppColors.persimmon : AppColors.ink,
-              fontWeight: project.isFull ? FontWeight.w600 : FontWeight.normal,
-            ),
+            '${project.academicProgram} · '
+            '${project.currentMembers} de ${project.maxMembers} miembros',
+            style: text.bodyMedium,
           ),
-          if (project.skillsWanted.isNotEmpty) ...[
-            const SizedBox(height: AppTokens.gapXs + 2),
+          const SizedBox(height: AppTokens.gapXs + 2),
+          if (project.acceptsApplications)
+            // Solo tiene sentido decir que busca gente si aun puede recibirla.
+            if (project.skillsWanted.isNotEmpty)
+              Text(
+                'Busca: ${project.skillsWanted.join(" · ")}',
+                style: text.bodySmall,
+              )
+            else
+              Text('Abierto a postulaciones', style: text.bodySmall)
+          else
             Text(
-              'Busca: ${project.skillsWanted.join(" · ")}',
-              style: text.bodySmall,
+              // Un equipo de 3 de 4 con el reclutamiento cerrado no esta
+              // completo: decir "Equipo completo" ahi seria mentira.
+              project.isFull
+                  ? 'Equipo completo · reclutamiento cerrado'
+                  : 'Reclutamiento cerrado',
+              style: text.bodySmall?.copyWith(
+                color: AppColors.persimmon,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ],
         ],
       ),
     );

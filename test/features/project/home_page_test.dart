@@ -163,7 +163,7 @@ void main() {
       );
     });
 
-    testWidgets('14 · el proyecto lleno y el cerrado siguen en la lista',
+    testWidgets('14 · el proyecto lleno sigue en la lista y lo dice',
         (tester) async {
       await _montarCartelera(tester);
       await _irAExplorar(tester);
@@ -171,7 +171,36 @@ void main() {
       // Ya no hay "solo abiertos" que los esconda.
       expect(_tarjetas(), 6);
       expect(find.text('Red comunitaria de reciclaje textil'), findsOneWidget);
+      expect(
+        find.text('Equipo completo · reclutamiento cerrado'),
+        findsOneWidget,
+      );
+
+      // El '6' esta cerrado pero va 3 de 4: no esta completo, y la tarjeta no
+      // dice que lo este.
       expect(find.text('Biblioteca digital accesible'), findsOneWidget);
+      expect(find.text('Reclutamiento cerrado'), findsOneWidget);
+    });
+
+    testWidgets('la tarjeta lleva programa, miembros y habilidades buscadas',
+        (tester) async {
+      await _montarCartelera(tester);
+      await _irAExplorar(tester);
+
+      // El '1': Arquitectura, 4 de 6, y pide Análisis de datos y Diseño UX.
+      expect(
+        find.text('${AppCatalogs.programArchitecture} · 4 de 6 miembros'),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Busca: ${AppCatalogs.skillData} · ${AppCatalogs.skillUx}',
+        ),
+        findsOneWidget,
+      );
+
+      // El '5' no pide ninguna: no puede quedarse sin tercera linea.
+      expect(find.text('Abierto a postulaciones'), findsOneWidget);
     });
 
     testWidgets('7 · sin habilidades en el perfil, el vacio lo explica y '
