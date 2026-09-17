@@ -23,29 +23,46 @@ class ProjectController extends GetxController with UiLoggy {
   final Rxn<Profile> _profile = Rxn<Profile>();
   final RxBool isLoading = false.obs;
 
-  /// Estado de los tres filtros de la cartelera. Reactivo, para que la lista se
-  /// repinte sola al cambiarlos.
-  final Rxn<ProjectStage> stageFilter = Rxn<ProjectStage>(); // null = todas
+  /// Estado de los filtros. Reactivo, para que la lista se repinte sola al
+  /// cambiarlos.
+  ///
+  /// Los tres grupos son de seleccion multiple. Dentro de un grupo los valores
+  /// se suman (marcar dos etapas muestra las dos); entre grupos se cruzan
+  /// (una habilidad y un programa deja solo los que cumplen ambas). Un grupo
+  /// vacio no filtra nada.
   final RxString searchQuery = ''.obs;
-  final RxBool onlyOpen = false.obs;
+  final RxList<String> skillFilters = <String>[].obs;
+  final RxList<String> programFilters = <String>[].obs;
+  final RxList<ProjectStage> stageFilters = <ProjectStage>[].obs;
 
   List<Project> get projects => _projects;
 
   /// Las habilidades del perfil en sesion, o vacia mientras no haya cargado.
   List<String> get mySkills => _profile.value?.skills ?? const [];
 
-  /// Los proyectos que pasan los tres filtros.
+  /// Los proyectos que pasan la busqueda y los tres grupos.
   ///
   /// Se calcula, no se almacena: derivarlo evita que se quede desincronizado
   /// cuando se crea un proyecto nuevo o cambia un filtro.
+  ///
+  /// Un proyecto con el equipo lleno no se esconde: sigue en la lista y es su
+  /// tarjeta la que dice que el reclutamiento esta cerrado.
   List<Project> get visibleProjects {
     final String consulta = searchQuery.value.trim().toLowerCase();
-    final ProjectStage? etapa = stageFilter.value;
-    final bool soloAbiertos = onlyOpen.value;
+    final List<String> habilidades = skillFilters;
+    final List<String> programas = programFilters;
+    final List<ProjectStage> etapas = stageFilters;
 
     return _projects.where((project) {
-      if (etapa != null && project.stage != etapa) return false;
-      if (soloAbiertos && !project.acceptsApplications) return false;
+      if (etapas.isNotEmpty && !etapas.contains(project.stage)) return false;
+      if (programas.isNotEmpty && !programas.contains(project.academicProgram)) {
+        return false;
+      }
+      // La misma regla de coincidencia que usa la pestania de habilidades: si
+      // el proyecto pide alguna de las marcadas, pasa.
+      if (habilidades.isNotEmpty && !project.matchesAnySkill(habilidades)) {
+        return false;
+      }
       if (consulta.isNotEmpty &&
           !project.title.toLowerCase().contains(consulta)) {
         return false;
@@ -62,12 +79,21 @@ class ProjectController extends GetxController with UiLoggy {
   /// Pestania "Explorar proyectos": los filtros y nada mas.
   List<Project> get allVisibleProjects => visibleProjects;
 
-  /// True si hay algun filtro puesto. La usa el estado vacio para decidir si
-  /// ofrece "Limpiar filtros" o si el problema es que no hay proyectos.
+  /// Cuantos GRUPOS de filtro tienen algo marcado. Es el numero que sale en el
+  /// boton "Filtros" y en "Aplicar N filtros". Se cuentan grupos, no chips:
+  /// marcar tres habilidades sigue siendo un filtro.
+  ///
+  /// La busqueda no cuenta: tiene su propio campo a la vista.
+  int get activeFilterCount =>
+      (skillFilters.isEmpty ? 0 : 1) +
+      (programFilters.isEmpty ? 0 : 1) +
+      (stageFilters.isEmpty ? 0 : 1);
+
+  /// True si hay algun filtro puesto, contando tambien la busqueda. La usa el
+  /// estado vacio para decidir si ofrece "Limpiar filtros" o si el problema es
+  /// que no hay proyectos.
   bool get hasActiveFilters =>
-      stageFilter.value != null ||
-      onlyOpen.value ||
-      searchQuery.value.trim().isNotEmpty;
+      activeFilterCount > 0 || searchQuery.value.trim().isNotEmpty;
 
   @override
   void onInit() {
@@ -97,15 +123,25 @@ class ProjectController extends GetxController with UiLoggy {
     return creado;
   }
 
-  void setStageFilter(ProjectStage? stage) => stageFilter.value = stage;
-
   void setSearchQuery(String query) => searchQuery.value = query;
 
-  void toggleOnlyOpen() => onlyOpen.value = !onlyOpen.value;
+  /// Vuelca de golpe lo que la pantalla de filtros traia seleccionado. La
+  /// pantalla trabaja sobre una copia y solo llama aqui al pulsar "Aplicar":
+  /// por eso salir con el boton de volver deja los filtros como estaban.
+  void applyFilters({
+    required List<String> skills,
+    required List<String> programs,
+    required List<ProjectStage> stages,
+  }) {
+    skillFilters.value = List<String>.from(skills);
+    programFilters.value = List<String>.from(programs);
+    stageFilters.value = List<ProjectStage>.from(stages);
+  }
 
   void clearFilters() {
-    stageFilter.value = null;
+    skillFilters.clear();
+    programFilters.clear();
+    stageFilters.clear();
     searchQuery.value = '';
-    onlyOpen.value = false;
   }
 }

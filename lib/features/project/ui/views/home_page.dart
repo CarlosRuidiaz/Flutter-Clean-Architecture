@@ -8,7 +8,7 @@ import '../../../profile/ui/views/widgets/profile_skills_line.dart';
 import '../../domain/models/project.dart';
 import '../viewmodels/project_controller.dart';
 import 'widgets/project_card.dart';
-import 'widgets/project_filters.dart';
+import 'widgets/explore_search_row.dart';
 
 /// La cartelera. Dos pestanias sobre los mismos proyectos con dos criterios
 /// distintos: la primera cruza con las habilidades del perfil, la segunda no.
@@ -86,8 +86,8 @@ class HomePage extends StatelessWidget {
           message: sinHabilidades
               ? 'Sin habilidades en tu perfil no podemos saber qué proyectos '
                   'te sirven. Mientras tanto, puedes mirarlos todos.'
-              : 'Ninguno de los proyectos que pasan los filtros busca alguna '
-                  'de tus habilidades. Prueba a mirar la cartelera completa.',
+              : 'Ninguno de los proyectos publicados busca alguna de tus '
+                  'habilidades. Prueba a mirar la cartelera completa.',
           actionLabel: 'Explorar proyectos',
           onAction: () => DefaultTabController.of(context).animateTo(1),
         );
@@ -110,8 +110,8 @@ class HomePage extends StatelessWidget {
         return _emptyState(
           context: context,
           icon: Icons.filter_alt_off_outlined,
-          title: 'Ningún proyecto pasa los filtros',
-          message: 'Prueba a quitar alguno o a buscar con otras palabras.',
+          title: 'Ningún proyecto coincide',
+          message: 'Prueba quitando algún filtro o buscando con otras palabras.',
           actionLabel: 'Limpiar filtros',
           onAction: controller.clearFilters,
         );
@@ -146,15 +146,18 @@ class HomePage extends StatelessWidget {
             Builder(
               builder: (tabContext) => Column(
                 children: [
+                  // Sin buscador ni filtros a proposito: esta pestania ya esta
+                  // filtrada por el perfil.
                   const ProfileSkillsLine(),
-                  const ProjectFilters(),
                   Expanded(child: _skillsTab(tabContext, controller)),
                 ],
               ),
             ),
             Column(
               children: [
-                const ProjectFilters(),
+                // La fila sigue visible aunque la lista quede vacia: si
+                // desapareciera, no habria forma de deshacer la busqueda.
+                const ExploreSearchRow(),
                 Expanded(child: _exploreTab(context, controller)),
               ],
             ),

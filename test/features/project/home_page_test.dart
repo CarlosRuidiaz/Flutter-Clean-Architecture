@@ -1,7 +1,9 @@
 import 'package:f_clean_template/core/app_theme.dart';
+import 'package:f_clean_template/core/app_catalogs.dart';
 import 'package:f_clean_template/features/profile/data/datasources/i_profile_source.dart';
 import 'package:f_clean_template/features/profile/data/datasources/local/local_profile_source.dart';
 import 'package:f_clean_template/features/profile/data/repositories/profile_repository.dart';
+import 'package:f_clean_template/features/profile/domain/models/profile.dart';
 import 'package:f_clean_template/features/profile/domain/repositories/i_profile_repository.dart';
 import 'package:f_clean_template/features/profile/ui/viewmodels/profile_controller.dart';
 import 'package:f_clean_template/features/project/data/datasources/i_project_source.dart';
@@ -16,10 +18,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
+/// Perfil a medida para los dos estados vacios de la pestania de habilidades:
+/// uno sin habilidades registradas y otro con una que nadie pide.
+class _FakeProfileSource implements IProfileSource {
+  _FakeProfileSource(this.skills);
+
+  final List<String> skills;
+
+  @override
+  Future<Profile> getCurrentProfile() async => Profile(
+        id: '1',
+        fullName: 'Carlos Ruidíaz',
+        academicProgram: AppCatalogs.programSystems,
+        semester: 8,
+        skills: skills,
+      );
+}
+
 /// Monta la cartelera con las fuentes locales de verdad, no con dobles: lo que
 /// se quiere comprobar es justamente que las dos pestanias muestran listas
 /// distintas sobre los mismos seis proyectos de prueba.
-Future<ProjectController> _montarCartelera(WidgetTester tester) async {
+Future<ProjectController> _montarCartelera(
+  WidgetTester tester, {
+  List<String>? skillsDelPerfil,
+}) async {
   Get.testMode = true;
   await Get.deleteAll(force: true);
 
@@ -29,7 +51,11 @@ Future<ProjectController> _montarCartelera(WidgetTester tester) async {
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
 
-  Get.put<IProfileSource>(LocalProfileSource());
+  Get.put<IProfileSource>(
+    skillsDelPerfil == null
+        ? LocalProfileSource()
+        : _FakeProfileSource(skillsDelPerfil),
+  );
   Get.put<IProfileRepository>(ProfileRepository(Get.find()));
   Get.put(ProfileController(Get.find()));
   Get.put<IProjectSource>(LocalProjectSource());
@@ -79,53 +105,41 @@ void main() {
       expect(find.text('Plataforma de tutorías entre pares'), findsNothing);
     });
 
-    testWidgets('3 · buscar por titulo filtra en las dos pestanias',
+    testWidgets('6 · "Para tus habilidades" no tiene buscador ni boton de '
+        'filtros, y si la linea de criterio', (tester) async {
+      await _montarCartelera(tester);
+
+      expect(find.byType(TextField), findsNothing);
+      expect(find.widgetWithText(OutlinedButton, 'Filtros'), findsNothing);
+      expect(
+        find.textContaining('Proyectos que buscan:'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('8 · "Explorar proyectos" tiene el buscador y el boton Filtros',
         (tester) async {
       await _montarCartelera(tester);
+      await _irAExplorar(tester);
+
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text('Buscar proyectos...'), findsOneWidget);
+      expect(find.widgetWithText(OutlinedButton, 'Filtros'), findsOneWidget);
+    });
+
+    testWidgets('la busqueda por titulo filtra la lista de explorar',
+        (tester) async {
+      await _montarCartelera(tester);
+      await _irAExplorar(tester);
 
       await tester.enterText(find.byType(TextField).first, 'movilidad');
       await tester.pumpAndSettle();
-      expect(_tarjetas(), 1);
-      expect(find.text('App de movilidad sostenible'), findsOneWidget);
 
-      await _irAExplorar(tester);
-      // El filtro es del controlador, asi que la otra pestania ya lo tiene
-      // puesto sin que nadie lo vuelva a escribir.
       expect(_tarjetas(), 1);
       expect(find.text('App de movilidad sostenible'), findsOneWidget);
     });
 
-    testWidgets('4 · filtrar por etapa deja solo esa, y "Todas" las devuelve',
-        (tester) async {
-      await _montarCartelera(tester);
-      await _irAExplorar(tester);
-      expect(_tarjetas(), 6);
-
-      await tester.tap(find.text('Idea').first);
-      await tester.pumpAndSettle();
-      expect(_tarjetas(), 1);
-      expect(find.text('Plataforma de tutorías entre pares'), findsOneWidget);
-
-      await tester.tap(find.text('Todas').first);
-      await tester.pumpAndSettle();
-      expect(_tarjetas(), 6);
-    });
-
-    testWidgets('5 · "Solo abiertos" esconde el lleno y el cerrado',
-        (tester) async {
-      await _montarCartelera(tester);
-      await _irAExplorar(tester);
-
-      await tester.tap(find.text('Solo abiertos a postulación').first);
-      await tester.pumpAndSettle();
-
-      // Se caen el '4' (5 de 5, lleno) y el '6' (reclutamiento cerrado).
-      expect(_tarjetas(), 4);
-      expect(find.text('Red comunitaria de reciclaje textil'), findsNothing);
-      expect(find.text('Biblioteca digital accesible'), findsNothing);
-    });
-
-    testWidgets('6 · cuando un filtro no deja nada sale el estado vacio',
+    testWidgets('13 · sin coincidencias sale el estado vacio y se limpia',
         (tester) async {
       await _montarCartelera(tester);
       await _irAExplorar(tester);
@@ -134,32 +148,78 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(_tarjetas(), 0);
-      expect(find.text('Ningún proyecto pasa los filtros'), findsOneWidget);
+      expect(find.text('Ningún proyecto coincide'), findsOneWidget);
+      // La fila de busqueda sigue visible: si no, no habria como deshacerla.
+      expect(find.text('Buscar proyectos...'), findsOneWidget);
 
       await tester.tap(find.widgetWithText(OutlinedButton, 'Limpiar filtros'));
       await tester.pumpAndSettle();
+
+      expect(_tarjetas(), 6);
+      // Limpiar tambien vacia el campo, no solo el estado del controlador.
+      expect(
+        tester.widget<TextField>(find.byType(TextField).first).controller?.text,
+        isEmpty,
+      );
+    });
+
+    testWidgets('14 · el proyecto lleno y el cerrado siguen en la lista',
+        (tester) async {
+      await _montarCartelera(tester);
+      await _irAExplorar(tester);
+
+      // Ya no hay "solo abiertos" que los esconda.
+      expect(_tarjetas(), 6);
+      expect(find.text('Red comunitaria de reciclaje textil'), findsOneWidget);
+      expect(find.text('Biblioteca digital accesible'), findsOneWidget);
+    });
+
+    testWidgets('7 · sin habilidades en el perfil, el vacio lo explica y '
+        'lleva a "Explorar proyectos"', (tester) async {
+      await _montarCartelera(tester, skillsDelPerfil: const []);
+
+      expect(_tarjetas(), 0);
+      expect(
+        find.text('Todavía no tienes habilidades registradas'),
+        findsOneWidget,
+      );
+
+      await tester.tap(
+        find.widgetWithText(OutlinedButton, 'Explorar proyectos'),
+      );
+      await tester.pumpAndSettle();
+
+      // El boton salta de pestania de verdad.
+      expect(find.text('Buscar proyectos...'), findsOneWidget);
       expect(_tarjetas(), 6);
     });
 
-    testWidgets(
-        '6b · el estado vacio de habilidades lleva a "Explorar proyectos"',
-        (tester) async {
-      final controller = await _montarCartelera(tester);
+    testWidgets('7 · con habilidades que ningun proyecto visible pide, el '
+        'vacio lo dice', (tester) async {
+      final controller = await _montarCartelera(
+        tester,
+        skillsDelPerfil: const [AppCatalogs.skillMarketing],
+      );
 
-      // Ningun proyecto en etapa Idea pide una habilidad del perfil.
-      controller.setStageFilter(ProjectStage.idea);
+      // Solo el '4' pide Marketing, y esta en etapa "Formando equipo".
+      expect(_tarjetas(), 1);
+      expect(find.text('Red comunitaria de reciclaje textil'), findsOneWidget);
+
+      // Los filtros puestos en la otra pestania tambien recortan esta: al
+      // dejar solo la etapa Idea, el '4' se cae y no queda ninguno.
+      controller.applyFilters(
+        skills: const [],
+        programs: const [],
+        stages: const [ProjectStage.idea],
+      );
       await tester.pumpAndSettle();
+
+      expect(_tarjetas(), 0);
       expect(find.text('Ningún proyecto pide tus habilidades'), findsOneWidget);
-
-      await tester.tap(find.widgetWithText(OutlinedButton, 'Explorar proyectos'));
-      await tester.pumpAndSettle();
-
-      // Ya en la otra pestania, con el mismo filtro de etapa puesto.
-      expect(find.text('Plataforma de tutorías entre pares'), findsOneWidget);
     });
 
-    testWidgets('7 y 8 · la idea nueva aparece de primera y en las dos si '
-        'pide una habilidad del perfil', (tester) async {
+    testWidgets('la idea nueva aparece de primera y en las dos si pide una '
+        'habilidad del perfil', (tester) async {
       final controller = await _montarCartelera(tester);
       await _irAExplorar(tester);
       expect(_tarjetas(), 6);

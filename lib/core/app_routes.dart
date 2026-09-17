@@ -5,6 +5,7 @@ import '../features/management/ui/views/applicants_page.dart';
 import '../features/project/ui/views/create_idea_page.dart';
 import '../features/project/ui/views/idea_published_page.dart';
 import '../features/project/ui/views/project_detail_page.dart';
+import '../features/project/ui/views/project_filters_page.dart';
 
 /// Las rutas del flujo "crear una idea -> postularse -> aceptar la postulacion".
 ///
@@ -28,6 +29,10 @@ abstract class AppRoutes {
   /// Pantalla 18. Recibe un `Project` por `Get.arguments`.
   static const String applicants = '/applicants';
 
+  /// Los filtros de la cartelera. No recibe argumentos: lee y escribe el
+  /// estado de `ProjectController`.
+  static const String projectFilters = '/project-filters';
+
   static final List<GetPage> pages = [
     GetPage(name: projectDetail, page: () => const ProjectDetailPage()),
     GetPage(name: createIdea, page: () => const CreateIdeaPage()),
@@ -37,5 +42,6 @@ abstract class AppRoutes {
       page: () => const ApplicationStatusPage(),
     ),
     GetPage(name: applicants, page: () => const ApplicantsPage()),
+    GetPage(name: projectFilters, page: () => const ProjectFiltersPage()),
   ];
 }

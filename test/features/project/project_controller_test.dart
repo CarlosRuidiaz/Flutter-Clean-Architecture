@@ -1,3 +1,4 @@
+import 'package:f_clean_template/core/app_catalogs.dart';
 import 'package:f_clean_template/features/profile/domain/models/profile.dart';
 import 'package:f_clean_template/features/profile/domain/repositories/i_profile_repository.dart';
 import 'package:f_clean_template/features/project/domain/models/project.dart';
@@ -102,7 +103,7 @@ class _FakeMutableRepository implements IProjectRepository {
 /// Perfil falso: el controlador necesita las habilidades del estudiante para
 /// la pestania "Para tus habilidades".
 class _FakeProfileRepository implements IProfileRepository {
-  _FakeProfileRepository([this.skills = const ['Dart', 'Diseño UX']]);
+  _FakeProfileRepository([this.skills = const [AppCatalogs.skillUx]]);
 
   final List<String> skills;
 
@@ -185,9 +186,9 @@ void main() {
     });
   });
 
-  group('ProjectController · filtros', () {
-    /// Cuatro proyectos elegidos para que cada filtro deje un subconjunto
-    /// distinto: dos etapas, uno lleno y uno con el reclutamiento cerrado.
+  group('ProjectController · filtros por grupos', () {
+    /// Cuatro proyectos elegidos para que cada grupo deje un subconjunto
+    /// distinto: dos etapas, dos programas, uno lleno y uno cerrado.
     List<Project> catalogo() => [
           Project(
             id: '1',
@@ -195,10 +196,10 @@ void main() {
             problem: 'p',
             description: 'd',
             stage: ProjectStage.research,
-            academicProgram: 'Ingeniería Civil',
+            academicProgram: AppCatalogs.programArchitecture,
             currentMembers: 4,
             maxMembers: 6,
-            skillsWanted: ['Diseño UX'],
+            skillsWanted: const [AppCatalogs.skillUx],
             leaderId: 'u3',
           ),
           Project(
@@ -207,10 +208,10 @@ void main() {
             problem: 'p',
             description: 'd',
             stage: ProjectStage.idea,
-            academicProgram: 'Ingeniería de Sistemas',
+            academicProgram: AppCatalogs.programSystems,
             currentMembers: 2,
             maxMembers: 4,
-            skillsWanted: ['Flutter', 'Backend'],
+            skillsWanted: const [AppCatalogs.skillWeb, AppCatalogs.skillPython],
             leaderId: '1',
           ),
           Project(
@@ -219,10 +220,10 @@ void main() {
             problem: 'p',
             description: 'd',
             stage: ProjectStage.idea,
-            academicProgram: 'Diseño Industrial',
+            academicProgram: AppCatalogs.programIndustrialDesign,
             currentMembers: 5,
-            maxMembers: 5, // lleno: no acepta postulaciones
-            skillsWanted: ['Logística'],
+            maxMembers: 5, // lleno
+            skillsWanted: const [AppCatalogs.skillManagement],
             leaderId: 'u2',
           ),
           Project(
@@ -231,17 +232,17 @@ void main() {
             problem: 'p',
             description: 'd',
             stage: ProjectStage.finished,
-            academicProgram: 'Psicología',
+            academicProgram: AppCatalogs.programPsychology,
             currentMembers: 3,
             maxMembers: 4,
-            skillsWanted: ['Diseño UX'],
+            skillsWanted: const [AppCatalogs.skillUx],
             leaderId: 'u6',
-            recruitmentOpen: false, // cerrado: tampoco acepta
+            recruitmentOpen: false, // cerrado
           ),
         ];
 
     Future<ProjectController> cargado({
-      List<String> skills = const ['Diseño UX'],
+      List<String> skills = const [AppCatalogs.skillUx],
     }) async {
       final controller = ProjectController(
         _FakeMutableRepository(catalogo()),
@@ -256,42 +257,102 @@ void main() {
       final controller = await cargado();
       expect(controller.allVisibleProjects.length, 4);
       expect(controller.hasActiveFilters, isFalse);
+      expect(controller.activeFilterCount, 0);
     });
 
     test('la busqueda por titulo no distingue mayusculas', () async {
       final controller = await cargado();
       controller.setSearchQuery('  TUTORÍAS  ');
 
-      expect(controller.allVisibleProjects.length, 1);
       expect(controller.allVisibleProjects.single.id, '2');
+      // La busqueda tiene su propio campo a la vista: no cuenta como grupo.
+      expect(controller.activeFilterCount, 0);
       expect(controller.hasActiveFilters, isTrue);
     });
 
-    test('el filtro de etapa deja solo los de esa etapa, y null los devuelve',
-        () async {
+    test('marcar dos etapas muestra los proyectos de las dos', () async {
       final controller = await cargado();
-      controller.setStageFilter(ProjectStage.idea);
-      expect(controller.allVisibleProjects.map((p) => p.id), ['2', '3']);
+      controller.applyFilters(
+        skills: const [],
+        programs: const [],
+        stages: const [ProjectStage.idea, ProjectStage.finished],
+      );
 
-      controller.setStageFilter(null);
-      expect(controller.allVisibleProjects.length, 4);
+      // Dentro de un grupo los valores se suman.
+      expect(controller.allVisibleProjects.map((p) => p.id), ['2', '3', '4']);
     });
 
-    test('onlyOpen esconde el lleno y el de reclutamiento cerrado', () async {
+    test('habilidad y programa a la vez se cruzan', () async {
       final controller = await cargado();
-      controller.toggleOnlyOpen();
+      controller.applyFilters(
+        skills: const [AppCatalogs.skillUx],
+        programs: const [AppCatalogs.programPsychology],
+        stages: const [],
+      );
 
-      expect(controller.allVisibleProjects.map((p) => p.id), ['1', '2']);
+      // El '1' pide Diseño UX pero es de Arquitectura: entre grupos se cruza,
+      // no se suma.
+      expect(controller.allVisibleProjects.map((p) => p.id), ['4']);
+      expect(controller.activeFilterCount, 2);
     });
 
-    test('projectsForMySkills cruza los filtros con las habilidades del perfil',
-        () async {
-      final controller = await cargado(skills: ['diseño ux']);
+    test('activeFilterCount cuenta grupos, no chips', () async {
+      final controller = await cargado();
+      controller.applyFilters(
+        skills: const [
+          AppCatalogs.skillUx,
+          AppCatalogs.skillWeb,
+          AppCatalogs.skillPython,
+        ],
+        programs: const [],
+        stages: const [],
+      );
 
-      // El 1 y el 4 piden "Diseño UX"; el 4 se cae al exigir abiertos.
+      expect(controller.skillFilters.length, 3);
+      expect(controller.activeFilterCount, 1);
+    });
+
+    test('un grupo vacio no filtra nada', () async {
+      final controller = await cargado();
+      controller.applyFilters(
+        skills: const [],
+        programs: const [AppCatalogs.programSystems],
+        stages: const [],
+      );
+
+      expect(controller.allVisibleProjects.map((p) => p.id), ['2']);
+    });
+
+    test('el proyecto lleno y el cerrado siguen en la lista', () async {
+      // onlyOpen desaparecio: nada esconde un proyecto por estar lleno o
+      // cerrado, y es su tarjeta la que lo dice.
+      final controller = await cargado();
+
+      expect(controller.allVisibleProjects.map((p) => p.id), [
+        '1',
+        '2',
+        '3',
+        '4',
+      ]);
+      expect(
+        controller.allVisibleProjects
+            .where((p) => !p.acceptsApplications)
+            .map((p) => p.id),
+        ['3', '4'],
+      );
+    });
+
+    test('projectsForMySkills cruza los filtros con las del perfil', () async {
+      final controller = await cargado(skills: const ['diseño ux']);
+
       expect(controller.projectsForMySkills.map((p) => p.id), ['1', '4']);
-      controller.toggleOnlyOpen();
-      expect(controller.projectsForMySkills.map((p) => p.id), ['1']);
+
+      controller.applyFilters(
+        skills: const [],
+        programs: const [],
+        stages: const [ProjectStage.finished],
+      );
+      expect(controller.projectsForMySkills.map((p) => p.id), ['4']);
     });
 
     test('sin habilidades en el perfil, la pestania de habilidades va vacia',
@@ -303,23 +364,49 @@ void main() {
       expect(controller.allVisibleProjects.length, 4);
     });
 
-    test('clearFilters devuelve la cartelera completa', () async {
+    test('clearFilters deja la lista completa', () async {
       final controller = await cargado();
       controller.setSearchQuery('biblioteca');
-      controller.setStageFilter(ProjectStage.finished);
-      controller.toggleOnlyOpen();
+      controller.applyFilters(
+        skills: const [AppCatalogs.skillManagement],
+        programs: const [AppCatalogs.programSystems],
+        stages: const [ProjectStage.idea],
+      );
       expect(controller.allVisibleProjects, isEmpty);
+      expect(controller.activeFilterCount, 3);
 
       controller.clearFilters();
 
       expect(controller.hasActiveFilters, isFalse);
+      expect(controller.activeFilterCount, 0);
+      expect(controller.searchQuery.value, isEmpty);
       expect(controller.allVisibleProjects.length, 4);
     });
 
-    test('un proyecto creado entra en las listas derivadas sin recalcular nada',
-        () async {
+    test('applyFilters copia la seleccion, no la comparte', () async {
+      // La pantalla de filtros edita su propia lista mientras esta abierta.
+      // Si el controlador guardara la misma referencia, cada toque se
+      // aplicaria al instante y "Aplicar" no significaria nada.
       final controller = await cargado();
-      controller.setStageFilter(ProjectStage.idea);
+      final seleccion = <ProjectStage>[ProjectStage.idea];
+
+      controller.applyFilters(
+        skills: const [],
+        programs: const [],
+        stages: seleccion,
+      );
+      seleccion.add(ProjectStage.finished);
+
+      expect(controller.stageFilters, [ProjectStage.idea]);
+    });
+
+    test('un proyecto creado entra en las listas derivadas', () async {
+      final controller = await cargado();
+      controller.applyFilters(
+        skills: const [],
+        programs: const [],
+        stages: const [ProjectStage.idea],
+      );
       final antes = controller.allVisibleProjects.length;
 
       await controller.createProject(
@@ -328,10 +415,10 @@ void main() {
           problem: 'p',
           description: 'd',
           stage: ProjectStage.idea,
-          academicProgram: 'Ingeniería Ambiental',
+          academicProgram: AppCatalogs.programSystems,
           currentMembers: 1,
           maxMembers: 5,
-          skillsWanted: const ['Diseño UX'],
+          skillsWanted: const [AppCatalogs.skillUx],
           leaderId: '1',
         ),
       );
