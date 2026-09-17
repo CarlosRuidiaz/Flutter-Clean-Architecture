@@ -223,8 +223,18 @@ void main() {
       expect(_tarjetas(), 6);
     });
 
-    testWidgets('7 · con habilidades que ningun proyecto visible pide, el '
-        'vacio lo dice', (tester) async {
+    testWidgets('7 · con habilidades que ningun proyecto pide, el vacio lo dice',
+        (tester) async {
+      // Ninguna de las siete del catalogo sirve: todas las pide algun proyecto
+      // sembrado. Hace falta una de fuera para llegar a esta rama de la vista.
+      await _montarCartelera(tester, skillsDelPerfil: const ['Soldadura']);
+
+      expect(_tarjetas(), 0);
+      expect(find.text('Ningún proyecto pide tus habilidades'), findsOneWidget);
+    });
+
+    testWidgets('los filtros de explorar no tocan la pestania de habilidades',
+        (tester) async {
       final controller = await _montarCartelera(
         tester,
         skillsDelPerfil: const [AppCatalogs.skillMarketing],
@@ -234,8 +244,8 @@ void main() {
       expect(_tarjetas(), 1);
       expect(find.text('Red comunitaria de reciclaje textil'), findsOneWidget);
 
-      // Los filtros puestos en la otra pestania tambien recortan esta: al
-      // dejar solo la etapa Idea, el '4' se cae y no queda ninguno.
+      // Un filtro que deja fuera al '4' vacia "Explorar" pero no esta pestania:
+      // aqui no hay ningun control que lo explique ni que lo deshaga.
       controller.applyFilters(
         skills: const [],
         programs: const [],
@@ -243,8 +253,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(_tarjetas(), 0);
-      expect(find.text('Ningún proyecto pide tus habilidades'), findsOneWidget);
+      expect(_tarjetas(), 1);
+      expect(find.text('Red comunitaria de reciclaje textil'), findsOneWidget);
+
+      await _irAExplorar(tester);
+      expect(find.text('Red comunitaria de reciclaje textil'), findsNothing);
     });
 
     testWidgets('la idea nueva aparece de primera y en las dos si pide una '

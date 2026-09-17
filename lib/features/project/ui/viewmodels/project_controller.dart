@@ -40,7 +40,8 @@ class ProjectController extends GetxController with UiLoggy {
   /// Las habilidades del perfil en sesion, o vacia mientras no haya cargado.
   List<String> get mySkills => _profile.value?.skills ?? const [];
 
-  /// Los proyectos que pasan la busqueda y los tres grupos.
+  /// Los proyectos que pasan la busqueda y los tres grupos de "Explorar
+  /// proyectos".
   ///
   /// Se calcula, no se almacena: derivarlo evita que se quede desincronizado
   /// cuando se crea un proyecto nuevo o cambia un filtro.
@@ -71,12 +72,19 @@ class ProjectController extends GetxController with UiLoggy {
     }).toList();
   }
 
-  /// Pestania "Para tus habilidades": los filtros y ademas la coincidencia con
-  /// el perfil, que la responde la entidad.
+  /// Pestania "Para tus habilidades": los proyectos que piden alguna habilidad
+  /// del perfil, y nada mas.
+  ///
+  /// Parte de la lista completa y no de [visibleProjects] a proposito. Su
+  /// criterio es el perfil, y ese es el unico que tiene. La busqueda y los tres
+  /// grupos son controles de "Explorar proyectos" y viven en su fila: recortar
+  /// esta pestania con algo que aqui no se ve ni se puede deshacer se lee como
+  /// un error de la app.
   List<Project> get projectsForMySkills =>
-      visibleProjects.where((p) => p.matchesAnySkill(mySkills)).toList();
+      _projects.where((p) => p.matchesAnySkill(mySkills)).toList();
 
-  /// Pestania "Explorar proyectos": los filtros y nada mas.
+  /// Pestania "Explorar proyectos": todos, recortados por lo que se haya
+  /// elegido.
   List<Project> get allVisibleProjects => visibleProjects;
 
   /// Cuantos GRUPOS de filtro tienen algo marcado. Es el numero que sale en el

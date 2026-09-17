@@ -342,17 +342,30 @@ void main() {
       );
     });
 
-    test('projectsForMySkills cruza los filtros con las del perfil', () async {
+    test('projectsForMySkills no se recorta con los filtros de explorar',
+        () async {
       final controller = await cargado(skills: const ['diseño ux']);
 
       expect(controller.projectsForMySkills.map((p) => p.id), ['1', '4']);
 
+      // Los filtros son controles de "Explorar proyectos" y solo recortan esa
+      // lista. La de habilidades tiene su propio criterio, el perfil.
       controller.applyFilters(
-        skills: const [],
-        programs: const [],
+        skills: const [AppCatalogs.skillManagement],
+        programs: const [AppCatalogs.programSystems],
         stages: const [ProjectStage.finished],
       );
-      expect(controller.projectsForMySkills.map((p) => p.id), ['4']);
+
+      expect(controller.projectsForMySkills.map((p) => p.id), ['1', '4']);
+      expect(controller.allVisibleProjects, isEmpty);
+    });
+
+    test('la busqueda tampoco recorta la pestania de habilidades', () async {
+      final controller = await cargado(skills: const ['diseño ux']);
+      controller.setSearchQuery('zzzz');
+
+      expect(controller.allVisibleProjects, isEmpty);
+      expect(controller.projectsForMySkills.map((p) => p.id), ['1', '4']);
     });
 
     test('sin habilidades en el perfil, la pestania de habilidades va vacia',
