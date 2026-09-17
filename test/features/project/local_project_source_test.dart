@@ -133,5 +133,26 @@ void main() {
       expect(p2.isFull, isTrue);
       expect(p2.acceptsApplications, isFalse);
     });
+    test('el realineado de vocabulario no movio ids, lider ni cupos', () async {
+      // El documento prohibia tocarlos: las postulaciones apuntan a estos id y
+      // la gestion de postulantes se prueba sobre el '2', cuyo lider es el
+      // perfil actual. Si alguien los cambia al retocar el catalogo, esto lo
+      // caza antes que la pantalla.
+      final projects = await source.getProjects();
+
+      expect(projects.map((p) => p.id), ['1', '2', '3', '4', '5', '6']);
+
+      final p2 = projects.firstWhere((p) => p.id == '2');
+      expect(p2.leaderId, '1');
+      expect(p2.currentMembers, 2);
+      expect(p2.maxMembers, 4);
+
+      final p4 = projects.firstWhere((p) => p.id == '4');
+      expect(p4.isFull, isTrue, reason: 'el 4 es el equipo lleno de prueba');
+
+      final p6 = projects.firstWhere((p) => p.id == '6');
+      expect(p6.recruitmentOpen, isFalse);
+      expect(p6.isFull, isFalse, reason: 'el 6 esta cerrado pero no lleno');
+    });
   });
 }
