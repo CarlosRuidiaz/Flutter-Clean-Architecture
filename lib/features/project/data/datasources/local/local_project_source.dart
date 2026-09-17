@@ -1,3 +1,4 @@
+import '../../../../../core/app_catalogs.dart';
 import '../../../domain/models/project.dart';
 import '../i_project_source.dart';
 
@@ -13,11 +14,11 @@ class LocalProjectSource implements IProjectSource {
           'Una app que arma rutas compartidas entre estudiantes que salen del '
           'mismo sector a la misma hora, con estimacion de huella de carbono.',
       stage: ProjectStage.research,
-      academicProgram: 'Ingeniería Civil',
+      academicProgram: AppCatalogs.programArchitecture,
       currentMembers: 4,
       maxMembers: 6,
-      skillsWanted: ['Análisis de datos', 'Diseño UX'],
-      tags: ['Movilidad', 'Sostenibilidad'],
+      skillsWanted: [AppCatalogs.skillData, AppCatalogs.skillUx],
+      tags: [AppCatalogs.tagSustainability, AppCatalogs.tagTechnology],
       leaderId: 'u3',
     ),
     Project(
@@ -30,11 +31,11 @@ class LocalProjectSource implements IProjectSource {
           'Un espacio donde un estudiante de semestres avanzados ofrece tutorías '
           'en una materia y quien la necesita reserva un horario.',
       stage: ProjectStage.idea,
-      academicProgram: 'Ingeniería de Sistemas',
+      academicProgram: AppCatalogs.programSystems,
       currentMembers: 2,
       maxMembers: 4,
-      skillsWanted: ['Flutter', 'Backend'],
-      tags: ['Educación'],
+      skillsWanted: [AppCatalogs.skillWeb, AppCatalogs.skillManagement],
+      tags: [AppCatalogs.tagEducation, AppCatalogs.tagTutoring],
       leaderId: '1', // el perfil actual: por eso puede abrir la pantalla 18
     ),
     Project(
@@ -47,11 +48,11 @@ class LocalProjectSource implements IProjectSource {
           'Un sensor de bajo costo que mide pH y turbidez cada hora y publica la '
           'lectura en un tablero que cualquiera puede consultar.',
       stage: ProjectStage.prototype,
-      academicProgram: 'Ingeniería Electrónica',
+      academicProgram: AppCatalogs.programSystems,
       currentMembers: 3,
       maxMembers: 5,
-      skillsWanted: ['Hardware', 'IoT', 'C++'],
-      tags: ['IoT', 'Salud pública'],
+      skillsWanted: [AppCatalogs.skillPython, AppCatalogs.skillData],
+      tags: [AppCatalogs.tagTechnology, AppCatalogs.tagSocial],
       leaderId: 'u5',
     ),
     Project(
@@ -64,11 +65,11 @@ class LocalProjectSource implements IProjectSource {
           'Una red de puntos de acopio en el campus con un inventario compartido '
           'y jornadas de intercambio cada mes.',
       stage: ProjectStage.teamFormation,
-      academicProgram: 'Diseño Industrial',
+      academicProgram: AppCatalogs.programIndustrialDesign,
       currentMembers: 5,
       maxMembers: 5, // equipo lleno: isFull y acceptsApplications en false
-      skillsWanted: ['Logística', 'Marketing'],
-      tags: ['Sostenibilidad', 'Comunidad'],
+      skillsWanted: [AppCatalogs.skillManagement, AppCatalogs.skillMarketing],
+      tags: [AppCatalogs.tagSustainability, AppCatalogs.tagCommunity],
       leaderId: 'u2',
     ),
     Project(
@@ -81,11 +82,11 @@ class LocalProjectSource implements IProjectSource {
           'Una alerta que llega al celular con el tipo de emergencia, el punto de '
           'encuentro y la ruta de evacuación más cercana.',
       stage: ProjectStage.testing,
-      academicProgram: 'Enfermería',
+      academicProgram: AppCatalogs.programBusiness,
       currentMembers: 2,
       maxMembers: 4,
       skillsWanted: [], // sin habilidades pedidas: la tarjeta no pinta la linea
-      tags: ['Seguridad'],
+      tags: [AppCatalogs.tagSocial],
       leaderId: 'u4',
     ),
     Project(
@@ -98,11 +99,11 @@ class LocalProjectSource implements IProjectSource {
           'Un catálogo con los textos convertidos a formato accesible, navegable '
           'por voz y con contraste ajustable.',
       stage: ProjectStage.finished,
-      academicProgram: 'Psicología',
+      academicProgram: AppCatalogs.programPsychology,
       currentMembers: 3,
       maxMembers: 4,
-      skillsWanted: ['Accesibilidad'],
-      tags: ['Accesibilidad', 'Educación'],
+      skillsWanted: [AppCatalogs.skillUx, AppCatalogs.skillResearch],
+      tags: [AppCatalogs.tagEducation, AppCatalogs.tagSocial],
       leaderId: 'u6',
       recruitmentOpen: false, // proyecto terminado: ya no recibe postulaciones
     ),

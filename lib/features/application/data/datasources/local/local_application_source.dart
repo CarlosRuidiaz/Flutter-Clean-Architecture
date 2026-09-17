@@ -1,3 +1,4 @@
+import '../../../../../core/app_catalogs.dart';
 import '../../../domain/models/application.dart';
 import '../i_application_source.dart';
 
@@ -23,9 +24,9 @@ class LocalApplicationSource implements IApplicationSource {
       projectId: '2',
       applicantId: 'u7',
       applicantName: 'Mariana Pérez',
-      applicantProgram: 'Diseño Industrial',
+      applicantProgram: AppCatalogs.programIndustrialDesign,
       applicantSemester: 7,
-      skillsOffered: ['Diseño UX', 'Investigación'],
+      skillsOffered: const [AppCatalogs.skillUx, AppCatalogs.skillResearch],
       status: ApplicationStatus.pending,
     ),
     Application(
@@ -33,9 +34,9 @@ class LocalApplicationSource implements IApplicationSource {
       projectId: '2',
       applicantId: 'u8',
       applicantName: 'Felipe Gómez',
-      applicantProgram: 'Ingeniería de Sistemas',
+      applicantProgram: AppCatalogs.programSystems,
       applicantSemester: 5,
-      skillsOffered: ['Flutter', 'Backend'],
+      skillsOffered: const [AppCatalogs.skillWeb, AppCatalogs.skillManagement],
       status: ApplicationStatus.pending,
     ),
     Application(
@@ -43,9 +44,9 @@ class LocalApplicationSource implements IApplicationSource {
       projectId: '1',
       applicantId: '1',
       applicantName: 'Carlos Ruidíaz',
-      applicantProgram: 'Ingeniería de Sistemas',
+      applicantProgram: AppCatalogs.programSystems,
       applicantSemester: 8,
-      skillsOffered: ['Diseño UX'],
+      skillsOffered: const [AppCatalogs.skillUx],
       status: ApplicationStatus.pending,
     ),
     Application(
@@ -53,9 +54,9 @@ class LocalApplicationSource implements IApplicationSource {
       projectId: '3',
       applicantId: '1',
       applicantName: 'Carlos Ruidíaz',
-      applicantProgram: 'Ingeniería de Sistemas',
+      applicantProgram: AppCatalogs.programSystems,
       applicantSemester: 8,
-      skillsOffered: ['Investigación'],
+      skillsOffered: const [AppCatalogs.skillResearch],
       status: ApplicationStatus.accepted,
     ),
   ];

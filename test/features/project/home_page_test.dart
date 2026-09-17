@@ -58,13 +58,13 @@ void main() {
         (tester) async {
       await _montarCartelera(tester);
 
-      // El perfil de prueba tiene Investigación y Diseño UX: solo el proyecto
-      // '1' pide alguna de las dos.
+      // El perfil de prueba tiene Investigación y Diseño UX: los proyectos
+      // '1' y '6' piden alguna de las dos.
       final int enHabilidades = _tarjetas();
       await _irAExplorar(tester);
       final int enExplorar = _tarjetas();
 
-      expect(enHabilidades, 1);
+      expect(enHabilidades, 2);
       expect(enExplorar, 6);
       expect(enHabilidades, isNot(enExplorar));
     });
@@ -74,8 +74,9 @@ void main() {
       await _montarCartelera(tester);
 
       expect(find.text('App de movilidad sostenible'), findsOneWidget);
+      expect(find.text('Biblioteca digital accesible'), findsOneWidget);
+      // El '2' pide Desarrollo web y Gestión: ninguna es del perfil.
       expect(find.text('Plataforma de tutorías entre pares'), findsNothing);
-      expect(find.text('Biblioteca digital accesible'), findsNothing);
     });
 
     testWidgets('3 · buscar por titulo filtra en las dos pestanias',
@@ -145,7 +146,8 @@ void main() {
         (tester) async {
       final controller = await _montarCartelera(tester);
 
-      controller.setStageFilter(ProjectStage.finished);
+      // Ningun proyecto en etapa Idea pide una habilidad del perfil.
+      controller.setStageFilter(ProjectStage.idea);
       await tester.pumpAndSettle();
       expect(find.text('Ningún proyecto pide tus habilidades'), findsOneWidget);
 
@@ -153,7 +155,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Ya en la otra pestania, con el mismo filtro de etapa puesto.
-      expect(find.text('Biblioteca digital accesible'), findsOneWidget);
+      expect(find.text('Plataforma de tutorías entre pares'), findsOneWidget);
     });
 
     testWidgets('7 y 8 · la idea nueva aparece de primera y en las dos si '
@@ -187,7 +189,7 @@ void main() {
       // 8: pide Diseño UX, que el perfil tiene, asi que tambien esta en la otra.
       await tester.tap(find.text('Para tus habilidades').first);
       await tester.pumpAndSettle();
-      expect(_tarjetas(), 2);
+      expect(_tarjetas(), 3);
       expect(find.text('Huerta urbana en la terraza'), findsOneWidget);
     });
   });

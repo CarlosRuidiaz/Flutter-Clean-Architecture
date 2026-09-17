@@ -1,3 +1,4 @@
+import 'package:f_clean_template/core/app_catalogs.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:f_clean_template/features/profile/data/datasources/local/local_profile_source.dart';
 import 'package:f_clean_template/features/profile/domain/models/profile.dart';
@@ -13,7 +14,7 @@ void main() {
     test('devuelve un perfil con nombre y programa', () async {
       final profile = await source.getCurrentProfile();
       expect(profile.fullName, 'Carlos Ruidíaz');
-      expect(profile.academicProgram, 'Ingeniería de Sistemas');
+      expect(profile.academicProgram, AppCatalogs.programSystems);
     });
 
     test('devuelve al menos una habilidad', () async {

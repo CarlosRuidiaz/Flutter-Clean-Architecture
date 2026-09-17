@@ -1,3 +1,4 @@
+import 'package:f_clean_template/core/app_catalogs.dart';
 import 'package:f_clean_template/core/app_routes.dart';
 import 'package:f_clean_template/core/app_theme.dart';
 import 'package:f_clean_template/features/application/data/datasources/i_application_source.dart';
@@ -76,10 +77,10 @@ Future<String> _proyectoPropioSinPostulantes() async {
       problem: 'Un problema',
       description: 'Una descripcion',
       stage: ProjectStage.idea,
-      academicProgram: 'Ingeniería de Sistemas',
+      academicProgram: AppCatalogs.programSystems,
       currentMembers: 1,
       maxMembers: 4,
-      skillsWanted: const ['Flutter'],
+      skillsWanted: const [AppCatalogs.skillWeb],
       leaderId: '1',
     ),
   );
@@ -98,11 +99,11 @@ void main() {
       expect(find.text('Mariana Pérez'), findsOneWidget);
       expect(find.text('Diseño Industrial · 7.º semestre'), findsOneWidget);
       expect(find.text('Felipe Gómez'), findsOneWidget);
-      expect(find.text('Ingeniería de Sistemas · 5.º semestre'), findsOneWidget);
+      expect(find.text('Ing. de Sistemas · 5.º semestre'), findsOneWidget);
       // Las habilidades ofrecidas, cada una en su pildora.
       expect(find.text('Diseño UX'), findsOneWidget);
       expect(find.text('Investigación'), findsOneWidget);
-      expect(find.text('Flutter'), findsOneWidget);
+      expect(find.text(AppCatalogs.skillWeb), findsOneWidget);
       // Iniciales, no foto.
       expect(find.text('MP'), findsOneWidget);
       expect(find.text('FG'), findsOneWidget);
