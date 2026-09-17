@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loggy/loggy.dart';
 
+import '../../../../core/app_catalogs.dart';
 import '../../../../core/app_routes.dart';
 import '../../../../core/app_tokens.dart';
 import '../../../../core/widgets/paper_card.dart';
@@ -22,8 +23,6 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
   final _titleController = TextEditingController();
   final _problemController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _skillController = TextEditingController();
-  final _tagController = TextEditingController();
 
   ProjectStage? _selectedStage;
   int _maxMembers = 2; // minimum is 2 since leader is 1
@@ -46,8 +45,6 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
     _titleController.dispose();
     _problemController.dispose();
     _descriptionController.dispose();
-    _skillController.dispose();
-    _tagController.dispose();
     super.dispose();
   }
 
@@ -108,28 +105,16 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
     Get.offAndToNamed(AppRoutes.ideaPublished, arguments: createdProject);
   }
 
-  void _addSkill(String skill) {
-    final s = skill.trim();
-    if (s.isNotEmpty && !_skillsWanted.contains(s)) {
-      setState(() => _skillsWanted.add(s));
-    }
-    _skillController.clear();
-  }
-
-  void _removeSkill(String skill) {
-    setState(() => _skillsWanted.remove(skill));
-  }
-
-  void _addTag(String tag) {
-    final t = tag.trim();
-    if (t.isNotEmpty && !_tags.contains(t)) {
-      setState(() => _tags.add(t));
-    }
-    _tagController.clear();
-  }
-
-  void _removeTag(String tag) {
-    setState(() => _tags.remove(tag));
+  /// Marcar y desmarcar sobre la misma lista. Con un catalogo cerrado no hay
+  /// nada que validar: el valor solo puede salir de [AppCatalogs].
+  void _toggle(List<String> seleccion, String valor) {
+    setState(() {
+      if (seleccion.contains(valor)) {
+        seleccion.remove(valor);
+      } else {
+        seleccion.add(valor);
+      }
+    });
   }
 
   @override
@@ -137,7 +122,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
-        title: const Text('Crear idea'),
+        title: const Text('Nueva idea de proyecto'),
         backgroundColor: AppColors.paper,
       ),
       body: SingleChildScrollView(
@@ -154,17 +139,20 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
             _buildTextField(
               controller: _titleController,
               label: 'Título del proyecto',
+              hint: 'Ej: App de movilidad sostenible para el campus',
             ),
             const SizedBox(height: AppTokens.gapM),
             _buildTextField(
               controller: _problemController,
               label: 'Problema a resolver',
+              hint: '¿Qué situación quieres mejorar o resolver?',
               maxLines: 3,
             ),
             const SizedBox(height: AppTokens.gapM),
             _buildTextField(
               controller: _descriptionController,
               label: 'Descripción',
+              hint: 'Cuenta cómo funcionaría y qué ya tienes hecho.',
               maxLines: 4,
             ),
             const SizedBox(height: AppTokens.gapXl),
@@ -266,6 +254,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
+    required String hint,
     int maxLines = 1,
   }) {
     return TextField(
@@ -273,6 +262,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
       maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
+        hintText: hint,
         alignLabelWithHint: maxLines > 1,
         border: OutlineInputBorder(
           borderRadius: AppTokens.borderRadius,
@@ -288,46 +278,57 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
     );
   }
 
-  Widget _buildSkillsInput() {
+  /// Chip pulsable de seleccion. Marcado y sin marcar se distinguen por el
+  /// fondo, no solo por el borde.
+  Widget _selectableChip({
+    required String label,
+    required bool selected,
+    required Color selectedColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Pill(
+        label: label,
+        background: selected ? selectedColor : AppColors.card,
+      ),
+    );
+  }
+
+  Widget _buildChipGroup({
+    required String label,
+    required List<String> options,
+    required List<String> selection,
+    required Color selectedColor,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextField(
-          controller: _skillController,
-          onSubmitted: _addSkill,
-          decoration: InputDecoration(
-            labelText: 'Habilidades buscadas (escribe y presiona Enter)',
-            border: OutlineInputBorder(
-              borderRadius: AppTokens.borderRadius,
-              borderSide: const BorderSide(color: AppColors.ink, width: AppTokens.borderWidth),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: AppTokens.borderRadius,
-              borderSide: const BorderSide(color: AppColors.ink, width: AppTokens.borderWidth),
-            ),
-            filled: true,
-            fillColor: AppColors.card,
-          ),
+        Text(label, style: Theme.of(context).textTheme.bodyLarge),
+        const SizedBox(height: AppTokens.gapS),
+        Wrap(
+          spacing: AppTokens.gapS,
+          runSpacing: AppTokens.gapS,
+          children: [
+            for (final option in options)
+              _selectableChip(
+                label: option,
+                selected: selection.contains(option),
+                selectedColor: selectedColor,
+                onTap: () => _toggle(selection, option),
+              ),
+          ],
         ),
-        if (_skillsWanted.isNotEmpty) ...[
-          const SizedBox(height: AppTokens.gapS),
-          Wrap(
-            spacing: AppTokens.gapXs,
-            runSpacing: AppTokens.gapXs,
-            children: _skillsWanted.map((skill) {
-              return GestureDetector(
-                onTap: () => _removeSkill(skill),
-                child: Pill(
-                  label: '$skill ✕',
-                  background: AppColors.persimmon,
-                ),
-              );
-            }).toList(),
-          ),
-        ],
       ],
     );
   }
+
+  Widget _buildSkillsInput() => _buildChipGroup(
+        label: 'Habilidades requeridas',
+        options: AppCatalogs.skills,
+        selection: _skillsWanted,
+        selectedColor: AppColors.persimmon,
+      );
 
   Widget _buildMembersStepper() {
     return Row(
@@ -372,77 +373,35 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Etapa',
+          'Etapa actual',
           style: Theme.of(context).textTheme.bodyLarge,
         ),
         const SizedBox(height: AppTokens.gapS),
         Wrap(
-          spacing: AppTokens.gapXs,
+          spacing: AppTokens.gapS,
           runSpacing: AppTokens.gapS,
-          children: ProjectStage.values.map((stage) {
-            final isSelected = _selectedStage == stage;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedStage = stage),
-              child: Opacity(
-                opacity: isSelected ? 1.0 : 0.5,
-                child: Container(
-                  decoration: isSelected 
-                    ? BoxDecoration(
-                        border: AppTokens.border(),
-                        borderRadius: BorderRadius.circular(999),
-                      ) 
-                    : null,
-                  padding: isSelected ? const EdgeInsets.all(2) : EdgeInsets.zero,
-                  child: StageChip(stage: stage),
-                ),
+          children: [
+            // Seleccion unica: tocar otra reemplaza la marcada. La marcada se
+            // pinta con el color de su etapa, que lo da StageChip.
+            for (final stage in ProjectStage.values)
+              _selectableChip(
+                label: StageChip.labelOf(stage),
+                selected: _selectedStage == stage,
+                selectedColor: StageChip.colorOf(stage),
+                onTap: () => setState(() => _selectedStage = stage),
               ),
-            );
-          }).toList(),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildTagsInput() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: _tagController,
-          onSubmitted: _addTag,
-          decoration: InputDecoration(
-            labelText: 'Tags (escribe y presiona Enter)',
-            border: OutlineInputBorder(
-              borderRadius: AppTokens.borderRadius,
-              borderSide: const BorderSide(color: AppColors.ink, width: AppTokens.borderWidth),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: AppTokens.borderRadius,
-              borderSide: const BorderSide(color: AppColors.ink, width: AppTokens.borderWidth),
-            ),
-            filled: true,
-            fillColor: AppColors.card,
-          ),
-        ),
-        if (_tags.isNotEmpty) ...[
-          const SizedBox(height: AppTokens.gapS),
-          Wrap(
-            spacing: AppTokens.gapXs,
-            runSpacing: AppTokens.gapXs,
-            children: _tags.map((tag) {
-              return GestureDetector(
-                onTap: () => _removeTag(tag),
-                child: Pill(
-                  label: '$tag ✕',
-                  background: AppColors.petrol,
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ],
-    );
-  }
+  Widget _buildTagsInput() => _buildChipGroup(
+        label: 'Tags del proyecto',
+        options: AppCatalogs.tags,
+        selection: _tags,
+        selectedColor: AppColors.petrol,
+      );
 
   Widget _buildImageDropzone() {
     return Container(
@@ -458,7 +417,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
           const Icon(Icons.cloud_upload_outlined, size: 48, color: AppColors.secondary),
           const SizedBox(height: AppTokens.gapS),
           Text(
-            'Arrastra imágenes aquí o haz clic para subir',
+            'Arrastra imágenes o toca para subir',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.secondary),
             textAlign: TextAlign.center,
           ),
