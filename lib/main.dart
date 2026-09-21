@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loggy/loggy.dart';
+import 'package:roble/roble.dart';
 
 import 'central.dart';
 import 'core/app_routes.dart';
@@ -9,6 +10,7 @@ import 'core/app_theme.dart';
 import 'core/i_local_preferences.dart';
 import 'core/local_preferences_secured.dart';
 import 'core/local_preferences_shared.dart';
+import 'core/roble_config.dart';
 
 import 'features/application/application_dependencies.dart';
 import 'features/auth/auth_dependencies.dart';
@@ -25,6 +27,17 @@ void main() async {
       ? LocalPreferencesShared()
       : LocalPreferencesSecured();
   Get.put<ILocalPreferences>(preferences, permanent: true);
+
+  // Una sola instancia, compartida: cada copia tendria su propia sesion.
+  Get.put<RobleApiDataBase>(
+    RobleApiDataBase(
+      config: RobleApiConfig.fromContract(
+        baseUrl: RobleConfig.baseUrl,
+        contractId: RobleConfig.contractId,
+      ),
+    ),
+    permanent: true,
+  );
 
   registerAuth();
   registerProduct();
