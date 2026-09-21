@@ -14,6 +14,7 @@ Map<String, dynamic> _respuestaDeRoble({Map<String, dynamic>? extra}) => {
             'academicProgram': AppCatalogs.programSystems,
             'semester': 8,
             'skills': [AppCatalogs.skillPython, AppCatalogs.skillUx],
+            'bio': 'Me interesa la movilidad urbana.',
           },
       'createdAt': '2026-09-01T10:00:00.000Z',
       'updatedAt': null,
@@ -37,7 +38,55 @@ void main() {
       expect(profile.academicProgram, AppCatalogs.programSystems);
       expect(profile.semester, 8);
       expect(profile.skills, [AppCatalogs.skillPython, AppCatalogs.skillUx]);
+      expect(profile.bio, 'Me interesa la movilidad urbana.');
       expect(profile.isComplete, isTrue);
+    });
+
+    test('la bio es opcional: sin ella el perfil sigue completo', () {
+      final profile = Profile.fromJson(
+        _respuestaDeRoble(
+          extra: {
+            'academicProgram': AppCatalogs.programSystems,
+            'semester': 8,
+            'skills': [AppCatalogs.skillPython],
+          },
+        ),
+      );
+
+      expect(profile.bio, isNull);
+      expect(profile.isComplete, isTrue);
+    });
+
+    test('una bio vacia o de espacios se lee como que no hay', () {
+      for (final vacia in ['', '   ']) {
+        final profile = Profile.fromJson(
+          _respuestaDeRoble(
+            extra: {
+              'academicProgram': AppCatalogs.programSystems,
+              'semester': 8,
+              'skills': [AppCatalogs.skillPython],
+              'bio': vacia,
+            },
+          ),
+        );
+
+        expect(profile.bio, isNull, reason: 'bio "$vacia" deberia ser null');
+      }
+    });
+
+    test('la bio se guarda sin espacios de sobra', () {
+      final profile = Profile.fromJson(
+        _respuestaDeRoble(
+          extra: {
+            'academicProgram': AppCatalogs.programSystems,
+            'semester': 8,
+            'skills': [AppCatalogs.skillPython],
+            'bio': '  Estudio de noche.  ',
+          },
+        ),
+      );
+
+      expect(profile.bio, 'Estudio de noche.');
     });
 
     test('un extra vacio no revienta: deja el perfil incompleto', () {
@@ -47,6 +96,7 @@ void main() {
       expect(profile.academicProgram, isEmpty);
       expect(profile.semester, 0);
       expect(profile.skills, isEmpty);
+      expect(profile.bio, isNull);
       expect(profile.isComplete, isFalse);
     });
 

@@ -41,6 +41,8 @@ class RobleAuthenticationSource with UiLoggy implements IAuthenticationSource {
           'academicProgram': user.academicProgram,
         if (user.semester != null) 'semester': user.semester,
         if (user.skills != null) 'skills': user.skills,
+        if (user.bio != null && user.bio!.trim().isNotEmpty)
+          'bio': user.bio!.trim(),
       },
       // Activacion directa: no se pide codigo por correo.
       autoLogin: true,

@@ -6,6 +6,7 @@ class Profile {
     required this.academicProgram,
     required this.semester,
     required this.skills,
+    this.bio,
   });
 
   final String? id;
@@ -13,6 +14,9 @@ class Profile {
   final String academicProgram;
   final int semester;
   final List<String> skills;
+
+  /// Presentacion corta. Opcional: no cuenta para [isComplete].
+  final String? bio;
   
   /// Lee el mapa que devuelve `currentUser()` de Roble.
   ///
@@ -33,6 +37,10 @@ class Profile {
           : int.tryParse('${semester ?? ''}') ?? 0,
       skills:
           (extra['skills'] as List?)?.map((s) => '$s').toList() ?? const [],
+      // Vacia y ausente son lo mismo: no hay biografia que mostrar.
+      bio: (extra['bio'] as String?)?.trim().isNotEmpty == true
+          ? (extra['bio'] as String).trim()
+          : null,
     );
   }
 

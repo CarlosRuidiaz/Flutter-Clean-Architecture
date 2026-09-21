@@ -11,6 +11,9 @@ class AuthenticationUser {
   final int? semester;
   final List<String>? skills;
 
+  /// Presentacion corta del estudiante. Opcional: el perfil vale sin ella.
+  final String? bio;
+
   AuthenticationUser({
     this.id,
     required this.email,
@@ -19,6 +22,7 @@ class AuthenticationUser {
     this.academicProgram,
     this.semester,
     this.skills,
+    this.bio,
   });
 
   factory AuthenticationUser.fromJson(Map<String, dynamic> json) {

@@ -94,6 +94,7 @@ class AuthenticationController extends GetxController with UiLoggy {
     required String academicProgram,
     required int semester,
     required List<String> skills,
+    String? bio,
   }) async {
     loggy.debug('AuthenticationController: Sign Up $email');
     error.value = '';
@@ -118,6 +119,7 @@ class AuthenticationController extends GetxController with UiLoggy {
           academicProgram: academicProgram,
           semester: semester,
           skills: skills,
+          bio: bio,
         ),
       );
       if (!created) {
