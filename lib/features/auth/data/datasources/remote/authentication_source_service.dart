@@ -48,7 +48,7 @@ class AuthenticationSourceService
 
     users.add(
       AuthenticationUser(
-        id: DateTime.now().microsecondsSinceEpoch,
+        id: '${DateTime.now().microsecondsSinceEpoch}',
         email: email,
         name: user.name.trim().isEmpty ? email : user.name.trim(),
         password: user.password,
