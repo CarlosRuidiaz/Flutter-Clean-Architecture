@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'data/datasources/i_profile_source.dart';
 import 'package:roble/roble.dart';
 
+import '../auth/domain/repositories/i_auth_repository.dart';
+
 import 'data/datasources/remote/roble_profile_source.dart';
 import 'data/repositories/profile_repository.dart';
 import 'domain/repositories/i_profile_repository.dart';
@@ -15,5 +17,10 @@ void registerProfile() {
   // La instancia de Roble la registro main.dart: aqui solo se recibe.
   Get.put<IProfileSource>(RobleProfileSource(Get.find<RobleApiDataBase>()));
   Get.put<IProfileRepository>(ProfileRepository(Get.find()));
-  Get.lazyPut(() => ProfileController(Get.find()));
+  Get.lazyPut(
+    () => ProfileController(
+      Get.find<IProfileRepository>(),
+      Get.find<IAuthRepository>(),
+    ),
+  );
 }

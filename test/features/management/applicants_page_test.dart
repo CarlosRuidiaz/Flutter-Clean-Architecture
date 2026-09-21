@@ -19,6 +19,8 @@ import 'package:f_clean_template/features/project/domain/models/project.dart';
 import 'package:f_clean_template/features/project/domain/repositories/i_project_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../auth/fake_auth_repository.dart';
 import 'package:get/get.dart';
 
 /// Monta la pantalla 18 sobre las fuentes locales. El proyecto '2' es el unico
@@ -37,7 +39,7 @@ Future<ManagementController> _montarGestion(
 
   Get.put<IProfileSource>(LocalProfileSource());
   Get.put<IProfileRepository>(ProfileRepository(Get.find()));
-  Get.put(ProfileController(Get.find()));
+  Get.put(ProfileController(Get.find(), FakeAuthRepository()));
   Get.put<IProjectSource>(LocalProjectSource());
   Get.put<IProjectRepository>(ProjectRepository(Get.find()));
   Get.put<IApplicationSource>(LocalApplicationSource());
@@ -105,7 +107,7 @@ void main() {
       // de la ruta y taparia el fallo.
       Get.put<IProfileSource>(LocalProfileSource());
       Get.put<IProfileRepository>(ProfileRepository(Get.find()));
-      Get.put(ProfileController(Get.find()));
+      Get.put(ProfileController(Get.find(), FakeAuthRepository()));
       Get.put<IProjectSource>(LocalProjectSource());
       Get.put<IProjectRepository>(ProjectRepository(Get.find()));
       Get.put<IApplicationSource>(LocalApplicationSource());

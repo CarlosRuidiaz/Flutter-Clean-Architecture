@@ -6,6 +6,8 @@ import 'package:f_clean_template/features/project/domain/repositories/i_project_
 import 'package:f_clean_template/features/project/ui/viewmodels/project_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../auth/fake_auth_repository.dart';
+
 class _FakeRepository implements IProjectRepository {
   @override
   Future<List<Project>> getProjects() async => [
@@ -132,7 +134,7 @@ Project _ideaNueva() => Project(
 void main() {
   group('ProjectController', () {
     test('el controlador expone lo que le da el repositorio', () async {
-      final controller = ProjectController(_FakeRepository(), _FakeProfileRepository());
+      final controller = ProjectController(_FakeRepository(), _FakeProfileRepository(), FakeAuthRepository());
       await controller.getProjects();
       expect(controller.projects.length, 2);
       expect(controller.isLoading.value, isFalse);
@@ -140,7 +142,7 @@ void main() {
 
     test('createProject deja el proyecto nuevo en la lista del controlador',
         () async {
-      final controller = ProjectController(_FakeMutableRepository([]), _FakeProfileRepository());
+      final controller = ProjectController(_FakeMutableRepository([]), _FakeProfileRepository(), FakeAuthRepository());
       await controller.getProjects();
       expect(controller.projects, isEmpty);
 
@@ -175,6 +177,7 @@ void main() {
           ),
         ]),
         _FakeProfileRepository(),
+        FakeAuthRepository(),
       );
       await controller.getProjects();
 
@@ -247,6 +250,7 @@ void main() {
       final controller = ProjectController(
         _FakeMutableRepository(catalogo()),
         _FakeProfileRepository(skills),
+        FakeAuthRepository(),
       );
       await controller.getProjects();
       await controller.getCurrentProfile();

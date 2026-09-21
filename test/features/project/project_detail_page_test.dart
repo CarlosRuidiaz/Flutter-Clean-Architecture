@@ -18,6 +18,8 @@ import 'package:f_clean_template/features/project/domain/repositories/i_project_
 import 'package:f_clean_template/features/project/ui/viewmodels/project_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../auth/fake_auth_repository.dart';
 import 'package:get/get.dart';
 
 Future<void> _abrirDetalle(WidgetTester tester, String projectId) async {
@@ -30,10 +32,10 @@ Future<void> _abrirDetalle(WidgetTester tester, String projectId) async {
 
   Get.put<IProfileSource>(LocalProfileSource());
   Get.put<IProfileRepository>(ProfileRepository(Get.find()));
-  Get.put(ProfileController(Get.find()));
+  Get.put(ProfileController(Get.find(), FakeAuthRepository()));
   Get.put<IProjectSource>(LocalProjectSource());
   Get.put<IProjectRepository>(ProjectRepository(Get.find()));
-  Get.put(ProjectController(Get.find(), Get.find()));
+  Get.put(ProjectController(Get.find(), Get.find(), FakeAuthRepository()));
   Get.put<IApplicationSource>(LocalApplicationSource());
   Get.put<IApplicationRepository>(ApplicationRepository(Get.find()));
   Get.put(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:f_clean_template/features/auth/domain/models/authentication_user.dart';
 import 'package:f_clean_template/features/auth/domain/repositories/i_auth_repository.dart';
 import 'package:f_clean_template/features/auth/ui/viewmodels/authentication_controller.dart';
@@ -7,6 +9,11 @@ import 'package:flutter_test/flutter_test.dart';
 /// llegar a el: la validacion del dominio corta antes de salir a la red.
 class _FakeAuthRepository implements IAuthRepository {
   final List<AuthenticationUser> registrados = [];
+  final StreamController<bool> _sesion = StreamController<bool>.broadcast();
+
+  @override
+  Stream<bool> get sessionChanges => _sesion.stream;
+
   final List<AuthenticationUser> entradas = [];
 
   @override

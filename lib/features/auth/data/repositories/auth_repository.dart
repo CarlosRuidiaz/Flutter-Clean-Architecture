@@ -8,6 +8,9 @@ class AuthRepository implements IAuthRepository {
   AuthRepository(this.authenticationSource);
 
   @override
+  Stream<bool> get sessionChanges => authenticationSource.sessionChanges;
+
+  @override
   Future<bool> login(AuthenticationUser user) async =>
       await authenticationSource.login(user);
 

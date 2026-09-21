@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../../../core/app_routes.dart';
 import '../../../../core/app_tokens.dart';
+import '../../../auth/ui/viewmodels/authentication_controller.dart';
 import '../../../profile/ui/views/widgets/profile_skills_line.dart';
 
 import '../../domain/models/project.dart';
@@ -21,6 +22,65 @@ class HomePage extends StatelessWidget {
     return ProjectCard(
       project: project,
       onTap: () => Get.toNamed(AppRoutes.projectDetail, arguments: project),
+    );
+  }
+
+  /// Cerrar sesion pide confirmacion, como el resto de acciones que sacan a
+  /// alguien de donde estaba. Al confirmar, `Central` devuelve al login solo.
+  Future<void> _confirmarCierreDeSesion(BuildContext context) {
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppTokens.radius * 3),
+        ),
+        side: BorderSide(color: AppColors.ink, width: AppTokens.borderWidth),
+      ),
+      builder: (sheetContext) {
+        final TextTheme textTheme = Theme.of(sheetContext).textTheme;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTokens.gapL,
+              vertical: AppTokens.gapXl,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  '¿Cerrar sesión?',
+                  style: textTheme.titleLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppTokens.gapM),
+                Text(
+                  'Volverás a la pantalla de inicio de sesión. Tus ideas y '
+                  'postulaciones se quedan como están.',
+                  style: textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppTokens.gapXl),
+                ElevatedButton(
+                  onPressed: () async {
+                    await Get.find<AuthenticationController>().logOut();
+                    if (sheetContext.mounted) {
+                      Navigator.of(sheetContext).pop();
+                    }
+                  },
+                  child: const Text('Sí, cerrar sesión'),
+                ),
+                const SizedBox(height: AppTokens.gapS),
+                OutlinedButton(
+                  onPressed: () => Navigator.of(sheetContext).pop(),
+                  child: const Text('Volver'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -130,6 +190,13 @@ class HomePage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Innovation Hub'),
+          actions: [
+            IconButton(
+              tooltip: 'Cerrar sesión',
+              icon: const Icon(Icons.logout),
+              onPressed: () => _confirmarCierreDeSesion(context),
+            ),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Para tus habilidades'),

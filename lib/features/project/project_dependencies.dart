@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../auth/domain/repositories/i_auth_repository.dart';
 import '../profile/domain/repositories/i_profile_repository.dart';
 import 'data/datasources/i_project_source.dart';
 import 'data/datasources/local/local_project_source.dart';
@@ -20,6 +21,7 @@ void registerProject() {
     () => ProjectController(
       Get.find<IProjectRepository>(),
       Get.find<IProfileRepository>(),
+      Get.find<IAuthRepository>(),
     ),
   );
 }

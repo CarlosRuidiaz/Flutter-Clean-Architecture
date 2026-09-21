@@ -16,6 +16,12 @@ class RobleAuthenticationSource with UiLoggy implements IAuthenticationSource {
 
   final RobleApiDataBase roble;
 
+  /// Roble ya avisa de sus cambios de sesion: aqui solo se reduce a lo unico
+  /// que le importa a quien escucha, si hay sesion o no.
+  @override
+  Stream<bool> get sessionChanges =>
+      roble.authStateChanges.map((estado) => estado.isSignedIn).distinct();
+
   @override
   Future<bool> login(AuthenticationUser user) async {
     loggy.debug('RobleAuthenticationSource: login ${user.email}');

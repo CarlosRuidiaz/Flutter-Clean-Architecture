@@ -18,6 +18,8 @@ import 'package:f_clean_template/features/project/ui/views/create_idea_page.dart
 import 'package:f_clean_template/features/project/ui/views/widgets/stage_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../auth/fake_auth_repository.dart';
 import 'package:get/get.dart';
 
 Future<ProjectController> _abrirCrearIdea(WidgetTester tester) async {
@@ -30,10 +32,10 @@ Future<ProjectController> _abrirCrearIdea(WidgetTester tester) async {
 
   Get.put<IProfileSource>(LocalProfileSource());
   Get.put<IProfileRepository>(ProfileRepository(Get.find()));
-  Get.put(ProfileController(Get.find()));
+  Get.put(ProfileController(Get.find(), FakeAuthRepository()));
   Get.put<IProjectSource>(LocalProjectSource());
   Get.put<IProjectRepository>(ProjectRepository(Get.find()));
-  final controller = Get.put(ProjectController(Get.find(), Get.find()));
+  final controller = Get.put(ProjectController(Get.find(), Get.find(), FakeAuthRepository()));
 
   await tester.pumpWidget(
     GetMaterialApp(

@@ -1,6 +1,9 @@
 import '../models/authentication_user.dart';
 
 abstract class IAuthRepository {
+  /// Emite cada vez que la sesion cambia: true al entrar, false al salir.
+  Stream<bool> get sessionChanges;
+
   Future<bool> login(AuthenticationUser user);
 
   Future<bool> restoreSession();

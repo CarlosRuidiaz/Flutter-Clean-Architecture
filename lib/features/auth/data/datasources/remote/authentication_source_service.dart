@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:loggy/loggy.dart';
@@ -19,6 +20,11 @@ class AuthenticationSourceService
   AuthenticationSourceService(this.preferences, {http.Client? client})
     : httpClient = client ?? http.Client();
 
+  final StreamController<bool> _sesion = StreamController<bool>.broadcast();
+
+  @override
+  Stream<bool> get sessionChanges => _sesion.stream;
+
   @override
   Future<bool> login(AuthenticationUser user) async {
     loggy.debug("Attempting login for email: ${user.email}");
@@ -33,6 +39,7 @@ class AuthenticationSourceService
     }
 
     await _saveSession(email);
+    _sesion.add(true);
     return true;
   }
 
@@ -63,6 +70,7 @@ class AuthenticationSourceService
     loggy.debug('Attempting logout');
     await preferences.remove(_sessionKey);
     await preferences.remove(_sessionEmailKey);
+    _sesion.add(false);
     return true;
   }
 

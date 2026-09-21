@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:loggy/loggy.dart';
 
+import '../../../auth/domain/repositories/i_auth_repository.dart';
 import '../../../profile/domain/models/profile.dart';
 import '../../../profile/domain/repositories/i_profile_repository.dart';
 import '../../domain/models/project.dart';
@@ -11,13 +14,18 @@ import '../../domain/repositories/i_project_repository.dart';
 /// Filtrar y ordenar es trabajo suyo, no del `ListView`: una vista que hace
 /// `.where(...)` dentro del `build` esconde una regla de negocio en la UI.
 class ProjectController extends GetxController with UiLoggy {
-  ProjectController(this.repository, this.profileRepository);
+  ProjectController(this.repository, this.profileRepository, this.authRepository);
 
   final IProjectRepository repository;
 
   /// Hace falta para la pestania "Para tus habilidades": sin el perfil no se
   /// sabe contra que habilidades comparar.
   final IProfileRepository profileRepository;
+
+  /// Por la interfaz, no por Roble: el controlador no sabe que hay detras.
+  final IAuthRepository authRepository;
+
+  StreamSubscription<bool>? _sesion;
 
   final RxList<Project> _projects = <Project>[].obs;
   final Rxn<Profile> _profile = Rxn<Profile>();
@@ -107,7 +115,23 @@ class ProjectController extends GetxController with UiLoggy {
   void onInit() {
     getProjects();
     getCurrentProfile();
+    // Las habilidades con las que se cruza la cartelera son las de quien tenga
+    // la sesion: al cambiar, las anteriores dejan de valer.
+    _sesion = authRepository.sessionChanges.listen((haySesion) {
+      loggy.debug('ProjectController: la sesion cambio (activa: $haySesion)');
+      if (haySesion) {
+        getCurrentProfile();
+      } else {
+        _profile.value = null;
+      }
+    });
     super.onInit();
+  }
+
+  @override
+  void onClose() {
+    _sesion?.cancel();
+    super.onClose();
   }
 
   Future<void> getProjects() async {
@@ -119,7 +143,14 @@ class ProjectController extends GetxController with UiLoggy {
 
   Future<void> getCurrentProfile() async {
     loggy.debug('ProjectController: pidiendo el perfil para la cartelera');
-    _profile.value = await profileRepository.getCurrentProfile();
+    try {
+      _profile.value = await profileRepository.getCurrentProfile();
+    } catch (e) {
+      // Sin sesion no hay habilidades con las que cruzar: la pestania se
+      // queda vacia y lo explica, en vez de reventar la cartelera entera.
+      loggy.warning('ProjectController: no se pudo cargar el perfil: $e');
+      _profile.value = null;
+    }
   }
 
   Future<Project> createProject(Project project) async {

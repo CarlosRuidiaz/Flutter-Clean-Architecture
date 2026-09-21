@@ -1,5 +1,7 @@
 import 'package:f_clean_template/core/app_theme.dart';
 import 'package:f_clean_template/core/app_catalogs.dart';
+import 'package:f_clean_template/features/auth/domain/repositories/i_auth_repository.dart';
+import 'package:f_clean_template/features/auth/ui/viewmodels/authentication_controller.dart';
 import 'package:f_clean_template/features/profile/data/datasources/i_profile_source.dart';
 import 'package:f_clean_template/features/profile/data/datasources/local/local_profile_source.dart';
 import 'package:f_clean_template/features/profile/data/repositories/profile_repository.dart';
@@ -16,6 +18,8 @@ import 'package:f_clean_template/features/project/ui/views/home_page.dart';
 import 'package:f_clean_template/features/project/ui/views/widgets/project_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../auth/fake_auth_repository.dart';
 import 'package:get/get.dart';
 
 /// Perfil a medida para los dos estados vacios de la pestania de habilidades:
@@ -51,16 +55,18 @@ Future<ProjectController> _montarCartelera(
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
 
+  Get.put<IAuthRepository>(FakeAuthRepository());
+  Get.put(AuthenticationController(Get.find<IAuthRepository>()));
   Get.put<IProfileSource>(
     skillsDelPerfil == null
         ? LocalProfileSource()
         : _FakeProfileSource(skillsDelPerfil),
   );
   Get.put<IProfileRepository>(ProfileRepository(Get.find()));
-  Get.put(ProfileController(Get.find()));
+  Get.put(ProfileController(Get.find(), Get.find<IAuthRepository>()));
   Get.put<IProjectSource>(LocalProjectSource());
   Get.put<IProjectRepository>(ProjectRepository(Get.find()));
-  final controller = Get.put(ProjectController(Get.find(), Get.find()));
+  final controller = Get.put(ProjectController(Get.find(), Get.find(), Get.find<IAuthRepository>()));
 
   await tester.pumpWidget(
     GetMaterialApp(theme: AppTheme.light, home: const HomePage()),
@@ -258,6 +264,32 @@ void main() {
 
       await _irAExplorar(tester);
       expect(find.text('Red comunitaria de reciclaje textil'), findsNothing);
+    });
+
+    testWidgets('el boton de cerrar sesion pide confirmacion y sale',
+        (tester) async {
+      await _montarCartelera(tester);
+
+      await tester.tap(find.byIcon(Icons.logout));
+      await tester.pumpAndSettle();
+      expect(find.text('¿Cerrar sesión?'), findsOneWidget);
+
+      // Volver no cierra nada: la sesion sigue abierta.
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Volver'));
+      await tester.pumpAndSettle();
+      expect(find.text('¿Cerrar sesión?'), findsNothing);
+      expect(Get.find<AuthenticationController>().isLogged, isTrue);
+
+      await tester.tap(find.byIcon(Icons.logout));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithText(ElevatedButton, 'Sí, cerrar sesión'),
+      );
+      await tester.pumpAndSettle();
+
+      // La hoja se cierra y la sesion queda cerrada: Central devuelve al login.
+      expect(find.text('¿Cerrar sesión?'), findsNothing);
+      expect(Get.find<AuthenticationController>().isLogged, isFalse);
     });
 
     testWidgets('la idea nueva aparece de primera y en las dos si pide una '
