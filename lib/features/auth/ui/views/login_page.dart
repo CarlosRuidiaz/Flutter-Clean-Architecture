@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loggy/loggy.dart';
+
+import '../../../../core/app_tokens.dart';
 import '../viewmodels/authentication_controller.dart';
 import 'signup_page.dart';
 
@@ -13,132 +15,118 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> with UiLoggy {
   final _formKey = GlobalKey<FormState>();
-  final controllerEmail = TextEditingController(text: 'a@a.com');
-  final controllerPassword = TextEditingController(text: 'ThePassword1!');
-  AuthenticationController authenticationController = Get.find();
+  // Sin valores precargados: los de la plantilla no eran institucionales y
+  // hoy ni siquiera pasarian la validacion.
+  final controllerEmail = TextEditingController();
+  final controllerPassword = TextEditingController();
 
-  Future<void> _login(String theEmail, String thePassword) async {
-    loggy.debug('_login $theEmail');
+  final AuthenticationController authenticationController = Get.find();
+
+  @override
+  void dispose() {
+    controllerEmail.dispose();
+    controllerPassword.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    loggy.debug('Login: ${controllerEmail.text}');
     final loggedIn = await authenticationController.login(
-      theEmail,
-      thePassword,
+      controllerEmail.text,
+      controllerPassword.text,
     );
-    if (!loggedIn) {
+    if (!loggedIn && mounted) {
       Get.snackbar(
-        "Login",
+        'Entrar',
         authenticationController.error.value,
-        icon: const Icon(Icons.person, color: Colors.red),
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.card,
+        colorText: AppColors.ink,
       );
     }
   }
 
+  Future<void> _enviar() async {
+    FocusScope.of(context).requestFocus(FocusNode());
+    if (_formKey.currentState!.validate()) await _login();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final TextTheme texto = Theme.of(context).textTheme;
+
     return Scaffold(
-      body: Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Form(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppTokens.gapXl),
+            child: Form(
               key: _formKey,
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    "Login to access your account",
-                    style: TextStyle(fontSize: 20),
+                  Text(
+                    'Innovation Hub',
+                    style: texto.headlineMedium,
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: AppTokens.gapS),
+                  Text(
+                    'Entra con tu correo institucional para ver la cartelera.',
+                    style: texto.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppTokens.gapXl),
                   TextFormField(
-                    keyboardType: TextInputType.emailAddress,
                     controller: controllerEmail,
-                    decoration: const InputDecoration(
-                      labelText: "Email address",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(20)),
-                      ),
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: 'Correo institucional',
+                      hintText:
+                          'tunombre${AuthenticationController.dominioInstitucional}',
                     ),
-                    validator: (String? value) {
-                      if (value!.isEmpty) {
-                        return "Enter email";
-                      } else if (!value.contains('@')) {
-                        return "Enter valid email address";
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return 'Escribe tu correo';
+                      }
+                      if (!AuthenticationController.esCorreoInstitucional(v)) {
+                        return 'Usa tu correo '
+                            '${AuthenticationController.dominioInstitucional}';
                       }
                       return null;
                     },
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppTokens.gapM),
                   TextFormField(
                     controller: controllerPassword,
-                    decoration: const InputDecoration(
-                      labelText: "Password",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                    obscureText: true,
+                    decoration: const InputDecoration(labelText: 'Contraseña'),
+                    validator: (v) => (v == null || v.length < 7)
+                        ? 'Debe tener al menos 7 caracteres'
+                        : null,
+                    onFieldSubmitted: (_) => _enviar(),
+                  ),
+                  const SizedBox(height: AppTokens.gapXl),
+                  Obx(
+                    () => ElevatedButton(
+                      onPressed:
+                          authenticationController.isLoading ? null : _enviar,
+                      child: Text(
+                        authenticationController.isLoading
+                            ? 'Entrando...'
+                            : 'Entrar',
                       ),
                     ),
-                    obscureText: true,
-                    validator: (String? value) {
-                      if (value!.isEmpty) {
-                        return "Enter password";
-                      } else if (value.length < 6) {
-                        return "Password should have at least 6 characters";
-                      }
-                      return null;
-                    },
-                    onFieldSubmitted: (value) async {
-                      FocusScope.of(context).requestFocus(FocusNode());
-                      final form = _formKey.currentState;
-                      form!.save();
-                      if (_formKey.currentState!.validate()) {
-                        await _login(
-                          controllerEmail.text,
-                          controllerPassword.text,
-                        );
-                      }
-                    },
                   ),
-
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton.tonal(
-                          onPressed: () async {
-                            // this line dismiss the keyboard by taking away the focus of the TextFormField and giving it to an unused
-                            FocusScope.of(context).requestFocus(FocusNode());
-                            final form = _formKey.currentState;
-                            form!.save();
-                            if (_formKey.currentState!.validate()) {
-                              await _login(
-                                controllerEmail.text,
-                                controllerPassword.text,
-                              );
-                            }
-                          },
-                          child: const Text("Login"),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SignUpPage(),
-                        ),
-                      );
-                    },
-                    child: const Text("Create account"),
+                  const SizedBox(height: AppTokens.gapS),
+                  OutlinedButton(
+                    onPressed: () => Get.to(() => const SignUpPage()),
+                    child: const Text('Crear cuenta'),
                   ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

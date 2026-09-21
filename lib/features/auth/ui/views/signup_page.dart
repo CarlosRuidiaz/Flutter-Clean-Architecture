@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loggy/loggy.dart';
+
+import '../../../../core/app_catalogs.dart';
+import '../../../../core/app_tokens.dart';
+import '../../../../core/widgets/pill.dart';
 import '../viewmodels/authentication_controller.dart';
 
+/// Registro: credenciales mas el perfil del estudiante.
+///
+/// Programa y habilidades salen de [AppCatalogs] y no de texto libre. Si cada
+/// quien escribe su variante, el emparejamiento entre proyectos y estudiantes
+/// deja de funcionar.
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
@@ -11,120 +20,244 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> with UiLoggy {
-  final controllerEmail = TextEditingController(text: 'a@a.com');
-  final controllerPassword = TextEditingController(text: 'ThePassword1!');
-  final controllerValidation = TextEditingController();
-  AuthenticationController authenticationController = Get.find();
+  final _formKey = GlobalKey<FormState>();
+  final controllerName = TextEditingController();
+  final controllerEmail = TextEditingController();
+  final controllerPassword = TextEditingController();
 
-  Future<void> _signup(String theEmail, String thePassword) async {
+  final AuthenticationController authenticationController = Get.find();
+
+  String? _programa;
+  int _semestre = 1;
+  final List<String> _habilidades = [];
+
+  @override
+  void dispose() {
+    controllerName.dispose();
+    controllerEmail.dispose();
+    controllerPassword.dispose();
+    super.dispose();
+  }
+
+  bool get _perfilCompleto => _programa != null && _habilidades.isNotEmpty;
+
+  Future<void> _signUp() async {
     final created = await authenticationController.signUp(
-      theEmail,
-      thePassword,
+      controllerEmail.text,
+      controllerPassword.text,
+      name: controllerName.text,
+      academicProgram: _programa!,
+      semester: _semestre,
+      skills: List<String>.from(_habilidades),
     );
 
+    if (!mounted) return;
     if (created) {
-      Get.snackbar(
-        "Sign Up",
-        'User created successfully',
-        icon: const Icon(Icons.person, color: Colors.red),
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      // Con autoLogin la sesion ya quedo abierta: Central decide a donde ir.
+      Get.back();
     } else {
       Get.snackbar(
-        "Sign Up",
+        'Registro',
         authenticationController.error.value,
-        icon: const Icon(Icons.person, color: Colors.red),
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.card,
+        colorText: AppColors.ink,
       );
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Sign Up"), centerTitle: true),
-      body: Center(
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          child: registerPhaseWidget(context, GlobalKey<FormState>()),
-        ),
+  Widget _campo({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    bool obscure = false,
+    TextInputType? keyboard,
+    String? Function(String?)? validator,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTokens.gapM),
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscure,
+        keyboardType: keyboard,
+        decoration: InputDecoration(labelText: label, hintText: hint),
+        validator: validator,
       ),
     );
   }
 
-  Form registerPhaseWidget(BuildContext context, GlobalKey<FormState> key) {
-    return Form(
-      key: key,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text("Sign Up Information", style: TextStyle(fontSize: 20)),
-          const SizedBox(height: 20),
-          TextFormField(
-            keyboardType: TextInputType.emailAddress,
-            controller: controllerEmail,
-            decoration: const InputDecoration(
-              labelText: "Email address",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(20)),
-              ),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                loggy.debug('SignUp validation empty email');
-                return "Enter email";
-              } else if (!value.contains('@')) {
-                loggy.debug('SignUp validation invalid email');
-                return "Enter valid email address";
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: controllerPassword,
-            decoration: const InputDecoration(
-              labelText: "Password",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(20)),
-              ),
-            ),
-            keyboardType: TextInputType.number,
-            obscureText: true,
-            validator: (value) {
-              if (value!.isEmpty) {
-                return "Enter password";
-              } else if (value.length < 6) {
-                return "Password should have at least 6 characters";
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 20),
-          Row(
+  Widget _chip({
+    required String label,
+    required bool selected,
+    required Color selectedColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Pill(
+        label: label,
+        background: selected ? selectedColor : AppColors.card,
+      ),
+    );
+  }
+
+  Widget _grupo({required String titulo, required List<Widget> chips}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(titulo, style: Theme.of(context).textTheme.bodyLarge),
+        const SizedBox(height: AppTokens.gapS),
+        Wrap(
+          spacing: AppTokens.gapS,
+          runSpacing: AppTokens.gapS,
+          children: chips,
+        ),
+        const SizedBox(height: AppTokens.gapL),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final TextTheme texto = Theme.of(context).textTheme;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Crear cuenta')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppTokens.gapL),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: FilledButton.tonal(
-                  onPressed: () async {
-                    final form = key.currentState;
-                    form!.save();
-                    FocusScope.of(context).requestFocus(FocusNode());
-                    if (key.currentState!.validate()) {
-                      loggy.debug('SignUp validation form ok');
-                      await _signup(
-                        controllerEmail.text,
-                        controllerPassword.text,
-                      );
-                    } else {
-                      loggy.debug('SignUp validation form invalid');
-                    }
-                  },
-                  child: const Text("Submit"),
+              Text('Tus datos', style: texto.titleMedium),
+              const SizedBox(height: AppTokens.gapM),
+              _campo(
+                controller: controllerName,
+                label: 'Nombre completo',
+                hint: 'Ej: Ana García',
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Escribe tu nombre' : null,
+              ),
+              _campo(
+                controller: controllerEmail,
+                label: 'Correo institucional',
+                hint: 'tunombre${AuthenticationController.dominioInstitucional}',
+                keyboard: TextInputType.emailAddress,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Escribe tu correo';
+                  if (!AuthenticationController.esCorreoInstitucional(v)) {
+                    return 'Usa tu correo '
+                        '${AuthenticationController.dominioInstitucional}';
+                  }
+                  return null;
+                },
+              ),
+              _campo(
+                controller: controllerPassword,
+                label: 'Contraseña',
+                hint: 'Al menos 7 caracteres',
+                obscure: true,
+                validator: (v) => (v == null || v.length < 7)
+                    ? 'Debe tener al menos 7 caracteres'
+                    : null,
+              ),
+              const SizedBox(height: AppTokens.gapS),
+              Text('Tu perfil', style: texto.titleMedium),
+              const SizedBox(height: AppTokens.gapM),
+              _grupo(
+                titulo: 'Programa académico',
+                chips: [
+                  for (final programa in AppCatalogs.academicPrograms)
+                    _chip(
+                      label: programa,
+                      selected: _programa == programa,
+                      selectedColor: AppColors.petrol,
+                      onTap: () => setState(() => _programa = programa),
+                    ),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text('Semestre', style: texto.bodyLarge),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: AppTokens.border(),
+                      borderRadius: AppTokens.borderRadius,
+                      color: AppColors.card,
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.remove),
+                          onPressed: _semestre > 1
+                              ? () => setState(() => _semestre--)
+                              : null,
+                        ),
+                        Text('$_semestre', style: texto.titleMedium),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: _semestre < 12
+                              ? () => setState(() => _semestre++)
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTokens.gapL),
+              _grupo(
+                titulo: 'Tus habilidades',
+                chips: [
+                  for (final habilidad in AppCatalogs.skills)
+                    _chip(
+                      label: habilidad,
+                      selected: _habilidades.contains(habilidad),
+                      selectedColor: AppColors.persimmon,
+                      onTap: () => setState(() {
+                        if (_habilidades.contains(habilidad)) {
+                          _habilidades.remove(habilidad);
+                        } else {
+                          _habilidades.add(habilidad);
+                        }
+                      }),
+                    ),
+                ],
+              ),
+              if (!_perfilCompleto)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppTokens.gapM),
+                  child: Text(
+                    'Elige tu programa y al menos una habilidad: sin eso no '
+                    'podemos mostrarte proyectos que te sirvan.',
+                    style: texto.bodySmall,
+                  ),
+                ),
+              Obx(
+                () => ElevatedButton(
+                  onPressed:
+                      authenticationController.isLoading || !_perfilCompleto
+                      ? null
+                      : () async {
+                          FocusScope.of(context).requestFocus(FocusNode());
+                          if (_formKey.currentState!.validate()) {
+                            loggy.debug('SignUp: formulario valido');
+                            await _signUp();
+                          }
+                        },
+                  child: Text(
+                    authenticationController.isLoading
+                        ? 'Creando cuenta...'
+                        : 'Crear cuenta',
+                  ),
                 ),
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

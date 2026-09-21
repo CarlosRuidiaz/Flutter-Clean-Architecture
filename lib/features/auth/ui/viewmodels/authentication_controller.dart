@@ -7,6 +7,16 @@ import 'package:loggy/loggy.dart';
 import '../../../../core/error_message.dart';
 
 class AuthenticationController extends GetxController with UiLoggy {
+  /// El enunciado pide credenciales institucionales: solo correos de la
+  /// universidad entran.
+  static const String dominioInstitucional = '@uninorte.edu.co';
+
+  /// True si el correo es institucional. Se comprueba antes de salir a la red:
+  /// el servidor lo aceptaria igual y tendriamos cuentas que no deberian
+  /// existir.
+  static bool esCorreoInstitucional(String email) =>
+      email.trim().toLowerCase().endsWith(dominioInstitucional);
+
   final IAuthRepository repoAuthentication;
   final _logged = false.obs;
   final _loggedUser = Rxn<AuthenticationUser>();
@@ -20,6 +30,7 @@ class AuthenticationController extends GetxController with UiLoggy {
   bool get isLoading => _isLoading.value;
   bool get isLogged => _logged.value;
   String get loggedEmail => _loggedUser.value?.email ?? '';
+  AuthenticationUser? get loggedUser => _loggedUser.value;
 
   @override
   void onInit() {
@@ -48,7 +59,12 @@ class AuthenticationController extends GetxController with UiLoggy {
     if (!_validate(email, password)) {
       loggy.warning('AuthenticationController: Invalid email or password');
       error.value =
-          'Enter a valid email and a password with at least 7 characters.';
+          'Escribe un correo valido y una contrasena de mas de 6 caracteres.';
+      return false;
+    }
+    if (!esCorreoInstitucional(email)) {
+      loggy.warning('AuthenticationController: correo no institucional');
+      error.value = 'Usa tu correo institucional $dominioInstitucional.';
       return false;
     }
     _isLoading.value = true;
@@ -60,7 +76,7 @@ class AuthenticationController extends GetxController with UiLoggy {
       _loggedUser.value = loggedIn
           ? await repoAuthentication.getLoggedUser()
           : null;
-      if (!loggedIn) error.value = 'Unable to sign in. Check your credentials.';
+      if (!loggedIn) error.value = 'No se pudo entrar. Revisa tus datos.';
       return loggedIn;
     } catch (exception) {
       loggy.error('AuthenticationController: Login error $exception');
@@ -71,22 +87,46 @@ class AuthenticationController extends GetxController with UiLoggy {
     }
   }
 
-  Future<bool> signUp(String email, String password) async {
+  Future<bool> signUp(
+    String email,
+    String password, {
+    required String name,
+    required String academicProgram,
+    required int semester,
+    required List<String> skills,
+  }) async {
     loggy.debug('AuthenticationController: Sign Up $email');
     error.value = '';
     if (!_validate(email, password)) {
       loggy.warning('AuthenticationController: Invalid email or password');
       error.value =
-          'Enter a valid email and a password with at least 7 characters.';
+          'Escribe un correo valido y una contrasena de mas de 6 caracteres.';
+      return false;
+    }
+    if (!esCorreoInstitucional(email)) {
+      loggy.warning('AuthenticationController: correo no institucional');
+      error.value = 'Usa tu correo institucional $dominioInstitucional.';
       return false;
     }
     _isLoading.value = true;
     try {
       final created = await repoAuthentication.signUp(
-        AuthenticationUser(email: email, name: email, password: password),
+        AuthenticationUser(
+          email: email,
+          name: name.trim().isEmpty ? email : name.trim(),
+          password: password,
+          academicProgram: academicProgram,
+          semester: semester,
+          skills: skills,
+        ),
       );
       if (!created) {
-        error.value = 'Unable to create the account. Please try again.';
+        error.value = 'No se pudo crear la cuenta. Intentalo de nuevo.';
+      } else {
+        // register con autoLogin deja la sesion abierta: la app ya puede
+        // entrar sin pasar por el login.
+        _logged.value = true;
+        _loggedUser.value = await repoAuthentication.getLoggedUser();
       }
       return created;
     } catch (exception) {
@@ -105,7 +145,7 @@ class AuthenticationController extends GetxController with UiLoggy {
       final loggedOut = await repoAuthentication.logOut();
       _logged.value = false;
       _loggedUser.value = null;
-      if (!loggedOut) error.value = 'Unable to sign out. Please try again.';
+      if (!loggedOut) error.value = 'No se pudo cerrar sesion. Intentalo de nuevo.';
       return loggedOut;
     } catch (exception) {
       loggy.error('AuthenticationController: Logout error $exception');
