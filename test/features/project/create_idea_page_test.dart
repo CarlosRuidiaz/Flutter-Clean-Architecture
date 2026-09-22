@@ -1,4 +1,5 @@
 import 'package:f_clean_template/core/app_catalogs.dart';
+import 'package:f_clean_template/core/error_message.dart';
 import 'package:f_clean_template/core/app_routes.dart';
 import 'package:f_clean_template/core/app_tokens.dart';
 import 'package:f_clean_template/core/app_theme.dart';
@@ -21,8 +22,32 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../auth/fake_auth_repository.dart';
 import 'package:get/get.dart';
+import 'package:roble/roble.dart';
 
-Future<ProjectController> _abrirCrearIdea(WidgetTester tester) async {
+/// Repositorio que responde como Roble con el payload malo: 400.
+class _RepositorioQueFalla implements IProjectRepository {
+  static const fallo = RobleApiHttpException(
+    400,
+    'Conversión inválida. Revisa los valores actuales de la columna.',
+  );
+
+  @override
+  Future<List<Project>> getProjects() async => [];
+
+  @override
+  Future<Project> createProject(Project project) async => throw fallo;
+
+  @override
+  Future<void> closeRecruitment(String projectId) async {}
+
+  @override
+  Future<void> addMember(String projectId) async {}
+}
+
+Future<ProjectController> _abrirCrearIdea(
+  WidgetTester tester, {
+  IProjectRepository? repositorio,
+}) async {
   Get.testMode = true;
   await Get.deleteAll(force: true);
 
@@ -34,7 +59,7 @@ Future<ProjectController> _abrirCrearIdea(WidgetTester tester) async {
   Get.put<IProfileRepository>(ProfileRepository(Get.find()));
   Get.put(ProfileController(Get.find(), FakeAuthRepository()));
   Get.put<IProjectSource>(LocalProjectSource());
-  Get.put<IProjectRepository>(ProjectRepository(Get.find()));
+  Get.put<IProjectRepository>(repositorio ?? ProjectRepository(Get.find()));
   final controller = Get.put(ProjectController(Get.find(), Get.find(), FakeAuthRepository()));
 
   await tester.pumpWidget(
@@ -161,6 +186,45 @@ void main() {
       expect(creado.skillsWanted, [AppCatalogs.skillUx]);
       // El programa sale del perfil, asi que tambien esta en el catalogo.
       expect(AppCatalogs.academicPrograms, contains(creado.academicProgram));
+    });
+
+    testWidgets('si Roble rechaza la idea, se avisa y no se congela',
+        (tester) async {
+      final controller = await _abrirCrearIdea(
+        tester,
+        repositorio: _RepositorioQueFalla(),
+      );
+
+      await tester.enterText(find.byType(TextField).at(0), 'Huerta urbana');
+      await tester.enterText(find.byType(TextField).at(1), 'Un problema real.');
+      await tester.enterText(find.byType(TextField).at(2), 'Una descripcion.');
+      await tester.tap(find.text(StageChip.labelOf(ProjectStage.idea)).first);
+      await tester.tap(find.text(AppCatalogs.skillUx).first);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Publicar'));
+      await tester.pumpAndSettle();
+
+      // Sin excepcion suelta, el mensaje traducido en pantalla, y la persona
+      // sigue en el formulario con lo que escribio.
+      expect(tester.takeException(), isNull);
+      expect(
+        find.text(errorMessage(_RepositorioQueFalla.fallo)),
+        findsOneWidget,
+      );
+      expect(find.text('Nueva idea de proyecto'), findsOneWidget);
+      expect(find.text('Huerta urbana'), findsOneWidget);
+      expect(controller.isLoading.value, isFalse);
+
+      // El boton vuelve a estar disponible para reintentar.
+      final boton = tester.widget<ElevatedButton>(
+        find.widgetWithText(ElevatedButton, 'Publicar'),
+      );
+      expect(boton.onPressed, isNotNull);
+
+      // Deja que el aviso se cierre solo, para no dejar temporizadores vivos.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
     });
   });
 }
