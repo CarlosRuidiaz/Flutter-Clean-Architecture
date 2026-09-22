@@ -45,6 +45,60 @@ void main() {
       expect(toJsonNoId.containsKey('_id'), false);
       expect(toJsonNoId.containsKey('id'), false);
       expect(toJsonNoId['title'], 'Proyecto Test');
+      // Texto JSON, no List: la columna jsonb convierte una lista de Dart en
+      // un array de PostgreSQL y el servidor responde 400.
+      expect(toJsonNoId['skills_wanted'], jsonEncode(['Flutter', 'Dart']));
+      expect(toJsonNoId['tags'], jsonEncode(['Tech', 'Mobile']));
+      expect(toJsonNoId['skills_wanted'], isA<String>());
+      expect(toJsonNoId['tags'], isA<String>());
+    });
+
+    test('toJsonNoId manda las listas como texto JSON, y fromJson las devuelve',
+        () {
+      final original = Project(
+        title: 'Huerta urbana',
+        problem: 'Un problema',
+        description: 'Una descripcion',
+        stage: ProjectStage.teamFormation,
+        academicProgram: 'Arquitectura',
+        currentMembers: 1,
+        maxMembers: 5,
+        skillsWanted: const ['Diseño UX', 'Análisis de datos'],
+        tags: const ['Sostenibilidad'],
+        leaderId: 'u1',
+      );
+
+      final enviado = original.toJsonNoId();
+      final devuelto = Project.fromJson(enviado);
+
+      // Ida y vuelta: lo que sale codificado vuelve como la misma lista.
+      expect(devuelto.skillsWanted, original.skillsWanted);
+      expect(devuelto.tags, original.tags);
+      expect(devuelto.title, original.title);
+      expect(devuelto.stage, original.stage);
+      expect(devuelto.maxMembers, original.maxMembers);
+    });
+
+    test('una lista vacia tambien viaja como texto JSON', () {
+      final project = Project(
+        title: 'Sin habilidades',
+        problem: 'p',
+        description: 'd',
+        stage: ProjectStage.idea,
+        academicProgram: 'Psicología',
+        currentMembers: 1,
+        maxMembers: 2,
+        skillsWanted: const [],
+        tags: const [],
+        leaderId: 'u1',
+      );
+
+      final enviado = project.toJsonNoId();
+
+      expect(enviado['skills_wanted'], '[]');
+      expect(enviado['tags'], '[]');
+      expect(Project.fromJson(enviado).skillsWanted, isEmpty);
+      expect(Project.fromJson(enviado).tags, isEmpty);
     });
 
     test('fromJson maneja listas jsonb que llegan como texto JSON codificado', () {

@@ -37,6 +37,47 @@ void main() {
       expect(toJsonNoId.containsKey('_id'), false);
       expect(toJsonNoId.containsKey('id'), false);
       expect(toJsonNoId['project_id'], 'proj1');
+      // Texto JSON, no List: la columna jsonb convierte una lista de Dart en
+      // un array de PostgreSQL y el servidor responde 400.
+      expect(toJsonNoId['skills_offered'], jsonEncode(['Figma', 'Prototyping']));
+      expect(toJsonNoId['skills_offered'], isA<String>());
+    });
+
+    test('toJsonNoId manda skills_offered como texto JSON, y fromJson lo '
+        'devuelve', () {
+      final original = Application(
+        projectId: 'proj9',
+        applicantId: 'u9',
+        applicantName: 'Ana García',
+        applicantProgram: 'Ing. de Sistemas',
+        applicantSemester: 8,
+        skillsOffered: const ['Python', 'Investigación'],
+      );
+
+      final enviado = original.toJsonNoId();
+      final devuelto = Application.fromJson(enviado);
+
+      // Ida y vuelta: lo que sale codificado vuelve como la misma lista.
+      expect(devuelto.skillsOffered, original.skillsOffered);
+      expect(devuelto.applicantName, original.applicantName);
+      expect(devuelto.applicantSemester, original.applicantSemester);
+      expect(devuelto.status, original.status);
+    });
+
+    test('una lista vacia tambien viaja como texto JSON', () {
+      final application = Application(
+        projectId: 'proj9',
+        applicantId: 'u9',
+        applicantName: 'Sin habilidades',
+        applicantProgram: 'Administración',
+        applicantSemester: 1,
+        skillsOffered: const [],
+      );
+
+      final enviado = application.toJsonNoId();
+
+      expect(enviado['skills_offered'], '[]');
+      expect(Application.fromJson(enviado).skillsOffered, isEmpty);
     });
 
     test('fromJson maneja skills_offered que llega como string JSON', () {

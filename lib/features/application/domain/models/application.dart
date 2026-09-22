@@ -58,13 +58,18 @@ class Application {
         'status': status.name,
       };
 
+  /// Lo que se le manda a Roble al postularse.
+  ///
+  /// `skills_offered` va como texto JSON por lo mismo que en `Project`: la
+  /// columna jsonb convierte una `List` de Dart en un array de PostgreSQL y
+  /// responde 400.
   Map<String, dynamic> toJsonNoId() => {
         'project_id': projectId,
         'applicant_id': applicantId,
         'applicant_name': applicantName,
         'applicant_program': applicantProgram,
         'applicant_semester': applicantSemester,
-        'skills_offered': skillsOffered,
+        'skills_offered': jsonEncode(skillsOffered),
         'status': status.name,
       };
 

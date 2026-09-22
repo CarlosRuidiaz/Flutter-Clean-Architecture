@@ -91,6 +91,13 @@ class Project {
         'recruitment_open': recruitmentOpen,
       };
 
+  /// Lo que se le manda a Roble al crear.
+  ///
+  /// Las listas van como texto JSON y no como `List`: las columnas jsonb
+  /// reciben la lista de Dart y el servidor la convierte en un array de
+  /// PostgreSQL (`{"a","b"}`), que no es JSON valido y responde 400
+  /// "Conversion invalida". `fromJson` acepta las dos formas, asi que leer
+  /// sigue funcionando igual.
   Map<String, dynamic> toJsonNoId() => {
         'title': title,
         'problem': problem,
@@ -99,8 +106,8 @@ class Project {
         'academic_program': academicProgram,
         'current_members': currentMembers,
         'max_members': maxMembers,
-        'skills_wanted': skillsWanted,
-        'tags': tags,
+        'skills_wanted': jsonEncode(skillsWanted),
+        'tags': jsonEncode(tags),
         'leader_id': leaderId,
         'recruitment_open': recruitmentOpen,
       };
