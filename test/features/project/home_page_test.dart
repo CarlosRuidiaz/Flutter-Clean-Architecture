@@ -13,6 +13,10 @@ import 'package:f_clean_template/features/project/data/datasources/local/local_p
 import 'package:f_clean_template/features/project/data/repositories/project_repository.dart';
 import 'package:f_clean_template/features/project/domain/models/project.dart';
 import 'package:f_clean_template/features/project/domain/repositories/i_project_repository.dart';
+import 'package:f_clean_template/features/application/data/datasources/local/local_application_source.dart';
+import 'package:f_clean_template/features/application/data/repositories/application_repository.dart';
+import 'package:f_clean_template/features/application/domain/repositories/i_application_repository.dart';
+import 'package:f_clean_template/features/my_projects/ui/viewmodels/my_projects_controller.dart';
 import 'package:f_clean_template/features/project/ui/viewmodels/project_controller.dart';
 import 'package:f_clean_template/features/project/ui/views/home_page.dart';
 import 'package:f_clean_template/features/project/ui/views/widgets/project_card.dart';
@@ -66,6 +70,8 @@ Future<ProjectController> _montarCartelera(
   Get.put(ProfileController(Get.find(), Get.find<IAuthRepository>()));
   Get.put<IProjectSource>(LocalProjectSource());
   Get.put<IProjectRepository>(ProjectRepository(Get.find()));
+  Get.put<IApplicationRepository>(ApplicationRepository(LocalApplicationSource()));
+  Get.put(MyProjectsController(Get.find(), Get.find(), Get.find(), Get.find()));
   final controller = Get.put(ProjectController(Get.find(), Get.find(), Get.find<IAuthRepository>()));
 
   await tester.pumpWidget(
@@ -266,11 +272,14 @@ void main() {
       expect(find.text('Red comunitaria de reciclaje textil'), findsNothing);
     });
 
-    testWidgets('el boton de cerrar sesion pide confirmacion y sale',
+    testWidgets('el boton de cerrar sesion en perfil pide confirmacion y sale',
         (tester) async {
       await _montarCartelera(tester);
 
-      await tester.tap(find.byIcon(Icons.logout));
+      await tester.tap(find.text('Perfil').first);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Cerrar sesión'));
       await tester.pumpAndSettle();
       expect(find.text('¿Cerrar sesión?'), findsOneWidget);
 
@@ -280,7 +289,7 @@ void main() {
       expect(find.text('¿Cerrar sesión?'), findsNothing);
       expect(Get.find<AuthenticationController>().isLogged, isTrue);
 
-      await tester.tap(find.byIcon(Icons.logout));
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Cerrar sesión'));
       await tester.pumpAndSettle();
       await tester.tap(
         find.widgetWithText(ElevatedButton, 'Sí, cerrar sesión'),

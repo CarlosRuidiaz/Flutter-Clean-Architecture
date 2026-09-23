@@ -15,6 +15,7 @@ import 'core/roble_config.dart';
 import 'features/application/application_dependencies.dart';
 import 'features/auth/auth_dependencies.dart';
 import 'features/management/management_dependencies.dart';
+import 'features/my_projects/my_projects_dependencies.dart';
 import 'features/product/product_dependencies.dart';
 import 'features/profile/profile_dependencies.dart';
 import 'features/project/project_dependencies.dart';
@@ -48,6 +49,7 @@ void main() async {
   // Va despues de los dos anteriores: resuelve sus repositorios.
   registerManagement();
   registerWorkspace();
+  registerMyProjects();
   runApp(const MyApp());
 }
 
