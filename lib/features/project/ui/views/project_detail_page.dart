@@ -5,6 +5,7 @@ import '../../../../core/app_routes.dart';
 import '../../../../core/app_tokens.dart';
 import '../../../../core/widgets/pill.dart';
 import '../../../application/domain/models/application.dart';
+import '../../../application/domain/repositories/i_application_repository.dart';
 import '../../../application/ui/viewmodels/application_controller.dart';
 import '../../../profile/ui/viewmodels/profile_controller.dart';
 import '../../domain/models/project.dart';
@@ -15,32 +16,56 @@ import 'widgets/stage_chip.dart';
 class ProjectDetailPage extends StatelessWidget {
   const ProjectDetailPage({super.key});
 
-  Widget _buildTeamAvatars() {
-    //Project no tiene lista de miembros todavía
-    const initials = ['SR', 'MC', 'AP', 'CS'];
-    return Row(
+  /// Las dos primeras iniciales de un nombre completo.
+  String _initials(String name) {
+    final partes = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
+    final letras = partes.take(2).map((p) => p[0].toUpperCase()).join();
+    return letras.isEmpty ? '?' : letras;
+  }
+
+  /// Nombre corto para la linea bajo los avatares: "Carlos R.". Un nombre sin
+  /// apellido (el marcador del lider desconocido) se deja tal cual.
+  String _shortName(String name) {
+    final partes = name.trim().split(RegExp(r'\s+'));
+    if (partes.length != 2) return name;
+    return '${partes[0]} ${partes[1][0].toUpperCase()}.';
+  }
+
+  Widget _buildTeamAvatars(
+    BuildContext context,
+    List<String> initialsList,
+    String namesLine,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final item in initials) ...[
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              shape: BoxShape.circle,
-              border: AppTokens.border(),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              item,
-              style: const TextStyle(
-                color: AppColors.ink,
-                fontWeight: FontWeight.w700,
-                fontSize: 12.5,
+        Row(
+          children: [
+            for (final iniciales in initialsList) ...[
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.card,
+                  shape: BoxShape.circle,
+                  border: AppTokens.border(),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  iniciales,
+                  style: const TextStyle(
+                    color: AppColors.ink,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.5,
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: AppTokens.gapS),
-        ],
+              const SizedBox(width: AppTokens.gapS),
+            ],
+          ],
+        ),
+        const SizedBox(height: AppTokens.gapS),
+        Text(namesLine, style: Theme.of(context).textTheme.bodySmall),
       ],
     );
   }
@@ -218,24 +243,83 @@ class ProjectDetailPage extends StatelessWidget {
                 ),
               const SizedBox(height: AppTokens.gapL),
 
-              // Equipo actual
-              Text('Equipo actual', style: textTheme.titleMedium),
-              const SizedBox(height: AppTokens.gapS),
-              _buildTeamAvatars(),
-              const SizedBox(height: AppTokens.gapXl),
-
-              // Botones del pie
-              _buildFooterButtons(context, project),
-
-              // Solo el lider del proyecto gestiona sus postulantes.
-              if (project.leaderId == _applicantId()) ...[
-                const SizedBox(height: AppTokens.gapM),
-                OutlinedButton(
-                  onPressed: () =>
-                      Get.toNamed(AppRoutes.applicants, arguments: project),
-                  child: const Text('Gestionar postulantes'),
+              // Equipo actual: el lider mas los postulantes aceptados. La
+              // misma regla decide quien ve "Gestionar postulantes" y quien
+              // ve "Espacio de trabajo".
+              FutureBuilder<List<Application>>(
+                future: Get.find<IApplicationRepository>().getApplicationsFor(
+                  project.id ?? '',
                 ),
-              ],
+                builder: (context, snapshot) {
+                  final List<Application> aceptados =
+                      (snapshot.data ?? const <Application>[])
+                          .where((a) => a.status == ApplicationStatus.accepted)
+                          .toList();
+                  final String applicantId = _applicantId();
+                  final bool esLider = project.leaderId == applicantId;
+                  final bool esMiembro =
+                      aceptados.any((a) => a.applicantId == applicantId);
+
+                  final profile = Get.isRegistered<ProfileController>()
+                      ? Get.find<ProfileController>().profile
+                      : null;
+                  final bool liderEsQuienMira = profile?.id == project.leaderId;
+                  final String liderNombre = liderEsQuienMira
+                      ? (profile?.fullName ?? 'Líder del proyecto')
+                      : 'Líder del proyecto';
+
+                  final List<String> iniciales = [
+                    _initials(liderNombre),
+                    for (final a in aceptados) _initials(a.applicantName),
+                  ];
+                  final List<String> nombresCortos = [
+                    liderEsQuienMira ? _shortName(liderNombre) : liderNombre,
+                    for (final a in aceptados) _shortName(a.applicantName),
+                  ];
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Equipo actual', style: textTheme.titleMedium),
+                      const SizedBox(height: AppTokens.gapS),
+                      _buildTeamAvatars(
+                        context,
+                        iniciales,
+                        nombresCortos.join(' · '),
+                      ),
+                      const SizedBox(height: AppTokens.gapXl),
+
+                      // Botones del pie
+                      _buildFooterButtons(context, project),
+
+                      // Solo el lider del proyecto gestiona sus postulantes.
+                      if (esLider) ...[
+                        const SizedBox(height: AppTokens.gapM),
+                        OutlinedButton(
+                          onPressed: () => Get.toNamed(
+                            AppRoutes.applicants,
+                            arguments: project,
+                          ),
+                          child: const Text('Gestionar postulantes'),
+                        ),
+                      ],
+
+                      // El espacio de trabajo es privado: solo el lider y los
+                      // miembros aceptados.
+                      if (esLider || esMiembro) ...[
+                        const SizedBox(height: AppTokens.gapM),
+                        ElevatedButton(
+                          onPressed: () => Get.toNamed(
+                            AppRoutes.workspace,
+                            arguments: project,
+                          ),
+                          child: const Text('Espacio de trabajo'),
+                        ),
+                      ],
+                    ],
+                  );
+                },
+              ),
             ],
           ),
         );
