@@ -5,7 +5,7 @@ import '../../../../core/app_tokens.dart';
 import '../../../../core/widgets/pill.dart';
 import '../../../auth/ui/viewmodels/authentication_controller.dart';
 import '../../../my_projects/ui/viewmodels/my_projects_controller.dart';
-import '../../../my_projects/ui/views/my_projects_view.dart';
+import '../../../my_projects/ui/views/widgets/compact_project_card.dart';
 import '../viewmodels/profile_controller.dart';
 
 class ProfileView extends StatelessWidget {
@@ -79,17 +79,42 @@ class ProfileView extends StatelessWidget {
         title: const Text('Perfil'),
       ),
       body: Obx(() {
-        if (profileCtrl.isLoading.value || profileCtrl.profile == null) {
+        if (profileCtrl.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final profile = profileCtrl.profile!;
-        final activeProjectsCount =
-            projectsCtrl.createdProjects.length + projectsCtrl.participatingProjects.length;
+        if (profileCtrl.profile == null) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppTokens.gapXl),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'No pudimos cargar tu perfil',
+                    style: theme.textTheme.titleMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppTokens.gapM),
+                  ElevatedButton(
+                    onPressed: profileCtrl.getCurrentProfile,
+                    child: const Text('Reintentar'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
 
-        final initials = profile.fullName.trim().isNotEmpty
-            ? profile.fullName.trim().substring(0, 1).toUpperCase()
-            : '?';
+        final profile = profileCtrl.profile!;
+        final activeProjectsCount = projectsCtrl.activeProjectsCount;
+
+        final parts = profile.fullName.trim().split(RegExp(r'\s+'));
+        final initials = parts.length >= 2
+            ? '${parts.first[0]}${parts.last[0]}'.toUpperCase()
+            : (parts.isNotEmpty && parts.first.isNotEmpty
+                ? parts.first.substring(0, 1).toUpperCase()
+                : '?');
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(AppTokens.gapXl),
@@ -100,7 +125,7 @@ class ProfileView extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 32,
-                    backgroundColor: AppColors.sun,
+                    backgroundColor: AppColors.gold,
                     child: Text(
                       initials,
                       style: theme.textTheme.headlineMedium?.copyWith(
@@ -127,7 +152,9 @@ class ProfileView extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '$activeProjectsCount proyectos activos',
+                          activeProjectsCount == 1
+                              ? '1 proyecto activo'
+                              : '$activeProjectsCount proyectos activos',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: AppColors.persimmon,
                             fontWeight: FontWeight.w600,
@@ -150,10 +177,12 @@ class ProfileView extends StatelessWidget {
                 Wrap(
                   spacing: AppTokens.gapXs,
                   runSpacing: AppTokens.gapXs,
-                  children: profile.skills.map((s) => Pill(label: s)).toList(),
+                  children:
+                      profile.skills.map((s) => Pill(label: s)).toList(),
                 )
               else
-                Text('No has registrado habilidades.', style: theme.textTheme.bodyMedium),
+                Text('No has registrado habilidades.',
+                    style: theme.textTheme.bodyMedium),
               const SizedBox(height: AppTokens.gapXl),
               Text(
                 'Proyectos',
@@ -163,25 +192,30 @@ class ProfileView extends StatelessWidget {
               ),
               const SizedBox(height: AppTokens.gapM),
               if (activeProjectsCount == 0)
-                Text('No tienes proyectos activos.', style: theme.textTheme.bodyMedium)
+                Text('No tienes proyectos activos.',
+                    style: theme.textTheme.bodyMedium)
               else ...[
                 ...projectsCtrl.createdProjects.map((p) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppTokens.gapM),
+                      padding:
+                          const EdgeInsets.only(bottom: AppTokens.gapM),
                       child: CompactProjectCard(
                         project: p,
                         bottomWidget: Text(
                           'Líder · ${p.currentMembers} de ${p.maxMembers} miembros',
-                          style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
                       ),
                     )),
                 ...projectsCtrl.participatingProjects.map((p) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppTokens.gapM),
+                      padding:
+                          const EdgeInsets.only(bottom: AppTokens.gapM),
                       child: CompactProjectCard(
                         project: p,
                         bottomWidget: Text(
                           'Participa · ${p.currentMembers} de ${p.maxMembers} miembros',
-                          style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
                       ),
                     )),
@@ -191,7 +225,8 @@ class ProfileView extends StatelessWidget {
                 onPressed: () => _confirmarCierreDeSesion(context),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.ink,
-                  side: AppTokens.border(),
+                  side: const BorderSide(
+                      color: AppColors.ink, width: AppTokens.borderWidth),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: const Text('Cerrar sesión'),

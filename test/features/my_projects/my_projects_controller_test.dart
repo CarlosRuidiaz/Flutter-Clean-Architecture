@@ -21,7 +21,7 @@ class _FakeAuthRepository implements IAuthRepository {
 
   @override
   Future<AuthenticationUser?> getLoggedUser() async {
-    return isLogged ? const AuthenticationUser(id: 'u1', email: 'test@test.com') : null;
+    return isLogged ? AuthenticationUser(id: 'u1', email: 'test@test.com', name: 'Test', password: '') : null;
   }
 
   void changeSession(bool logged) {
@@ -54,9 +54,6 @@ class _FakeProfileRepository implements IProfileRepository {
         semester: 1,
         skills: [],
       );
-
-  @override
-  Future<void> saveProfile(Profile profile) async => throw UnimplementedError();
 }
 
 class _FakeProjectRepository implements IProjectRepository {

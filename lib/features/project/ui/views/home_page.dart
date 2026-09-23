@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../../../core/app_routes.dart';
 import '../../../../core/app_tokens.dart';
+import '../../../my_projects/ui/viewmodels/my_projects_controller.dart';
 import '../../../my_projects/ui/views/my_projects_view.dart';
 import '../../../profile/ui/views/profile_view.dart';
 import 'cartelera_view.dart';
@@ -19,7 +20,11 @@ class _HomePageState extends State<HomePage> {
 
   void _onItemTapped(int index) {
     if (index == 2) {
-      Get.toNamed(AppRoutes.createIdea);
+      Get.toNamed(AppRoutes.createIdea)?.then((_) {
+        if (Get.isRegistered<MyProjectsController>()) {
+          Get.find<MyProjectsController>().reload();
+        }
+      });
     } else {
       setState(() {
         _currentIndex = index;
@@ -32,12 +37,12 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: const [
-          CarteleraView(),
-          MyProjectsView(),
-          SizedBox.shrink(), // Index 2 is "Crear", which opens a new route
-          _NotificationsEmptyView(),
-          ProfileView(),
+        children: [
+          const CarteleraView(),
+          MyProjectsView(onExplore: () => setState(() => _currentIndex = 0)),
+          const SizedBox.shrink(), // Index 2 is "Crear", which opens a new route
+          const _NotificationsEmptyView(),
+          const ProfileView(),
         ],
       ),
       bottomNavigationBar: _BottomBar(
@@ -61,7 +66,8 @@ class _NotificationsEmptyView extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.notifications_none, size: 48, color: AppColors.secondary),
+              const Icon(Icons.notifications_none,
+                  size: 48, color: AppColors.secondary),
               const SizedBox(height: AppTokens.gapM),
               Text(
                 'Todavía no tienes notificaciones',
@@ -87,41 +93,52 @@ class _BottomBar extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.paper,
-        border: Border(top: BorderSide(color: AppColors.ink, width: AppTokens.borderWidth)),
+        border: Border(
+            top: BorderSide(
+                color: AppColors.ink, width: AppTokens.borderWidth)),
       ),
       padding: const EdgeInsets.only(bottom: 16, top: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _NavBarItem(
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home,
-            label: 'Inicio',
-            isActive: currentIndex == 0,
-            onTap: () => onTap(0),
+          Expanded(
+            child: _NavBarItem(
+              icon: Icons.home_outlined,
+              activeIcon: Icons.home,
+              label: 'Inicio',
+              isActive: currentIndex == 0,
+              onTap: () => onTap(0),
+            ),
           ),
-          _NavBarItem(
-            icon: Icons.folder_outlined,
-            activeIcon: Icons.folder,
-            label: 'Mis proyectos',
-            isActive: currentIndex == 1,
-            onTap: () => onTap(1),
+          Expanded(
+            child: _NavBarItem(
+              icon: Icons.folder_outlined,
+              activeIcon: Icons.folder,
+              label: 'Mis proyectos',
+              isActive: currentIndex == 1,
+              onTap: () => onTap(1),
+            ),
           ),
-          _CreateActionItem(),
-          _NavBarItem(
-            icon: Icons.notifications_outlined,
-            activeIcon: Icons.notifications,
-            label: 'Notificaciones',
-            isActive: currentIndex == 3,
-            onTap: () => onTap(3),
+          Expanded(
+            child: _CreateActionItem(onTap: () => onTap(2)),
           ),
-          _NavBarItem(
-            icon: Icons.person_outline,
-            activeIcon: Icons.person,
-            label: 'Perfil',
-            isActive: currentIndex == 4,
-            onTap: () => onTap(4),
+          Expanded(
+            child: _NavBarItem(
+              icon: Icons.notifications_outlined,
+              activeIcon: Icons.notifications,
+              label: 'Notificaciones',
+              isActive: currentIndex == 3,
+              onTap: () => onTap(3),
+            ),
+          ),
+          Expanded(
+            child: _NavBarItem(
+              icon: Icons.person_outline,
+              activeIcon: Icons.person,
+              label: 'Perfil',
+              isActive: currentIndex == 4,
+              onTap: () => onTap(4),
+            ),
           ),
         ],
       ),
@@ -148,8 +165,7 @@ class _NavBarItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      child: Container(
-        width: 60,
+      child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -159,7 +175,8 @@ class _NavBarItem extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                    fontWeight:
+                        isActive ? FontWeight.bold : FontWeight.normal,
                     fontSize: 10,
                   ),
               textAlign: TextAlign.center,
@@ -171,7 +188,7 @@ class _NavBarItem extends StatelessWidget {
               height: 3,
               width: 16,
               decoration: BoxDecoration(
-                color: isActive ? AppColors.persimmon : Colors.transparent,
+                color: isActive ? AppColors.persimmon : null,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -183,12 +200,15 @@ class _NavBarItem extends StatelessWidget {
 }
 
 class _CreateActionItem extends StatelessWidget {
+  const _CreateActionItem({required this.onTap});
+
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => Get.toNamed(AppRoutes.createIdea),
-      child: Container(
-        width: 60,
+      onTap: onTap,
+      child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,

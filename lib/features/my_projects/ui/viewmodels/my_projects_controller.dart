@@ -26,18 +26,35 @@ class MyProjectsController extends GetxController with UiLoggy {
   StreamSubscription<bool>? _sessionSub;
 
   final RxBool isLoading = false.obs;
-  
+  final RxString error = ''.obs;
+
   final RxList<Project> createdProjects = <Project>[].obs;
   final RxMap<String, int> pendingApplicationsCount = <String, int>{}.obs;
-  
+
   final RxList<Project> participatingProjects = <Project>[].obs;
+
+  int pendingFor(String? projectId) =>
+      projectId == null ? 0 : (pendingApplicationsCount[projectId] ?? 0);
+
+  /// Creados + participando, sin [ProjectStage.finished] y sin repetir id.
+  int get activeProjectsCount {
+    final ids = <String>{};
+    for (final p in createdProjects) {
+      if (p.stage != ProjectStage.finished && p.id != null) ids.add(p.id!);
+    }
+    for (final p in participatingProjects) {
+      if (p.stage != ProjectStage.finished && p.id != null) ids.add(p.id!);
+    }
+    return ids.length;
+  }
 
   @override
   void onInit() {
     super.onInit();
     _loadData();
     _sessionSub = authRepo.sessionChanges.listen((haySesion) {
-      loggy.debug('MyProjectsController: cambio de sesion (activa: $haySesion)');
+      loggy.debug(
+          'MyProjectsController: cambio de sesion (activa: $haySesion)');
       if (haySesion) {
         _loadData();
       } else {
@@ -63,38 +80,48 @@ class MyProjectsController extends GetxController with UiLoggy {
   Future<void> _loadData() async {
     loggy.debug('MyProjectsController: _loadData()');
     isLoading.value = true;
+    error.value = '';
     try {
       final user = await authRepo.getLoggedUser();
       if (user == null) {
         _clearData();
         return;
       }
-      
+
       final profile = await profileRepo.getCurrentProfile();
-      final allProjects = await projectRepo.getProjects();
-      
-      // Creados por mí
-      final created = allProjects.where((p) => p.leaderId == profile.id).toList();
-      createdProjects.value = created;
-      
-      for (final p in created) {
-        final apps = await appRepo.getApplicationsFor(p.id!);
-        pendingApplicationsCount[p.id!] = apps.where((a) => a.isPending).length;
+      final myId = profile.id;
+      if (myId == null) {
+        _clearData();
+        return;
       }
-      
+
+      final allProjects = await projectRepo.getProjects();
+
+      // Creados por mí
+      final created =
+          allProjects.where((p) => p.leaderId == myId).toList();
+      createdProjects.value = created;
+
+      // Pendientes en paralelo
+      final conteos = await Future.wait(created.map((p) async {
+        final apps = await appRepo.getApplicationsFor(p.id!);
+        return MapEntry(p.id!, apps.where((a) => a.isPending).length);
+      }));
+      pendingApplicationsCount.assignAll(Map.fromEntries(conteos));
+
       // Donde participo
-      final myApps = await appRepo.getMyApplications(profile.id);
+      final myApps = await appRepo.getMyApplications(myId);
       final acceptedProjectIds = myApps
           .where((a) => a.status == ApplicationStatus.accepted)
           .map((a) => a.projectId)
           .toSet();
-          
+
       participatingProjects.value = allProjects
           .where((p) => acceptedProjectIds.contains(p.id))
           .toList();
-
     } catch (e) {
       loggy.error('Error cargando Mis Proyectos: $e');
+      error.value = '$e';
     } finally {
       isLoading.value = false;
     }

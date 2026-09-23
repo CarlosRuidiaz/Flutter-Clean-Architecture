@@ -1,6 +1,11 @@
 import 'package:f_clean_template/core/app_catalogs.dart';
 import 'package:f_clean_template/core/app_routes.dart';
 import 'package:f_clean_template/core/app_theme.dart';
+import 'package:f_clean_template/features/application/data/datasources/local/local_application_source.dart';
+import 'package:f_clean_template/features/application/data/repositories/application_repository.dart';
+import 'package:f_clean_template/features/application/domain/repositories/i_application_repository.dart';
+import 'package:f_clean_template/features/auth/domain/repositories/i_auth_repository.dart';
+import 'package:f_clean_template/features/my_projects/ui/viewmodels/my_projects_controller.dart';
 import 'package:f_clean_template/features/profile/data/datasources/i_profile_source.dart';
 import 'package:f_clean_template/features/profile/data/datasources/local/local_profile_source.dart';
 import 'package:f_clean_template/features/profile/data/repositories/profile_repository.dart';
@@ -31,12 +36,16 @@ Future<ProjectController> _enExplorar(WidgetTester tester) async {
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
 
+  final authRepo = FakeAuthRepository();
+  Get.put<IAuthRepository>(authRepo);
   Get.put<IProfileSource>(LocalProfileSource());
   Get.put<IProfileRepository>(ProfileRepository(Get.find()));
-  Get.put(ProfileController(Get.find(), FakeAuthRepository()));
+  Get.put(ProfileController(Get.find(), authRepo));
   Get.put<IProjectSource>(LocalProjectSource());
   Get.put<IProjectRepository>(ProjectRepository(Get.find()));
-  final controller = Get.put(ProjectController(Get.find(), Get.find(), FakeAuthRepository()));
+  Get.put<IApplicationRepository>(ApplicationRepository(LocalApplicationSource()));
+  Get.put(MyProjectsController(Get.find(), Get.find(), Get.find(), Get.find()));
+  final controller = Get.put(ProjectController(Get.find(), Get.find(), authRepo));
 
   await tester.pumpWidget(
     GetMaterialApp(
