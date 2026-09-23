@@ -75,6 +75,14 @@ void main() {
       );
     });
 
+    testWidgets('el lider no puede postularse a su propio proyecto',
+        (tester) async {
+      // El '2' tiene leaderId '1', el perfil de prueba, y sigue reclutando.
+      await _abrirDetalle(tester, '2');
+
+      expect(find.widgetWithText(ElevatedButton, 'Postularme'), findsNothing);
+    });
+
     testWidgets('9 · y no sale en los que lidera otra persona', (tester) async {
       // El '5' lo lidera 'u4', y el perfil de prueba no se ha postulado a el.
       await _abrirDetalle(tester, '5');

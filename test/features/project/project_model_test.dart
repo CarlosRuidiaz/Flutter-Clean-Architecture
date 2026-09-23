@@ -152,4 +152,31 @@ void main() {
       expect(projectNull.stage, ProjectStage.idea);
     });
   });
+
+  group('Project · quien puede postularse', () {
+    final abierto = Project(
+      id: 'p1',
+      title: 'T',
+      problem: '',
+      description: '',
+      stage: ProjectStage.idea,
+      academicProgram: '',
+      currentMembers: 1,
+      maxMembers: 4,
+      skillsWanted: const [],
+      leaderId: 'lider',
+    );
+
+    test('el lider no se postula a su propio proyecto', () {
+      expect(abierto.acceptsApplicationsFrom('lider'), isFalse);
+    });
+
+    test('cualquier otro si, mientras siga reclutando', () {
+      expect(abierto.acceptsApplicationsFrom('otro'), isTrue);
+      expect(
+        abierto.copyWith(recruitmentOpen: false).acceptsApplicationsFrom('otro'),
+        isFalse,
+      );
+    });
+  });
 }

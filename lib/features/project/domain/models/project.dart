@@ -37,6 +37,11 @@ class Project {
   /// solo aparece si esto es true.
   bool get acceptsApplications => recruitmentOpen && !isFull;
 
+  /// Si [userId] puede postularse: ademas de lo anterior, no es el lider. Quien
+  /// crea el proyecto ya esta en el equipo y gestiona a los postulantes.
+  bool acceptsApplicationsFrom(String? userId) =>
+      acceptsApplications && userId != leaderId;
+
   /// Un proyecto encaja con un estudiante si alguna habilidad buscada coincide
   /// con alguna de las suyas. Comparacion sin distinguir mayusculas ni espacios
   /// de sobra, porque las habilidades se escriben a mano.
