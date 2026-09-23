@@ -40,7 +40,7 @@ class LocalPreferencesSecured with UiLoggy implements ILocalPreferences {
 
   @override
   Future<int?> getInt(String key) async {
-    final value = await _storage.read(key: key);
+    final value = await _readOrFallback(key, () => _fallback.getInt(key));
     return value == null ? null : int.tryParse(value);
   }
 
@@ -52,7 +52,7 @@ class LocalPreferencesSecured with UiLoggy implements ILocalPreferences {
 
   @override
   Future<double?> getDouble(String key) async {
-    final value = await _storage.read(key: key);
+    final value = await _readOrFallback(key, () => _fallback.getDouble(key));
     return value == null ? null : double.tryParse(value);
   }
 
@@ -64,7 +64,7 @@ class LocalPreferencesSecured with UiLoggy implements ILocalPreferences {
 
   @override
   Future<bool?> getBool(String key) async {
-    final value = await _storage.read(key: key);
+    final value = await _readOrFallback(key, () => _fallback.getBool(key));
     if (value == null) return null;
     if (value.toLowerCase() == 'true') return true;
     if (value.toLowerCase() == 'false') return false;
@@ -118,6 +118,28 @@ class LocalPreferencesSecured with UiLoggy implements ILocalPreferences {
   @override
   Future<void> clear() =>
       _secureOrFallback(_storage.deleteAll, _fallback.clear);
+
+  /// Reads the raw string for [key] from secure storage, falling back to
+  /// [fallbackValue] (and switching to it for good) if the plugin isn't
+  /// available. `getInt`/`getDouble`/`getBool` store their value as text, so
+  /// the fallback's already-typed result is stringified to match.
+  Future<String?> _readOrFallback<T>(
+    String key,
+    Future<T?> Function() fallbackValue,
+  ) async {
+    if (_useFallback) return (await fallbackValue())?.toString();
+
+    try {
+      return await _storage.read(key: key);
+    } on MissingPluginException {
+      _useFallback = true;
+      loggy.warning(
+        'flutter_secure_storage is unavailable; using SharedPreferences fallback. '
+        'Fully restart the app after adding the plugin to enable encrypted storage.',
+      );
+      return (await fallbackValue())?.toString();
+    }
+  }
 
   Future<T> _secureOrFallback<T>(
     Future<T> Function() secure,

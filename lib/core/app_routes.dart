@@ -6,6 +6,8 @@ import '../features/project/ui/views/create_idea_page.dart';
 import '../features/project/ui/views/idea_published_page.dart';
 import '../features/project/ui/views/project_detail_page.dart';
 import '../features/project/ui/views/project_filters_page.dart';
+import '../features/workspace/ui/views/publish_update_page.dart';
+import '../features/workspace/ui/views/workspace_page.dart';
 
 /// Las rutas del flujo "crear una idea -> postularse -> aceptar la postulacion".
 ///
@@ -33,6 +35,13 @@ abstract class AppRoutes {
   /// estado de `ProjectController`.
   static const String projectFilters = '/project-filters';
 
+  /// El espacio de trabajo del proyecto. Recibe un `Project` por
+  /// `Get.arguments`, como el detalle.
+  static const String workspace = '/workspace';
+
+  /// Publicar un avance. Recibe un `Project` por `Get.arguments`.
+  static const String publishUpdate = '/publish-update';
+
   static final List<GetPage> pages = [
     GetPage(name: projectDetail, page: () => const ProjectDetailPage()),
     GetPage(name: createIdea, page: () => const CreateIdeaPage()),
@@ -43,5 +52,7 @@ abstract class AppRoutes {
     ),
     GetPage(name: applicants, page: () => const ApplicantsPage()),
     GetPage(name: projectFilters, page: () => const ProjectFiltersPage()),
+    GetPage(name: workspace, page: () => const WorkspacePage()),
+    GetPage(name: publishUpdate, page: () => const PublishUpdatePage()),
   ];
 }
