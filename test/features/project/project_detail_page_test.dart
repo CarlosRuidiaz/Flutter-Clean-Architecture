@@ -111,5 +111,29 @@ void main() {
 
       expect(find.widgetWithText(ElevatedButton, 'Postularme'), findsNothing);
     });
+
+    testWidgets('el boton de espacio de trabajo sale en el proyecto que uno '
+        'lidera', (tester) async {
+      // El '2' tiene leaderId '1', que es el perfil de prueba.
+      await _abrirDetalle(tester, '2');
+      await tester.pumpAndSettle();
+
+      expect(
+        find.widgetWithText(ElevatedButton, 'Espacio de trabajo'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('y no sale para un visitante que ni lidera ni fue aceptado',
+        (tester) async {
+      // El '5' lo lidera 'u4', y el perfil de prueba no se ha postulado a el.
+      await _abrirDetalle(tester, '5');
+      await tester.pumpAndSettle();
+
+      expect(
+        find.widgetWithText(ElevatedButton, 'Espacio de trabajo'),
+        findsNothing,
+      );
+    });
   });
 }
