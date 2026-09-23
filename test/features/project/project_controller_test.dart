@@ -102,6 +102,13 @@ class _FakeMutableRepository implements IProjectRepository {
   }
 }
 
+/// Repositorio que falla al crear, como Roble cuando responde 400.
+class _FailingRepository extends _FakeRepository {
+  @override
+  Future<Project> createProject(Project project) async =>
+      throw StateError('el backend rechazo la peticion');
+}
+
 /// Perfil falso: el controlador necesita las habilidades del estudiante para
 /// la pestania "Para tus habilidades".
 class _FakeProfileRepository implements IProfileRepository {
@@ -137,6 +144,22 @@ void main() {
       final controller = ProjectController(_FakeRepository(), _FakeProfileRepository(), FakeAuthRepository());
       await controller.getProjects();
       expect(controller.projects.length, 2);
+      expect(controller.isLoading.value, isFalse);
+    });
+
+    test('si crear falla, isLoading se apaga y el error sube', () async {
+      final controller = ProjectController(
+        _FailingRepository(),
+        _FakeProfileRepository(),
+        FakeAuthRepository(),
+      );
+
+      await expectLater(
+        controller.createProject(_ideaNueva()),
+        throwsStateError,
+      );
+
+      // Si se quedara en true, la cartelera giraria para siempre.
       expect(controller.isLoading.value, isFalse);
     });
 
@@ -443,6 +466,38 @@ void main() {
       expect(controller.allVisibleProjects.length, antes + 1);
       expect(controller.allVisibleProjects.first.title, 'Huerta urbana');
       expect(controller.projectsForMySkills.first.title, 'Huerta urbana');
+    });
+  });
+
+  group('ProjectController · sesion', () {
+    test('cerrar sesion borra la busqueda y los filtros', () async {
+      final authRepo = FakeAuthRepository();
+      final controller = ProjectController(
+        _FakeRepository(),
+        _FakeProfileRepository(),
+        authRepo,
+      );
+      controller.onInit();
+      await controller.getProjects();
+
+      controller.setSearchQuery('movilidad');
+      controller.applyFilters(
+        skills: const [AppCatalogs.skillUx],
+        programs: const [AppCatalogs.programSystems],
+        stages: const [ProjectStage.idea],
+      );
+
+      expect(controller.searchQuery.value, 'movilidad');
+      expect(controller.activeFilterCount, 3);
+
+      authRepo.emitirSesion(false);
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      expect(controller.searchQuery.value, isEmpty);
+      expect(controller.activeFilterCount, 0);
+      expect(controller.hasActiveFilters, isFalse);
+
+      controller.onClose();
     });
   });
 }

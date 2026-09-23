@@ -123,6 +123,7 @@ class ProjectController extends GetxController with UiLoggy {
         getCurrentProfile();
       } else {
         _profile.value = null;
+        clearFilters();
       }
     });
     super.onInit();
@@ -156,10 +157,15 @@ class ProjectController extends GetxController with UiLoggy {
   Future<Project> createProject(Project project) async {
     loggy.debug('ProjectController: creando proyecto');
     isLoading.value = true;
-    final creado = await repository.createProject(project);
-    await getProjects();   // para que el homepage se entere
-    isLoading.value = false;
-    return creado;
+    try {
+      final creado = await repository.createProject(project);
+      await getProjects();   // para que el homepage se entere
+      return creado;
+    } finally {
+      // Si el backend falla, isLoading no puede quedarse encendido: la
+      // cartelera se quedaria girando para siempre.
+      isLoading.value = false;
+    }
   }
 
   void setSearchQuery(String query) => searchQuery.value = query;

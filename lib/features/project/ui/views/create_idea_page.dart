@@ -5,6 +5,7 @@ import 'package:loggy/loggy.dart';
 import '../../../../core/app_catalogs.dart';
 import '../../../../core/app_routes.dart';
 import '../../../../core/app_tokens.dart';
+import '../../../../core/error_message.dart';
 import '../../../../core/widgets/paper_card.dart';
 import '../../../../core/widgets/pill.dart';
 import '../../../profile/ui/viewmodels/profile_controller.dart';
@@ -72,18 +73,34 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
 
   bool get _canPublish => _completedRequiredFieldsCount == 6 && _hasValidLeader;
 
+  /// Mientras la peticion esta en vuelo, el boton se apaga: un segundo toque
+  /// con la red lenta crearia la misma idea dos veces.
+  bool _publicando = false;
+
+  void _avisar(String mensaje) {
+    Get.snackbar(
+      'Publicar idea',
+      mensaje,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: AppColors.card,
+      colorText: AppColors.ink,
+    );
+  }
+
   Future<void> _publish() async {
-    if (!_canPublish) return;
+    if (!_canPublish || _publicando) return;
 
     final profile = _profileController.profile;
     if (profile == null) {
       loggy.error('No se encontro el perfil activo');
+      _avisar('No encontramos tu perfil. Vuelve a entrar e inténtalo de nuevo.');
       return;
     }
 
     final leaderId = profile.id;
     if (leaderId == null || leaderId.isEmpty) {
       loggy.error('El perfil activo no tiene id: la idea nacería sin líder');
+      _avisar('No encontramos tu perfil. Vuelve a entrar e inténtalo de nuevo.');
       return;
     }
 
@@ -101,8 +118,19 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
       recruitmentOpen: true,
     );
 
-    final createdProject = await _projectController.createProject(project);
-    Get.offAndToNamed(AppRoutes.ideaPublished, arguments: createdProject);
+    setState(() => _publicando = true);
+    try {
+      final createdProject = await _projectController.createProject(project);
+      Get.offAndToNamed(AppRoutes.ideaPublished, arguments: createdProject);
+    } catch (e) {
+      // Sin esto el fallo del backend quedaba sin atrapar: nada en pantalla y
+      // el depurador detenido en la excepcion. Se queda en el formulario, con
+      // lo escrito, para poder reintentar.
+      loggy.error('No se pudo publicar la idea: $e');
+      _avisar(errorMessage(e));
+    } finally {
+      if (mounted) setState(() => _publicando = false);
+    }
   }
 
   /// Marcar y desmarcar sobre la misma lista. Con un catalogo cerrado no hay
@@ -197,7 +225,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
                 const SizedBox(width: AppTokens.gapM),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _canPublish ? _publish : null,
+                    onPressed: _canPublish && !_publicando ? _publish : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.persimmon,
                       foregroundColor: Colors.white,
@@ -208,7 +236,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text('Publicar'),
+                    child: Text(_publicando ? 'Publicando...' : 'Publicar'),
                   ),
                 ),
               ],

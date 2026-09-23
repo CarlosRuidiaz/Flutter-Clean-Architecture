@@ -81,7 +81,7 @@ class ProjectDetailPage extends StatelessWidget {
                 child: const Text('Ver mi postulación'),
               ),
             ),
-          ] else if (project.acceptsApplications) ...[
+          ] else if (project.acceptsApplicationsFrom(_applicantId())) ...[
             const SizedBox(width: AppTokens.gapM),
             Expanded(
               child: ElevatedButton(
