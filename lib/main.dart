@@ -18,6 +18,7 @@ import 'features/management/management_dependencies.dart';
 import 'features/product/product_dependencies.dart';
 import 'features/profile/profile_dependencies.dart';
 import 'features/project/project_dependencies.dart';
+import 'features/workspace/workspace_dependencies.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +47,7 @@ void main() async {
   registerApplication();
   // Va despues de los dos anteriores: resuelve sus repositorios.
   registerManagement();
+  registerWorkspace();
   runApp(const MyApp());
 }
 
