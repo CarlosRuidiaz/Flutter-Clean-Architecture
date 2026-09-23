@@ -18,9 +18,15 @@ class RobleAuthenticationSource with UiLoggy implements IAuthenticationSource {
 
   /// Roble ya avisa de sus cambios de sesion: aqui solo se reduce a lo unico
   /// que le importa a quien escucha, si hay sesion o no.
+  ///
+  /// Roble entrega primero el estado actual al suscribirse; se salta, porque
+  /// esto avisa de cambios. Con el, cada controlador cargaba dos veces al
+  /// arrancar: una en su onInit y otra por ese primer aviso.
   @override
-  Stream<bool> get sessionChanges =>
-      roble.authStateChanges.map((estado) => estado.isSignedIn).distinct();
+  Stream<bool> get sessionChanges => roble.authStateChanges
+      .map((estado) => estado.isSignedIn)
+      .distinct()
+      .skip(1);
 
   @override
   Future<bool> login(AuthenticationUser user) async {
