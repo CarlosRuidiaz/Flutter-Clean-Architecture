@@ -123,6 +123,7 @@ class ProjectController extends GetxController with UiLoggy {
         getCurrentProfile();
       } else {
         _profile.value = null;
+        clearFilters();
       }
     });
     super.onInit();

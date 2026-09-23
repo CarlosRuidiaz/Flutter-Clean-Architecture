@@ -468,4 +468,36 @@ void main() {
       expect(controller.projectsForMySkills.first.title, 'Huerta urbana');
     });
   });
+
+  group('ProjectController · sesion', () {
+    test('cerrar sesion borra la busqueda y los filtros', () async {
+      final authRepo = FakeAuthRepository();
+      final controller = ProjectController(
+        _FakeRepository(),
+        _FakeProfileRepository(),
+        authRepo,
+      );
+      controller.onInit();
+      await controller.getProjects();
+
+      controller.setSearchQuery('movilidad');
+      controller.applyFilters(
+        skills: const [AppCatalogs.skillUx],
+        programs: const [AppCatalogs.programSystems],
+        stages: const [ProjectStage.idea],
+      );
+
+      expect(controller.searchQuery.value, 'movilidad');
+      expect(controller.activeFilterCount, 3);
+
+      authRepo.emitirSesion(false);
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      expect(controller.searchQuery.value, isEmpty);
+      expect(controller.activeFilterCount, 0);
+      expect(controller.hasActiveFilters, isFalse);
+
+      controller.onClose();
+    });
+  });
 }
