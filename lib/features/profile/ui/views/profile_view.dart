@@ -200,8 +200,9 @@ class ProfileView extends StatelessWidget {
                           const EdgeInsets.only(bottom: AppTokens.gapM),
                       child: CompactProjectCard(
                         project: p,
+                        // La tarjeta ya dice "N de M miembros": aqui solo el papel.
                         bottomWidget: Text(
-                          'Líder · ${p.currentMembers} de ${p.maxMembers} miembros',
+                          'Líder',
                           style: theme.textTheme.bodySmall
                               ?.copyWith(fontWeight: FontWeight.w600),
                         ),
@@ -213,7 +214,7 @@ class ProfileView extends StatelessWidget {
                       child: CompactProjectCard(
                         project: p,
                         bottomWidget: Text(
-                          'Participa · ${p.currentMembers} de ${p.maxMembers} miembros',
+                          'Participa',
                           style: theme.textTheme.bodySmall
                               ?.copyWith(fontWeight: FontWeight.w600),
                         ),

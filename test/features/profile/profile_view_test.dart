@@ -117,7 +117,9 @@ void main() {
       expect(find.text('Flutter'), findsOneWidget); // Pill de habilidad
       expect(find.text('Dart'), findsOneWidget); // Pill de habilidad
       expect(find.text('Proyecto 1'), findsOneWidget); // Tarjeta compacta
-      expect(find.text('Líder · 1 de 3 miembros'), findsOneWidget); // Rol
+      expect(find.text('Líder'), findsOneWidget); // Rol
+      // Una sola vez: lo pone la tarjeta, no la linea del rol.
+      expect(find.text('1 de 3 miembros'), findsOneWidget);
     });
   });
 }
