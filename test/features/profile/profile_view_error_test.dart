@@ -94,7 +94,9 @@ void main() {
     testWidgets('con el perfil nulo se ve el mensaje, no el spinner',
         (tester) async {
       // Esperar a que el ProfileController termine de intentar cargar.
-      await Future.delayed(const Duration(milliseconds: 50));
+      // Con el reloj falso de testWidgets un Future.delayed no vence nunca:
+      // hay que avanzar el tiempo con pump.
+      await tester.pump(const Duration(milliseconds: 50));
 
       await tester.pumpWidget(const GetMaterialApp(home: ProfileView()));
       await tester.pumpAndSettle();

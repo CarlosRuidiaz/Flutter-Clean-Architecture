@@ -11,7 +11,6 @@ import 'package:f_clean_template/features/profile/ui/viewmodels/profile_controll
 import 'package:f_clean_template/features/profile/ui/views/profile_view.dart';
 import 'package:f_clean_template/features/project/domain/models/project.dart';
 import 'package:f_clean_template/features/project/domain/repositories/i_project_repository.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 

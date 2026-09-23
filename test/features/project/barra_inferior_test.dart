@@ -84,6 +84,10 @@ void main() {
       await tester.tap(find.text('Crear'));
       await tester.pumpAndSettle();
 
+      // El formulario tapa la cartelera: se cierra para mirar debajo.
+      Get.back();
+      await tester.pumpAndSettle();
+
       // Seguimos en la cartelera (el IndexedStack sigue en index 0).
       expect(find.text('Para tus habilidades'), findsOneWidget);
     });

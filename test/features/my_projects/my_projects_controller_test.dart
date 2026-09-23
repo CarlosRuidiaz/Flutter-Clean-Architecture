@@ -8,7 +8,6 @@ import 'package:f_clean_template/features/project/domain/models/project.dart';
 import 'package:f_clean_template/features/project/domain/repositories/i_project_repository.dart';
 import 'package:f_clean_template/features/my_projects/ui/viewmodels/my_projects_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get/get.dart';
 import 'dart:async';
 
 class _FakeAuthRepository implements IAuthRepository {

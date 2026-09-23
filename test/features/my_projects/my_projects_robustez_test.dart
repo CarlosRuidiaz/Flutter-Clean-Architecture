@@ -77,9 +77,7 @@ class _FakeProjectRepository implements IProjectRepository {
 class _TrackingAppRepository implements IApplicationRepository {
   int _inFlight = 0;
   int maxInFlight = 0;
-  final Duration delay;
-
-  _TrackingAppRepository({this.delay = const Duration(milliseconds: 10)});
+  static const Duration delay = Duration(milliseconds: 10);
 
   @override
   Future<List<Application>> getMyApplications(String applicantId) async => [];
