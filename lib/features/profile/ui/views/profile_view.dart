@@ -116,9 +116,15 @@ class ProfileView extends StatelessWidget {
                 ? parts.first.substring(0, 1).toUpperCase()
                 : '?');
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(AppTokens.gapXl),
-          child: Column(
+        return RefreshIndicator(
+          onRefresh: () async {
+            await profileCtrl.getCurrentProfile();
+            await projectsCtrl.reload();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(AppTokens.gapXl),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
@@ -234,7 +240,7 @@ class ProfileView extends StatelessWidget {
               ),
             ],
           ),
-        );
+        ));
       }),
     );
   }

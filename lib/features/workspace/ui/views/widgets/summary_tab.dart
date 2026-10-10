@@ -7,6 +7,7 @@ import '../../../../../core/widgets/pill.dart';
 import '../../../../project/ui/views/widgets/stage_chip.dart';
 import '../../../ui/viewmodels/team_member.dart';
 import '../../../ui/viewmodels/workspace_controller.dart';
+import '../../../../poll/ui/views/widgets/workspace_polls_block.dart';
 
 /// Pestania "Resumen": estado actual, equipo y tarjeta de reclutamiento.
 class WorkspaceSummaryTab extends StatelessWidget {
@@ -114,6 +115,8 @@ class WorkspaceSummaryTab extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: AppTokens.gapXl),
+          WorkspacePollsBlock(project: project),
         ],
       );
     });

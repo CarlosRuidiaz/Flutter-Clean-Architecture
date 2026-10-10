@@ -8,6 +8,9 @@ import '../features/project/ui/views/project_detail_page.dart';
 import '../features/project/ui/views/project_filters_page.dart';
 import '../features/workspace/ui/views/publish_update_page.dart';
 import '../features/workspace/ui/views/workspace_page.dart';
+import '../features/poll/ui/views/create_poll_page.dart';
+import '../features/poll/ui/views/respond_poll_page.dart';
+import '../features/poll/ui/views/poll_results_page.dart';
 
 /// Las rutas del flujo "crear una idea -> postularse -> aceptar la postulacion".
 ///
@@ -42,6 +45,10 @@ abstract class AppRoutes {
   /// Publicar un avance. Recibe un `Project` por `Get.arguments`.
   static const String publishUpdate = '/publish-update';
 
+  static const String createPoll = '/create-poll';
+  static const String respondPoll = '/respond-poll';
+  static const String pollResults = '/poll-results';
+
   static final List<GetPage> pages = [
     GetPage(name: projectDetail, page: () => const ProjectDetailPage()),
     GetPage(name: createIdea, page: () => const CreateIdeaPage()),
@@ -54,5 +61,8 @@ abstract class AppRoutes {
     GetPage(name: projectFilters, page: () => const ProjectFiltersPage()),
     GetPage(name: workspace, page: () => const WorkspacePage()),
     GetPage(name: publishUpdate, page: () => const PublishUpdatePage()),
+    GetPage(name: createPoll, page: () => const CreatePollPage()),
+    GetPage(name: respondPoll, page: () => const RespondPollPage()),
+    GetPage(name: pollResults, page: () => const PollResultsPage()),
   ];
 }

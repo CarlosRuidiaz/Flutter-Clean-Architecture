@@ -11,6 +11,8 @@ import '../../../profile/ui/viewmodels/profile_controller.dart';
 import '../../domain/models/project.dart';
 import '../viewmodels/project_controller.dart';
 import 'widgets/stage_chip.dart';
+import '../../../follow/ui/viewmodels/follow_controller.dart';
+import '../../../poll/ui/views/widgets/active_polls_block.dart';
 
 /// Pantalla 07 de Figma: Detalle de un proyecto con el flujo de postulación.
 class ProjectDetailPage extends StatelessWidget {
@@ -80,21 +82,31 @@ class ProjectDetailPage extends StatelessWidget {
 
   Widget _buildFooterButtons(BuildContext context, Project project) {
     final controller = Get.find<ApplicationController>();
+    final followController = Get.isRegistered<FollowController>() ? Get.find<FollowController>() : null;
+    final String applicantId = _applicantId();
+    final bool esLider = project.leaderId == applicantId;
 
     return Obx(() {
       // Si ya hay una postulación viva a este proyecto, la pantalla 07 lleva a
       // verla en vez de ofrecer postularse otra vez. Es la única entrada a la
       // pantalla 19 mientras la 18 no exista, y evita duplicados.
       final vigente = controller.vigenteEn(project.id ?? '');
+      
+      final bool isFollowing = followController?.isFollowing(project.id ?? '') ?? false;
 
       return Row(
         children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () {}, // Decorativo según especificación Figma
-              child: const Text('Seguir'),
+          if (!esLider)
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () {
+                  if (project.id != null) {
+                    followController?.toggleFollow(project.id!, !isFollowing);
+                  }
+                },
+                child: Text(isFollowing ? 'Siguiendo' : 'Seguir'),
+              ),
             ),
-          ),
           if (vigente != null) ...[
             const SizedBox(width: AppTokens.gapM),
             Expanded(
@@ -291,6 +303,9 @@ class ProjectDetailPage extends StatelessWidget {
 
                       // Botones del pie
                       _buildFooterButtons(context, project),
+                      
+                      // Encuestas activas
+                      ActivePollsBlock(project: project),
 
                       // Solo el lider del proyecto gestiona sus postulantes.
                       if (esLider) ...[
