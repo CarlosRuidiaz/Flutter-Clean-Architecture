@@ -19,6 +19,7 @@ import 'features/my_projects/my_projects_dependencies.dart';
 import 'features/product/product_dependencies.dart';
 import 'features/profile/profile_dependencies.dart';
 import 'features/project/project_dependencies.dart';
+import 'features/showcase/showcase_dependencies.dart';
 import 'features/workspace/workspace_dependencies.dart';
 
 void main() async {
@@ -50,6 +51,7 @@ void main() async {
   registerManagement();
   registerWorkspace();
   registerMyProjects();
+  registerShowcase();
   runApp(const MyApp());
 }
 
