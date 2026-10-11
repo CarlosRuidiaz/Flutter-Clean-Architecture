@@ -8,6 +8,7 @@ import '../../domain/models/project.dart';
 import '../viewmodels/project_controller.dart';
 import 'widgets/explore_search_row.dart';
 import 'widgets/project_card.dart';
+import 'widgets/showcase_banner.dart';
 
 class CarteleraView extends StatelessWidget {
   const CarteleraView({super.key});
@@ -138,6 +139,7 @@ class CarteleraView extends StatelessWidget {
             Column(
               children: [
                 const ExploreSearchRow(),
+                const ShowcaseBanner(),
                 Expanded(child: _exploreTab(context, controller)),
               ],
             ),
