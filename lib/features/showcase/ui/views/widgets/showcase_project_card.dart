@@ -37,6 +37,7 @@ class ShowcaseProjectCard extends StatelessWidget {
           Container(
             width: 76,
             height: 76,
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: const Color(0xFFF3EEDD),
               borderRadius: AppTokens.borderRadius,
@@ -95,6 +96,13 @@ class ShowcaseProjectCard extends StatelessWidget {
 class _HatchPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.clipRRect(
+      RRect.fromRectAndRadius(
+        Offset.zero & size,
+        const Radius.circular(AppTokens.radius),
+      ),
+    );
     final paint = Paint()
       ..color = const Color(0xFFDFD7C2)
       ..strokeWidth = 2.0;
@@ -106,6 +114,7 @@ class _HatchPatternPainter extends CustomPainter {
         paint,
       );
     }
+    canvas.restore();
   }
 
   @override
