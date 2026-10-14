@@ -21,6 +21,10 @@ class _FakeProjectRepository implements IProjectRepository {
   Future<void> closeRecruitment(String projectId) async {}
   @override
   Future<void> addMember(String projectId) async {}
+  @override
+  Future<void> removeMember(String projectId) async {}
+  @override
+  Future<void> updateStage(String projectId, ProjectStage stage) async {}
 }
 
 class _FakeProfileRepository implements IProfileRepository {
@@ -46,6 +50,8 @@ class _FakeApplicationRepository implements IApplicationRepository {
   Future<void> withdraw(String applicationId) async {}
   @override
   Future<void> decide(String applicationId, ApplicationStatus decision) async {}
+  @override
+  Future<void> leave(String applicationId) async {}
 }
 
 void main() {
