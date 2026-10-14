@@ -11,7 +11,8 @@ void main() {
     
     // Validar que se creó y esta activo
     final list1 = await source.getFollowsByUser('u1');
-    expect(list1.length, 2); // 1 (default de local source) + 1 nuevo
+    // La siembra de la fuente local es de 'u8': 'u1' solo tiene el nuevo.
+    expect(list1.length, 1);
     
     // Dejar de seguir
     await source.setFollow(Follow(projectId: 'p1', userId: 'u1', active: false));
