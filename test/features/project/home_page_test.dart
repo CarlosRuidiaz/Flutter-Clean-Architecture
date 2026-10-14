@@ -25,6 +25,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../auth/fake_auth_repository.dart';
 import 'package:get/get.dart';
+import '../seguir_y_encuestas_de_prueba.dart';
 
 /// Perfil a medida para los dos estados vacios de la pestania de habilidades:
 /// uno sin habilidades registradas y otro con una que nadie pide.
@@ -73,6 +74,12 @@ Future<ProjectController> _montarCartelera(
   Get.put<IApplicationRepository>(ApplicationRepository(LocalApplicationSource()));
   Get.put(MyProjectsController(Get.find(), Get.find(), Get.find(), Get.find()));
   final controller = Get.put(ProjectController(Get.find(), Get.find(), Get.find<IAuthRepository>()));
+  registrarSeguirYEncuestas(
+    auth: Get.find(),
+    perfiles: Get.find(),
+    proyectos: Get.find(),
+    postulaciones: Get.find(),
+  );
 
   await tester.pumpWidget(
     GetMaterialApp(theme: AppTheme.light, home: const HomePage()),

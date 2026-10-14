@@ -22,6 +22,7 @@ import 'package:f_clean_template/features/project/ui/views/home_page.dart';
 import 'package:f_clean_template/features/project/ui/views/widgets/project_card.dart';
 
 import '../auth/fake_auth_repository.dart';
+import '../seguir_y_encuestas_de_prueba.dart';
 
 Future<ProjectController> _montar(
   WidgetTester tester, {
@@ -46,6 +47,12 @@ Future<ProjectController> _montar(
   );
   final controller = Get.put(
     ProjectController(Get.find(), Get.find(), authRepo),
+  );
+  registrarSeguirYEncuestas(
+    auth: authRepo,
+    perfiles: Get.find(),
+    proyectos: Get.find(),
+    postulaciones: Get.find(),
   );
 
   await tester.pumpWidget(

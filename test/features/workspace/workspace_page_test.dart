@@ -23,6 +23,8 @@ import 'package:f_clean_template/features/workspace/ui/viewmodels/workspace_cont
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import '../auth/fake_auth_repository.dart';
+import '../seguir_y_encuestas_de_prueba.dart';
 
 class _PerfilFijo implements IProfileRepository {
   _PerfilFijo(this.perfil);
@@ -83,6 +85,12 @@ Future<void> _abrir(
       Get.find<IProfileRepository>(),
       Get.find<IProjectRepository>(),
     ),
+  );
+  registrarSeguirYEncuestas(
+    auth: FakeAuthRepository(),
+    perfiles: Get.find(),
+    proyectos: Get.find(),
+    postulaciones: Get.find(),
   );
 
   await preparar?.call(Get.find<IApplicationRepository>());

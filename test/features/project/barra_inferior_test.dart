@@ -22,6 +22,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
 import '../auth/fake_auth_repository.dart';
+import '../seguir_y_encuestas_de_prueba.dart';
 
 /// Monta la cartelera completa con las fuentes locales.
 Future<void> _montarHome(WidgetTester tester) async {
@@ -45,6 +46,12 @@ Future<void> _montarHome(WidgetTester tester) async {
   Get.put(MyProjectsController(
       Get.find(), Get.find(), Get.find(), Get.find()));
   Get.put(ProjectController(Get.find(), Get.find(), authRepo));
+  registrarSeguirYEncuestas(
+    auth: authRepo,
+    perfiles: Get.find(),
+    proyectos: Get.find(),
+    postulaciones: Get.find(),
+  );
 
   await tester.pumpWidget(
     GetMaterialApp(

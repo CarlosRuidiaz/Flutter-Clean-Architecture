@@ -25,6 +25,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../auth/fake_auth_repository.dart';
 import 'package:get/get.dart';
+import '../seguir_y_encuestas_de_prueba.dart';
 
 /// Arranca en la cartelera, no en la pantalla de filtros: lo que se prueba es
 /// el viaje entero, ida, seleccion y vuelta.
@@ -46,6 +47,12 @@ Future<ProjectController> _enExplorar(WidgetTester tester) async {
   Get.put<IApplicationRepository>(ApplicationRepository(LocalApplicationSource()));
   Get.put(MyProjectsController(Get.find(), Get.find(), Get.find(), Get.find()));
   final controller = Get.put(ProjectController(Get.find(), Get.find(), authRepo));
+  registrarSeguirYEncuestas(
+    auth: authRepo,
+    perfiles: Get.find(),
+    proyectos: Get.find(),
+    postulaciones: Get.find(),
+  );
 
   await tester.pumpWidget(
     GetMaterialApp(

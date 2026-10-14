@@ -13,6 +13,7 @@ import 'package:f_clean_template/features/project/domain/repositories/i_project_
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import '../seguir_y_encuestas_de_prueba.dart';
 
 // ───────────────────────────────────────────────────────────────────────────
 // Fakes
@@ -149,6 +150,12 @@ Future<MyProjectsController> _montar(
 
   final controller = Get.put<MyProjectsController>(
     MyProjectsController(pRepo, aRepo, profileRepo, authRepo),
+  );
+  registrarSeguirYEncuestas(
+    auth: authRepo,
+    perfiles: profileRepo,
+    proyectos: pRepo,
+    postulaciones: aRepo,
   );
 
   await controller.reload();

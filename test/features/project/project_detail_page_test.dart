@@ -23,6 +23,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../auth/fake_auth_repository.dart';
 import 'package:get/get.dart';
+import '../seguir_y_encuestas_de_prueba.dart';
 
 /// Un repositorio de perfil que no logra cargar nada: como cuando todavia no
 /// hay sesion. `ProfileController` lo traga y deja el perfil en null.
@@ -76,6 +77,12 @@ Future<void> _abrirDetalle(
       Get.find<IApplicationRepository>(),
       Get.find<IProjectRepository>(),
     ),
+  );
+  registrarSeguirYEncuestas(
+    auth: FakeAuthRepository(),
+    perfiles: Get.find(),
+    proyectos: Get.find(),
+    postulaciones: Get.find(),
   );
 
   await preparar?.call(Get.find<IApplicationRepository>());
