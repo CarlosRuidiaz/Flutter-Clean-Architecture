@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:get/get.dart';
 import 'package:loggy/loggy.dart';
 
-import '../../auth/domain/repositories/i_auth_repository.dart';
-import '../domain/models/follow.dart';
-import '../domain/repositories/i_follow_repository.dart';
+import '../../../auth/domain/repositories/i_auth_repository.dart';
+import '../../domain/models/follow.dart';
+import '../../domain/repositories/i_follow_repository.dart';
 
 class FollowController extends GetxController with UiLoggy {
   FollowController(this.followRepo, this.authRepo);

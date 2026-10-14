@@ -1,4 +1,4 @@
-import '../models/follow.dart';
+import '../../domain/models/follow.dart';
 
 abstract class IFollowSource {
   Future<List<Follow>> getFollowsByUser(String userId);
