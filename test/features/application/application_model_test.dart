@@ -120,5 +120,39 @@ void main() {
       final applicationNull = Application.fromJson(jsonNull);
       expect(applicationNull.status, ApplicationStatus.pending);
     });
+
+    test('los estados left y removed se leen y se escriben por su nombre', () {
+      Application leer(String status) => Application.fromJson({
+        '_id': 'a',
+        'project_id': 'p',
+        'applicant_id': 'u',
+        'applicant_name': 'n',
+        'applicant_program': 'x',
+        'applicant_semester': 1,
+        'skills_offered': [],
+        'status': status,
+      });
+
+      expect(leer('left').status, ApplicationStatus.left);
+      expect(leer('removed').status, ApplicationStatus.removed);
+      expect(leer('left').toJsonNoId()['status'], 'left');
+      expect(leer('removed').toJsonNoId()['status'], 'removed');
+    });
+
+    test('ni salir ni ser removido dejan retirar la postulacion', () {
+      Application con(ApplicationStatus status) => Application(
+        projectId: 'p',
+        applicantId: 'u',
+        applicantName: 'n',
+        applicantProgram: 'x',
+        applicantSemester: 1,
+        skillsOffered: const [],
+        status: status,
+      );
+
+      expect(con(ApplicationStatus.left).canWithdraw, isFalse);
+      expect(con(ApplicationStatus.removed).canWithdraw, isFalse);
+      expect(con(ApplicationStatus.left).isPending, isFalse);
+    });
   });
 }

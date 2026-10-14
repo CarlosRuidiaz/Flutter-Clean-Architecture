@@ -5,7 +5,9 @@ import 'package:f_clean_template/features/application/data/datasources/local/loc
 import 'package:f_clean_template/features/application/data/repositories/application_repository.dart';
 import 'package:f_clean_template/features/application/domain/repositories/i_application_repository.dart';
 import 'package:f_clean_template/features/application/ui/viewmodels/application_controller.dart';
+import 'package:f_clean_template/features/application/domain/models/application.dart';
 import 'package:f_clean_template/features/profile/data/datasources/i_profile_source.dart';
+import 'package:f_clean_template/features/profile/domain/models/profile.dart';
 import 'package:f_clean_template/features/profile/data/datasources/local/local_profile_source.dart';
 import 'package:f_clean_template/features/profile/data/repositories/profile_repository.dart';
 import 'package:f_clean_template/features/profile/domain/repositories/i_profile_repository.dart';
@@ -22,7 +24,32 @@ import 'package:flutter_test/flutter_test.dart';
 import '../auth/fake_auth_repository.dart';
 import 'package:get/get.dart';
 
-Future<void> _abrirDetalle(WidgetTester tester, String projectId) async {
+/// Un repositorio de perfil que no logra cargar nada: como cuando todavia no
+/// hay sesion. `ProfileController` lo traga y deja el perfil en null.
+class _PerfilQueNoCarga implements IProfileRepository {
+  @override
+  Future<Profile> getCurrentProfile() async =>
+      throw StateError('todavia no hay sesion');
+}
+
+class _PerfilFijo implements IProfileRepository {
+  _PerfilFijo(this.perfil);
+
+  final Profile perfil;
+
+  @override
+  Future<Profile> getCurrentProfile() async => perfil;
+}
+
+/// [preparar] corre despues de registrar las fuentes y antes de abrir la
+/// pantalla: sirve para dejar una postulacion en el estado que se quiere ver.
+Future<void> _abrirDetalle(
+  WidgetTester tester,
+  String projectId, {
+  bool conPerfil = true,
+  Profile? perfil,
+  Future<void> Function(IApplicationRepository postulaciones)? preparar,
+}) async {
   Get.testMode = true;
   await Get.deleteAll(force: true);
 
@@ -30,8 +57,14 @@ Future<void> _abrirDetalle(WidgetTester tester, String projectId) async {
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
 
-  Get.put<IProfileSource>(LocalProfileSource());
-  Get.put<IProfileRepository>(ProfileRepository(Get.find()));
+  if (perfil != null) {
+    Get.put<IProfileRepository>(_PerfilFijo(perfil));
+  } else if (conPerfil) {
+    Get.put<IProfileSource>(LocalProfileSource());
+    Get.put<IProfileRepository>(ProfileRepository(Get.find()));
+  } else {
+    Get.put<IProfileRepository>(_PerfilQueNoCarga());
+  }
   Get.put(ProfileController(Get.find(), FakeAuthRepository()));
   Get.put<IProjectSource>(LocalProjectSource());
   Get.put<IProjectRepository>(ProjectRepository(Get.find()));
@@ -44,6 +77,8 @@ Future<void> _abrirDetalle(WidgetTester tester, String projectId) async {
       Get.find<IProjectRepository>(),
     ),
   );
+
+  await preparar?.call(Get.find<IApplicationRepository>());
 
   final Project project = (await Get.find<IProjectRepository>().getProjects())
       .firstWhere((p) => p.id == projectId);
@@ -142,6 +177,123 @@ void main() {
         find.widgetWithText(ElevatedButton, 'Espacio de trabajo'),
         findsNothing,
       );
+    });
+
+    testWidgets('un miembro aceptado ve el espacio de trabajo aunque no lidere',
+        (tester) async {
+      // El perfil de prueba tiene aceptada su postulacion al '3'.
+      await _abrirDetalle(tester, '3');
+      await tester.pumpAndSettle();
+
+      expect(
+        find.widgetWithText(ElevatedButton, 'Espacio de trabajo'),
+        findsOneWidget,
+      );
+      expect(
+        find.widgetWithText(OutlinedButton, 'Gestionar postulantes'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('quien salio del proyecto ya no ve el espacio de trabajo y '
+        'puede volver a postularse', (tester) async {
+      await _abrirDetalle(
+        tester,
+        '3',
+        preparar: (postulaciones) => postulaciones.leave('4'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.widgetWithText(ElevatedButton, 'Espacio de trabajo'),
+        findsNothing,
+      );
+      expect(find.widgetWithText(ElevatedButton, 'Postularme'), findsOneWidget);
+    });
+
+    testWidgets('a quien el lider removio no se le ofrece postularse',
+        (tester) async {
+      // La postulacion '3' del perfil de prueba es al proyecto '1'.
+      await _abrirDetalle(
+        tester,
+        '1',
+        preparar: (postulaciones) =>
+            postulaciones.decide('3', ApplicationStatus.removed),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(ElevatedButton, 'Postularme'), findsNothing);
+      expect(find.text('Te removieron de este proyecto.'), findsOneWidget);
+      expect(
+        find.widgetWithText(ElevatedButton, 'Espacio de trabajo'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('sin perfil cargado el detalle no ofrece postularse',
+        (tester) async {
+      await _abrirDetalle(tester, '5', conPerfil: false);
+      await tester.pumpAndSettle();
+
+      final boton = find.widgetWithText(ElevatedButton, 'Postularme');
+      expect(boton, findsOneWidget);
+      expect(tester.widget<ElevatedButton>(boton).onPressed, isNull);
+
+      // Pulsarlo no crea nada a nombre de nadie.
+      final antes = (await Get.find<IApplicationRepository>()
+              .getApplicationsFor('5'))
+          .length;
+      await tester.tap(boton, warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(
+        (await Get.find<IApplicationRepository>().getApplicationsFor('5'))
+            .length,
+        antes,
+      );
+    });
+
+    testWidgets('sin perfil tampoco se ven los botones del lider ni del equipo',
+        (tester) async {
+      // Aunque el proyecto sea el '2', cuyo lider es el perfil de prueba: sin
+      // saber quien mira no se adivina que es el lider.
+      await _abrirDetalle(tester, '2', conPerfil: false);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.widgetWithText(OutlinedButton, 'Gestionar postulantes'),
+        findsNothing,
+      );
+      expect(
+        find.widgetWithText(ElevatedButton, 'Espacio de trabajo'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('postularse guarda los datos del perfil, no unos de prueba',
+        (tester) async {
+      // Un perfil que no se parece en nada a los datos de prueba de antes
+      // (Carlos Ruidíaz, Ingeniería de Sistemas, semestre 8).
+      final perfil = Profile(
+        id: 'u99',
+        fullName: 'Valentina Mora',
+        academicProgram: 'Psicología',
+        semester: 3,
+        skills: const ['Python'],
+      );
+      await _abrirDetalle(tester, '5', perfil: perfil);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Postularme'));
+      await tester.pumpAndSettle();
+
+      final nueva = (await Get.find<IApplicationRepository>()
+              .getApplicationsFor('5'))
+          .single;
+      expect(nueva.applicantId, 'u99');
+      expect(nueva.applicantName, 'Valentina Mora');
+      expect(nueva.applicantProgram, 'Psicología');
+      expect(nueva.applicantSemester, 3);
+      expect(nueva.skillsOffered, ['Python']);
     });
   });
 }

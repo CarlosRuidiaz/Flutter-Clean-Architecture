@@ -163,5 +163,53 @@ void main() {
       await source.addMember('p3');
       expect(fakeRoble.projects.first['current_members'], 3);
     });
+
+    Map<String, dynamic> proyecto(String id, int miembros) => {
+      '_id': id,
+      'title': 'Proyecto',
+      'problem': '',
+      'description': '',
+      'stage': 'idea',
+      'academic_program': '',
+      'current_members': miembros,
+      'max_members': 4,
+      'skills_wanted': [],
+      'tags': [],
+      'leader_id': 'l1',
+      'recruitment_open': true,
+    };
+
+    test('removeMember resta uno a current_members', () async {
+      fakeRoble.projects.add(proyecto('p4', 3));
+
+      await source.removeMember('p4');
+
+      expect(fakeRoble.projects.first['current_members'], 2);
+    });
+
+    test('removeMember nunca baja de 1, que es el lider', () async {
+      fakeRoble.projects.add(proyecto('p5', 1));
+
+      await source.removeMember('p5');
+
+      expect(fakeRoble.projects.first['current_members'], 1);
+    });
+
+    test('removeMember de un proyecto que no existe no hace nada', () async {
+      await source.removeMember('no-existe');
+
+      expect(fakeRoble.projects, isEmpty);
+    });
+
+    test('updateStage escribe el nombre de la etapa en la columna stage',
+        () async {
+      fakeRoble.projects.add(proyecto('p6', 2));
+
+      await source.updateStage('p6', ProjectStage.prototype);
+
+      expect(fakeRoble.projects.first['stage'], 'prototype');
+      // Y lo demas queda como estaba.
+      expect(fakeRoble.projects.first['current_members'], 2);
+    });
   });
 }

@@ -207,5 +207,116 @@ void main() {
       await source.decide('a1', ApplicationStatus.accepted);
       expect(fakeRoble.applications.first['status'], 'accepted');
     });
+
+    test('leave actualiza status a left', () async {
+      fakeRoble.applications.add({
+        '_id': 'a1',
+        'project_id': 'p1',
+        'applicant_id': 'u1',
+        'applicant_name': 'User 1',
+        'applicant_program': 'Sistemas',
+        'applicant_semester': 5,
+        'skills_offered': [],
+        'status': 'accepted',
+      });
+
+      await source.leave('a1');
+      expect(fakeRoble.applications.first['status'], 'left');
+    });
+
+    test('decide con removed actualiza status a removed', () async {
+      fakeRoble.applications.add({
+        '_id': 'a1',
+        'project_id': 'p1',
+        'applicant_id': 'u1',
+        'applicant_name': 'User 1',
+        'applicant_program': 'Sistemas',
+        'applicant_semester': 5,
+        'skills_offered': [],
+        'status': 'accepted',
+      });
+
+      await source.decide('a1', ApplicationStatus.removed);
+      expect(fakeRoble.applications.first['status'], 'removed');
+    });
+
+    test('quien salio puede volver a postularse: se crea una nueva', () async {
+      fakeRoble.applications.add({
+        '_id': 'a1',
+        'project_id': 'p1',
+        'applicant_id': 'u1',
+        'applicant_name': 'User 1',
+        'applicant_program': 'Sistemas',
+        'applicant_semester': 5,
+        'skills_offered': [],
+        'status': 'left',
+      });
+
+      final resultado = await source.apply(Application(
+        projectId: 'p1',
+        applicantId: 'u1',
+        applicantName: 'User 1',
+        applicantProgram: 'Sistemas',
+        applicantSemester: 5,
+        skillsOffered: const [],
+      ));
+
+      expect(resultado.id, isNot('a1'));
+      expect(resultado.isPending, isTrue);
+      expect(fakeRoble.applications.length, 2);
+    });
+
+    test('un removido no puede volver a postularse: apply devuelve la suya',
+        () async {
+      fakeRoble.applications.add({
+        '_id': 'a1',
+        'project_id': 'p1',
+        'applicant_id': 'u1',
+        'applicant_name': 'User 1',
+        'applicant_program': 'Sistemas',
+        'applicant_semester': 5,
+        'skills_offered': [],
+        'status': 'removed',
+      });
+
+      final resultado = await source.apply(Application(
+        projectId: 'p1',
+        applicantId: 'u1',
+        applicantName: 'User 1',
+        applicantProgram: 'Sistemas',
+        applicantSemester: 5,
+        skillsOffered: const [],
+      ));
+
+      expect(resultado.id, 'a1');
+      expect(resultado.status, ApplicationStatus.removed);
+      expect(fakeRoble.applications.length, 1);
+    });
+
+    test('un removido de un proyecto si puede postularse a otro', () async {
+      fakeRoble.applications.add({
+        '_id': 'a1',
+        'project_id': 'p1',
+        'applicant_id': 'u1',
+        'applicant_name': 'User 1',
+        'applicant_program': 'Sistemas',
+        'applicant_semester': 5,
+        'skills_offered': [],
+        'status': 'removed',
+      });
+
+      final resultado = await source.apply(Application(
+        projectId: 'p2',
+        applicantId: 'u1',
+        applicantName: 'User 1',
+        applicantProgram: 'Sistemas',
+        applicantSemester: 5,
+        skillsOffered: const [],
+      ));
+
+      expect(resultado.projectId, 'p2');
+      expect(resultado.isPending, isTrue);
+      expect(fakeRoble.applications.length, 2);
+    });
   });
 }

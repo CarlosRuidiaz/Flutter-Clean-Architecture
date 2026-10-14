@@ -138,5 +138,56 @@ void main() {
       final decidida = actualizadas.firstWhere((a) => a.id == id);
       expect(decidida.status, ApplicationStatus.accepted);
     });
+
+    test('leave deja la postulacion en left', () async {
+      // La del estudiante '1' al proyecto '3' nace aceptada.
+      final aceptada = (await source.getMyApplications('1'))
+          .firstWhere((a) => a.status == ApplicationStatus.accepted);
+
+      await source.leave(aceptada.id!);
+
+      final despues = (await source.getMyApplications('1'))
+          .firstWhere((a) => a.id == aceptada.id);
+      expect(despues.status, ApplicationStatus.left);
+    });
+
+    test('quien salio puede volver a postularse', () async {
+      final aceptada = (await source.getMyApplications('1'))
+          .firstWhere((a) => a.status == ApplicationStatus.accepted);
+      await source.leave(aceptada.id!);
+
+      final nueva = await source.apply(Application(
+        projectId: aceptada.projectId,
+        applicantId: '1',
+        applicantName: 'Carlos Ruidíaz',
+        applicantProgram: 'Ing. de Sistemas',
+        applicantSemester: 8,
+        skillsOffered: const [],
+      ));
+
+      expect(nueva.id, isNot(aceptada.id));
+      expect(nueva.isPending, isTrue);
+    });
+
+    test('un removido no puede volver a postularse: apply devuelve la suya',
+        () async {
+      final apps = await source.getApplicationsFor('2');
+      final app = apps.first;
+      await source.decide(app.id!, ApplicationStatus.removed);
+      final antes = (await source.getApplicationsFor('2')).length;
+
+      final resultado = await source.apply(Application(
+        projectId: '2',
+        applicantId: app.applicantId,
+        applicantName: app.applicantName,
+        applicantProgram: app.applicantProgram,
+        applicantSemester: app.applicantSemester,
+        skillsOffered: const [],
+      ));
+
+      expect(resultado.id, app.id);
+      expect(resultado.status, ApplicationStatus.removed);
+      expect((await source.getApplicationsFor('2')).length, antes);
+    });
   });
 }
