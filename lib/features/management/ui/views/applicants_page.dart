@@ -8,6 +8,7 @@ import '../../../application/domain/models/application.dart';
 import '../../../profile/domain/models/profile.dart';
 import '../../../profile/ui/viewmodels/profile_controller.dart';
 import '../../../project/domain/models/project.dart';
+import '../../../project/ui/viewmodels/project_controller.dart';
 import '../viewmodels/management_controller.dart';
 
 /// Pantalla 18 de Figma: gestion de postulantes, del lado del lider.
@@ -28,6 +29,24 @@ class _ApplicantsPageState extends State<ApplicantsPage> {
   Profile? _profile() => Get.isRegistered<ProfileController>()
       ? Get.find<ProfileController>().profile
       : null;
+
+  /// Aceptar suma un miembro y cerrar el reclutamiento cambia el proyecto: la
+  /// cartelera y el detalle guardan su propia copia, y sin esto seguirian
+  /// mostrando el contador de antes.
+  void _refrescarProyectos() {
+    if (Get.isRegistered<ProjectController>()) {
+      Get.find<ProjectController>().getProjects();
+    }
+  }
+
+  Future<void> _decidir(
+    ManagementController controller,
+    String applicationId,
+    ApplicationStatus decision,
+  ) async {
+    await controller.decide(applicationId, decision);
+    _refrescarProyectos();
+  }
 
   String _initials(String name) {
     final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
@@ -76,6 +95,7 @@ class _ApplicantsPageState extends State<ApplicantsPage> {
                 ElevatedButton(
                   onPressed: () async {
                     await controller.closeRecruitment(projectId);
+                    _refrescarProyectos();
                     if (sheetContext.mounted) {
                       Navigator.of(sheetContext).pop();
                     }
@@ -162,7 +182,8 @@ class _ApplicantsPageState extends State<ApplicantsPage> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => controller.decide(
+                    onPressed: () => _decidir(
+                      controller,
                       application.id ?? '',
                       ApplicationStatus.rejected,
                     ),
@@ -172,7 +193,8 @@ class _ApplicantsPageState extends State<ApplicantsPage> {
                 const SizedBox(width: AppTokens.gapM),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => controller.decide(
+                    onPressed: () => _decidir(
+                      controller,
                       application.id ?? '',
                       ApplicationStatus.accepted,
                     ),

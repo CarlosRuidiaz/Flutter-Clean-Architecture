@@ -16,6 +16,7 @@ import 'package:f_clean_template/features/profile/data/repositories/profile_repo
 import 'package:f_clean_template/features/profile/domain/repositories/i_profile_repository.dart';
 import 'package:f_clean_template/features/profile/ui/viewmodels/profile_controller.dart';
 import 'package:f_clean_template/features/project/data/datasources/i_project_source.dart';
+import 'package:f_clean_template/features/project/ui/viewmodels/project_controller.dart';
 import 'package:f_clean_template/features/project/data/datasources/local/local_project_source.dart';
 import 'package:f_clean_template/features/project/data/repositories/project_repository.dart';
 import 'package:f_clean_template/features/project/domain/models/project.dart';
@@ -290,6 +291,27 @@ void main() {
 
       expect(find.text('0 postulaciones pendientes'), findsOneWidget);
       expect(find.text('Todavía no hay postulantes.'), findsOneWidget);
+    });
+
+    testWidgets('aceptar tambien actualiza la copia de proyectos que ve el '
+        'detalle', (tester) async {
+      await _montarGestion(tester);
+      final proyectos = Get.put(
+        ProjectController(
+          Get.find<IProjectRepository>(),
+          Get.find<IProfileRepository>(),
+          FakeAuthRepository(),
+        ),
+      );
+      await proyectos.getProjects();
+      Project dos() => proyectos.projects.firstWhere((p) => p.id == '2');
+      expect(dos().currentMembers, 2);
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Aceptar').first);
+      await tester.pumpAndSettle();
+
+      // Sin esto el detalle, que lee esta copia, seguiria diciendo "2 de 4".
+      expect(dos().currentMembers, 3);
     });
 
     testWidgets('refrescar no reemplaza la lista por un spinner',
