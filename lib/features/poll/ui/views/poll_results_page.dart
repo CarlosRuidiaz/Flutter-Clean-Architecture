@@ -67,7 +67,7 @@ class PollResultsPage extends StatelessWidget {
                           const SizedBox(height: AppTokens.gapXs),
                           LinearProgressIndicator(
                             value: percent,
-                            backgroundColor: AppColors.surface,
+                            backgroundColor: AppColors.card,
                             color: AppColors.persimmon,
                           ),
                           const SizedBox(height: AppTokens.gapM),

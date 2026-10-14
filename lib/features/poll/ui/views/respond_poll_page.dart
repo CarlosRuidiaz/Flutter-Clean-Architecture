@@ -55,7 +55,7 @@ class _RespondPollPageState extends State<RespondPollPage> {
     setState(() => _isSending = false);
 
     if (created != null) {
-      Get.offReplacementNamed(AppRoutes.pollResults, arguments: poll);
+      Get.offNamed(AppRoutes.pollResults, arguments: poll);
     } else {
       Get.snackbar('Error', 'No se pudo enviar la respuesta');
     }

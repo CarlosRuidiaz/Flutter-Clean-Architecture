@@ -211,7 +211,7 @@ class _CreatePollPageState extends State<CreatePollPage> {
                           ),
                         ),
                       TextButton.icon(
-                        onIcon: const Icon(Icons.add),
+                        icon: const Icon(Icons.add),
                         label: const Text('Añadir opción'),
                         onPressed: () => _addOption(i),
                       ),
@@ -222,7 +222,7 @@ class _CreatePollPageState extends State<CreatePollPage> {
             ],
             
             OutlinedButton.icon(
-              onIcon: const Icon(Icons.add),
+              icon: const Icon(Icons.add),
               label: const Text('Añadir pregunta'),
               onPressed: _addQuestion,
             ),
