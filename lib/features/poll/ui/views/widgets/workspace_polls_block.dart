@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../core/app_routes.dart';
-import '../../../../core/app_tokens.dart';
-import '../../../project/domain/models/project.dart';
-import '../../domain/models/poll.dart';
-import '../viewmodels/poll_controller.dart';
+import '../../../../../core/app_routes.dart';
+import '../../../../../core/app_tokens.dart';
+import '../../../../project/domain/models/project.dart';
+import '../../../domain/models/poll.dart';
+import '../../viewmodels/poll_controller.dart';
 
 class WorkspacePollsBlock extends StatelessWidget {
   const WorkspacePollsBlock({super.key, required this.project});

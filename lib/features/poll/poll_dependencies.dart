@@ -2,10 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:roble/roble.dart';
 
-import '../../application/domain/repositories/i_application_repository.dart';
-import '../../auth/domain/repositories/i_auth_repository.dart';
-import '../../profile/domain/repositories/i_profile_repository.dart';
-import '../../project/domain/repositories/i_project_repository.dart';
+import '../application/domain/repositories/i_application_repository.dart';
+import '../auth/domain/repositories/i_auth_repository.dart';
+import '../profile/domain/repositories/i_profile_repository.dart';
+import '../project/domain/repositories/i_project_repository.dart';
 import 'data/datasources/i_poll_source.dart';
 import 'data/datasources/local/local_poll_source.dart';
 import 'data/datasources/remote/roble_poll_source.dart';

@@ -1,5 +1,5 @@
-import '../models/poll.dart';
-import '../models/poll_response.dart';
+import '../../domain/models/poll.dart';
+import '../../domain/models/poll_response.dart';
 
 abstract class IPollSource {
   Future<List<Poll>> getPollsForProject(String projectId);

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/app_catalogs.dart';
 import '../../../../core/app_tokens.dart';
@@ -144,7 +143,7 @@ class _CreatePollPageState extends State<CreatePollPage> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('Fecha de cierre'),
-              subtitle: Text(_closesAt == null ? 'Seleccionar fecha futura' : DateFormat.yMMMd().format(_closesAt!)),
+              subtitle: Text(_closesAt == null ? 'Seleccionar fecha futura' : '${_closesAt!.day}/${_closesAt!.month}/${_closesAt!.year}'),
               trailing: const Icon(Icons.calendar_today),
               onTap: _pickDate,
             ),

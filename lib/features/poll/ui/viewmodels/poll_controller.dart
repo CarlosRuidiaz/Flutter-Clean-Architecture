@@ -1,14 +1,14 @@
 import 'package:get/get.dart';
 import 'package:loggy/loggy.dart';
 
-import '../../application/domain/models/application.dart';
-import '../../application/domain/repositories/i_application_repository.dart';
-import '../../auth/domain/repositories/i_auth_repository.dart';
-import '../../profile/domain/repositories/i_profile_repository.dart';
-import '../../project/domain/repositories/i_project_repository.dart';
-import '../domain/models/poll.dart';
-import '../domain/models/poll_response.dart';
-import '../domain/repositories/i_poll_repository.dart';
+import '../../../application/domain/models/application.dart';
+import '../../../application/domain/repositories/i_application_repository.dart';
+import '../../../auth/domain/repositories/i_auth_repository.dart';
+import '../../../profile/domain/repositories/i_profile_repository.dart';
+import '../../../project/domain/repositories/i_project_repository.dart';
+import '../../domain/models/poll.dart';
+import '../../domain/models/poll_response.dart';
+import '../../domain/repositories/i_poll_repository.dart';
 
 class PollController extends GetxController with UiLoggy {
   PollController(
