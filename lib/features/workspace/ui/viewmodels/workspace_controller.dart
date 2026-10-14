@@ -149,8 +149,18 @@ class WorkspaceController extends GetxController with UiLoggy {
     String? videoUrl,
     String? milestoneId,
   }) async {
+    loggy.debug('WorkspaceController: publicando el avance "$title"');
     final projectId = _project.value?.id;
-    if (projectId == null) return;
+    if (projectId == null || !canEnter) return;
+
+    // Primero se marca el hito y despues se calcula el porcentaje, para que la
+    // foto que se guarda en el avance ya lo incluya. Se llama al repositorio
+    // directo y no a setMilestoneDone: cualquier miembro puede cumplir un hito
+    // al publicar, aunque solo el lider pueda marcarlo a mano.
+    if (milestoneId != null) {
+      await repository.setMilestoneDone(milestoneId, true);
+      _milestones.value = await repository.getMilestones(projectId);
+    }
 
     await repository.publishUpdate(
       ProgressUpdate(
@@ -160,14 +170,12 @@ class WorkspaceController extends GetxController with UiLoggy {
         title: title,
         description: description,
         createdAt: DateTime.now(),
+        completionPercentage: progressPercent,
         videoUrl: videoUrl,
         milestoneId: milestoneId,
       ),
     );
     _updates.value = await repository.getUpdates(projectId);
-    if (milestoneId != null) {
-      _milestones.value = await repository.getMilestones(projectId);
-    }
   }
 
   Future<void> addTask(String title, String assigneeName) async {

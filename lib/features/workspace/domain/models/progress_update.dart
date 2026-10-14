@@ -11,6 +11,7 @@ class ProgressUpdate {
     required this.title,
     required this.description,
     required this.createdAt,
+    required this.completionPercentage,
     this.videoUrl,
     this.milestoneId,
   });
@@ -22,6 +23,11 @@ class ProgressUpdate {
   final String title;
   final String description;
   final DateTime createdAt;
+
+  /// Foto del porcentaje de avance del proyecto (0 a 100) en el momento de
+  /// publicar. El porcentaje real sigue calculandose con los hitos y nunca se
+  /// guarda: esto es solo lo que decia la barra cuando se escribio el avance.
+  final int completionPercentage;
 
   /// La galeria y el video todavia no van: solo se guarda el enlace.
   final String? videoUrl;
@@ -40,6 +46,9 @@ class ProgressUpdate {
       createdAt:
           DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.fromMillisecondsSinceEpoch(0),
+      completionPercentage:
+          (int.tryParse(json['completion_percentage']?.toString() ?? '') ?? 0)
+              .clamp(0, 100),
       videoUrl: _textoOpcional(json['video_url']),
       milestoneId: _textoOpcional(json['milestone_id']),
     );
@@ -54,6 +63,7 @@ class ProgressUpdate {
         'title': title,
         'description': description,
         'created_at': createdAt.toIso8601String(),
+        'completion_percentage': completionPercentage,
         'video_url': videoUrl ?? '',
         'milestone_id': milestoneId ?? '',
       };

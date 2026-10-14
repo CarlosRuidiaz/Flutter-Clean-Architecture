@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../../../../core/app_routes.dart';
 import '../../../../../core/app_tokens.dart';
+import '../../../../../core/widgets/pill.dart';
 import '../../../domain/models/progress_update.dart';
 import '../../../ui/viewmodels/workspace_controller.dart';
 
@@ -71,6 +72,11 @@ class WorkspaceProgressTab extends StatelessWidget {
                   Text(update.title, style: textTheme.titleMedium),
                   const SizedBox(height: AppTokens.gapXs),
                   Text(update.description, style: textTheme.bodyMedium),
+                  const SizedBox(height: AppTokens.gapS),
+                  Pill(
+                    label: '${update.completionPercentage} % al publicarse',
+                    background: AppColors.card,
+                  ),
                 ],
               ),
             ),
