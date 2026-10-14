@@ -150,7 +150,7 @@ class _CreatePollPageState extends State<CreatePollPage> {
             const SizedBox(height: AppTokens.gapM),
             DropdownButtonFormField<String?>(
               decoration: const InputDecoration(labelText: 'Audiencia (Opcional)', border: OutlineInputBorder()),
-              value: _audienceProgram,
+              initialValue: _audienceProgram,
               items: [
                 const DropdownMenuItem(value: null, child: Text('Toda la comunidad')),
                 ...AppCatalogs.academicPrograms.map((p) => DropdownMenuItem(value: p, child: Text(p))),
