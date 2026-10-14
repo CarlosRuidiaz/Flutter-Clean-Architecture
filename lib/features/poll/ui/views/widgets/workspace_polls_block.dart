@@ -61,7 +61,6 @@ class _PollCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final controller = Get.find<PollController>();
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppTokens.gapS),

@@ -5,7 +5,6 @@ import '../../../../core/app_routes.dart';
 import '../../../../core/app_tokens.dart';
 import '../../../../core/widgets/pill.dart';
 import '../../../follow/ui/viewmodels/follow_controller.dart';
-import '../../../project/domain/models/project.dart';
 import '../../../project/ui/viewmodels/project_controller.dart';
 import '../viewmodels/my_projects_controller.dart';
 import 'widgets/compact_project_card.dart';

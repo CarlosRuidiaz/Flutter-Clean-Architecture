@@ -29,7 +29,6 @@ class LocalFollowSource implements IFollowSource {
       _follows[index] = _follows[index].copyWith(active: follow.active);
       return _follows[index];
     } else {
-      final newFollow = follow.copyWith(); // Let ID be null, or assign one.
       // We mutate the list directly. To simulate DB IDs:
       final f = Follow(
         id: 'f${_nextId++}',

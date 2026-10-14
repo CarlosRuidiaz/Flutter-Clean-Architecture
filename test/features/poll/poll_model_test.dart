@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:f_clean_template/features/poll/domain/models/poll.dart';
 import 'package:f_clean_template/features/poll/domain/models/poll_response.dart';
