@@ -26,6 +26,7 @@ class _ProjectFiltersPageState extends State<ProjectFiltersPage> {
   late final List<String> _skills;
   late final List<String> _programs;
   late final List<ProjectStage> _stages;
+  late final List<String> _tags;
 
   @override
   void initState() {
@@ -35,6 +36,7 @@ class _ProjectFiltersPageState extends State<ProjectFiltersPage> {
     _skills = List<String>.from(_controller.skillFilters);
     _programs = List<String>.from(_controller.programFilters);
     _stages = List<ProjectStage>.from(_controller.stageFilters);
+    _tags = List<String>.from(_controller.tagFilters);
   }
 
   /// Cuantos grupos tienen algo marcado en la seleccion en curso, que puede no
@@ -42,7 +44,8 @@ class _ProjectFiltersPageState extends State<ProjectFiltersPage> {
   int get _seleccionados =>
       (_skills.isEmpty ? 0 : 1) +
       (_programs.isEmpty ? 0 : 1) +
-      (_stages.isEmpty ? 0 : 1);
+      (_stages.isEmpty ? 0 : 1) +
+      (_tags.isEmpty ? 0 : 1);
 
   void _toggle<T>(List<T> seleccion, T valor) {
     setState(() {
@@ -144,6 +147,19 @@ class _ProjectFiltersPageState extends State<ProjectFiltersPage> {
                   ),
               ],
             ),
+            _group(
+              key: const ValueKey('grupo-categorias'),
+              title: 'Categoría',
+              chips: [
+                for (final tag in AppCatalogs.tags)
+                  _filterPill(
+                    label: tag,
+                    selected: _tags.contains(tag),
+                    selectedColor: AppColors.gold,
+                    onTap: () => _toggle(_tags, tag),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
@@ -158,6 +174,7 @@ class _ProjectFiltersPageState extends State<ProjectFiltersPage> {
                 skills: _skills,
                 programs: _programs,
                 stages: _stages,
+                tags: _tags,
               );
               Get.back();
             },

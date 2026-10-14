@@ -42,13 +42,14 @@ class ProjectController extends GetxController with UiLoggy {
   final RxList<String> skillFilters = <String>[].obs;
   final RxList<String> programFilters = <String>[].obs;
   final RxList<ProjectStage> stageFilters = <ProjectStage>[].obs;
+  final RxList<String> tagFilters = <String>[].obs;
 
   List<Project> get projects => _projects;
 
   /// Las habilidades del perfil en sesion, o vacia mientras no haya cargado.
   List<String> get mySkills => _profile.value?.skills ?? const [];
 
-  /// Los proyectos que pasan la busqueda y los tres grupos de "Explorar
+  /// Los proyectos que pasan la busqueda y los grupos de "Explorar
   /// proyectos".
   ///
   /// Se calcula, no se almacena: derivarlo evita que se quede desincronizado
@@ -61,6 +62,7 @@ class ProjectController extends GetxController with UiLoggy {
     final List<String> habilidades = skillFilters;
     final List<String> programas = programFilters;
     final List<ProjectStage> etapas = stageFilters;
+    final List<String> etiquetas = tagFilters;
 
     return _projects.where((project) {
       if (etapas.isNotEmpty && !etapas.contains(project.stage)) return false;
@@ -70,6 +72,9 @@ class ProjectController extends GetxController with UiLoggy {
       // La misma regla de coincidencia que usa la pestania de habilidades: si
       // el proyecto pide alguna de las marcadas, pasa.
       if (habilidades.isNotEmpty && !project.matchesAnySkill(habilidades)) {
+        return false;
+      }
+      if (etiquetas.isNotEmpty && !project.tags.any(etiquetas.contains)) {
         return false;
       }
       if (consulta.isNotEmpty &&
@@ -103,7 +108,8 @@ class ProjectController extends GetxController with UiLoggy {
   int get activeFilterCount =>
       (skillFilters.isEmpty ? 0 : 1) +
       (programFilters.isEmpty ? 0 : 1) +
-      (stageFilters.isEmpty ? 0 : 1);
+      (stageFilters.isEmpty ? 0 : 1) +
+      (tagFilters.isEmpty ? 0 : 1);
 
   /// True si hay algun filtro puesto, contando tambien la busqueda. La usa el
   /// estado vacio para decidir si ofrece "Limpiar filtros" o si el problema es
@@ -177,16 +183,19 @@ class ProjectController extends GetxController with UiLoggy {
     required List<String> skills,
     required List<String> programs,
     required List<ProjectStage> stages,
+    List<String> tags = const [],
   }) {
     skillFilters.value = List<String>.from(skills);
     programFilters.value = List<String>.from(programs);
     stageFilters.value = List<ProjectStage>.from(stages);
+    tagFilters.value = List<String>.from(tags);
   }
 
   void clearFilters() {
     skillFilters.clear();
     programFilters.clear();
     stageFilters.clear();
+    tagFilters.clear();
     searchQuery.value = '';
   }
 }

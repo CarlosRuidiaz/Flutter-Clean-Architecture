@@ -6,6 +6,8 @@ import '../features/project/ui/views/create_idea_page.dart';
 import '../features/project/ui/views/idea_published_page.dart';
 import '../features/project/ui/views/project_detail_page.dart';
 import '../features/project/ui/views/project_filters_page.dart';
+import '../features/showcase/ui/views/prototype_feedback_page.dart';
+import '../features/showcase/ui/views/showcase_view.dart';
 import '../features/workspace/ui/views/publish_update_page.dart';
 import '../features/workspace/ui/views/workspace_page.dart';
 
@@ -42,6 +44,12 @@ abstract class AppRoutes {
   /// Publicar un avance. Recibe un `Project` por `Get.arguments`.
   static const String publishUpdate = '/publish-update';
 
+  /// Pantalla 28. Vitrina de prototipos.
+  static const String showcase = '/showcase';
+
+  /// Pantalla 29. Prototipo con retroalimentación. Recibe un `Project` por `Get.arguments`.
+  static const String prototypeDetail = '/prototype-detail';
+
   static final List<GetPage> pages = [
     GetPage(name: projectDetail, page: () => const ProjectDetailPage()),
     GetPage(name: createIdea, page: () => const CreateIdeaPage()),
@@ -54,5 +62,7 @@ abstract class AppRoutes {
     GetPage(name: projectFilters, page: () => const ProjectFiltersPage()),
     GetPage(name: workspace, page: () => const WorkspacePage()),
     GetPage(name: publishUpdate, page: () => const PublishUpdatePage()),
+    GetPage(name: showcase, page: () => const ShowcaseView()),
+    GetPage(name: prototypeDetail, page: () => const PrototypeFeedbackPage()),
   ];
 }
