@@ -25,11 +25,11 @@ class CommentThreadView extends StatelessWidget {
 
   Color _avatarColor(String name) {
     final colors = [
-      const Color(0xFF6B4EE6),
-      const Color(0xFF0F5C56),
-      const Color(0xFFE8552F),
-      const Color(0xFF2D5BFF),
-      const Color(0xFF8E44AD),
+      AppStageColors.testing,
+      AppColors.petrol,
+      AppColors.persimmon,
+      AppStageColors.research,
+      AppColors.ink,
     ];
     return colors[name.hashCode.abs() % colors.length];
   }

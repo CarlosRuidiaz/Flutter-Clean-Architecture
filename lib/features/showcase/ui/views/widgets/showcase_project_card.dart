@@ -39,7 +39,7 @@ class ShowcaseProjectCard extends StatelessWidget {
             height: 76,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              color: const Color(0xFFF3EEDD),
+              color: AppColors.paper,
               borderRadius: AppTokens.borderRadius,
               border: AppTokens.border(),
             ),
@@ -104,7 +104,7 @@ class _HatchPatternPainter extends CustomPainter {
       ),
     );
     final paint = Paint()
-      ..color = const Color(0xFFDFD7C2)
+      ..color = AppColors.hatch
       ..strokeWidth = 2.0;
 
     for (double i = -size.height; i < size.width; i += 10) {

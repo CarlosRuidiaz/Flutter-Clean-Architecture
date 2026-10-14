@@ -59,7 +59,7 @@ class ShowcaseBanner extends StatelessWidget {
                         return Text(
                           label,
                           style: textTheme.bodySmall?.copyWith(
-                            color: const Color(0xFFD3E7E3),
+                            color: Colors.white.withValues(alpha: 0.8),
                           ),
                         );
                       })
@@ -67,7 +67,7 @@ class ShowcaseBanner extends StatelessWidget {
                       Text(
                         'Proyectos esperan tu retroalimentación',
                         style: textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFFD3E7E3),
+                          color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
                   ],

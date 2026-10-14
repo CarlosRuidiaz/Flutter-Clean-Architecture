@@ -24,6 +24,10 @@ abstract final class AppColors {
 
   /// Acento de atencion.
   static const gold = Color(0xFFF2B705);
+
+  /// Trazo de los rayados decorativos sobre papel, como el de las tarjetas de
+  /// la vitrina.
+  static const hatch = Color(0xFFDFD7C2);
 }
 
 /// Colores de las seis etapas de un proyecto. Viven aqui, en la capa de UI,
