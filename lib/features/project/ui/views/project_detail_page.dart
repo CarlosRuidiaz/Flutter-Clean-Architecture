@@ -7,6 +7,7 @@ import '../../../../core/widgets/pill.dart';
 import '../../../application/domain/models/application.dart';
 import '../../../application/domain/repositories/i_application_repository.dart';
 import '../../../application/ui/viewmodels/application_controller.dart';
+import '../../../profile/domain/models/profile.dart';
 import '../../../profile/ui/viewmodels/profile_controller.dart';
 import '../../domain/models/project.dart';
 import '../viewmodels/project_controller.dart';
@@ -70,22 +71,42 @@ class ProjectDetailPage extends StatelessWidget {
     );
   }
 
-  /// El estudiante en sesión. El perfil de prueba es el '1'.
-  String _applicantId() {
-    final profile = Get.isRegistered<ProfileController>()
-        ? Get.find<ProfileController>().profile
-        : null;
-    return profile?.id ?? '1';
+  /// El perfil de quien tiene la sesión, o null mientras no haya cargado. Leerlo
+  /// dentro de un `Obx` hace que la pantalla se repinte cuando llegue.
+  Profile? _profile() => Get.isRegistered<ProfileController>()
+      ? Get.find<ProfileController>().profile
+      : null;
+
+  /// El estudiante en sesión, o null si su perfil todavía no cargó. Sin id no
+  /// se adivina nadie: ya hubo postulaciones a nombre de otra persona.
+  String? _applicantId() => _profile()?.id;
+
+  /// Pide el perfil si todavía no está, y con él las postulaciones del
+  /// estudiante (para saber si ya se postuló, si lo removieron o si es
+  /// miembro) y los proyectos al día.
+  Future<void> _cargar(ProjectController projectController) async {
+    String? id = _applicantId();
+    if (id == null && Get.isRegistered<ProfileController>()) {
+      await Get.find<ProfileController>().getCurrentProfile();
+      id = _applicantId();
+    }
+    if (id != null) {
+      await Get.find<ApplicationController>().getMyApplications(id);
+    }
+    await projectController.getProjects();
   }
 
   Widget _buildFooterButtons(BuildContext context, Project project) {
     final controller = Get.find<ApplicationController>();
 
     return Obx(() {
+      final profile = _profile();
+
       // Si ya hay una postulación viva a este proyecto, la pantalla 07 lleva a
       // verla en vez de ofrecer postularse otra vez. Es la única entrada a la
       // pantalla 19 mientras la 18 no exista, y evita duplicados.
       final vigente = controller.vigenteEn(project.id ?? '');
+      final bool removido = controller.fueRemovidoDe(project.id ?? '');
 
       return Row(
         children: [
@@ -106,27 +127,42 @@ class ProjectDetailPage extends StatelessWidget {
                 child: const Text('Ver mi postulación'),
               ),
             ),
-          ] else if (project.acceptsApplicationsFrom(_applicantId())) ...[
+          ] else if (removido) ...[
+            // El líder lo sacó: no vuelve a postularse a este proyecto.
+            const SizedBox(width: AppTokens.gapM),
+            Expanded(
+              child: Text(
+                'Te removieron de este proyecto.',
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ] else if (project.acceptsApplicationsFrom(profile?.id)) ...[
             const SizedBox(width: AppTokens.gapM),
             Expanded(
               child: ElevatedButton(
-                onPressed: () async {
-                  final profile = Get.isRegistered<ProfileController>()
-                      ? Get.find<ProfileController>().profile
-                      : null;
-                  final application = Application(
-                    projectId: project.id ?? '',
-                    applicantId: _applicantId(),
-                    applicantName: profile?.fullName ?? 'Carlos Ruidíaz',
-                    applicantProgram:
-                        profile?.academicProgram ?? 'Ingeniería de Sistemas',
-                    applicantSemester: profile?.semester ?? 8,
-                    skillsOffered: profile?.skills ?? const [],
-                    status: ApplicationStatus.pending,
-                  );
-                  final created = await controller.apply(application);
-                  Get.toNamed(AppRoutes.applicationStatus, arguments: created);
-                },
+                // Sin perfil cargado el botón se ve deshabilitado: postularse
+                // ahora sería hacerlo a nombre de nadie.
+                onPressed: profile?.id == null
+                    ? null
+                    : () async {
+                        final application = Application(
+                          projectId: project.id ?? '',
+                          applicantId: profile!.id!,
+                          applicantName: profile.fullName,
+                          applicantProgram: profile.academicProgram,
+                          applicantSemester: profile.semester,
+                          skillsOffered: profile.skills,
+                          status: ApplicationStatus.pending,
+                        );
+                        final created = await controller.apply(application);
+                        if (created != null) {
+                          Get.toNamed(
+                            AppRoutes.applicationStatus,
+                            arguments: created,
+                          );
+                        }
+                      },
                 child: const Text('Postularme'),
               ),
             ),
@@ -153,14 +189,13 @@ class ProjectDetailPage extends StatelessWidget {
 
     final TextTheme textTheme = Theme.of(context).textTheme;
 
-    // Al abrir el detalle hay que saber si ya existe una postulación a este
-    // proyecto, y ademas releer el proyecto: mientras se gestionaban los
-    // postulantes pudo cambiar su numero de miembros. Va despues del primer
-    // frame para no cambiar un Rx durante build.
+    // Al abrir el detalle hay que saber en qué quedó la postulación a este
+    // proyecto (el líder pudo aceptarla o removerlo desde la última vez), y
+    // ademas releer el proyecto: pudo cambiar su numero de miembros o su etapa.
+    // Va despues del primer frame para no cambiar un Rx durante build.
     final ProjectController projectController = Get.find();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Get.find<ApplicationController>().ensureMyApplications(_applicantId());
-      projectController.getProjects();
+      _cargar(projectController);
     });
 
     return Scaffold(
@@ -255,15 +290,15 @@ class ProjectDetailPage extends StatelessWidget {
                       (snapshot.data ?? const <Application>[])
                           .where((a) => a.status == ApplicationStatus.accepted)
                           .toList();
-                  final String applicantId = _applicantId();
-                  final bool esLider = project.leaderId == applicantId;
+                  final profile = _profile();
+                  final String? applicantId = profile?.id;
+                  final bool esLider =
+                      applicantId != null && project.leaderId == applicantId;
                   final bool esMiembro =
+                      applicantId != null &&
                       aceptados.any((a) => a.applicantId == applicantId);
 
-                  final profile = Get.isRegistered<ProfileController>()
-                      ? Get.find<ProfileController>().profile
-                      : null;
-                  final bool liderEsQuienMira = profile?.id == project.leaderId;
+                  final bool liderEsQuienMira = esLider;
                   final String liderNombre = liderEsQuienMira
                       ? (profile?.fullName ?? 'Líder del proyecto')
                       : 'Líder del proyecto';

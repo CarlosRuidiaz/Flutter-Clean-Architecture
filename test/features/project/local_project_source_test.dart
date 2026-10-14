@@ -154,5 +154,63 @@ void main() {
       expect(p6.recruitmentOpen, isFalse);
       expect(p6.isFull, isFalse, reason: 'el 6 esta cerrado pero no lleno');
     });
+
+    test('removeMember resta un miembro', () async {
+      // El '2' va 2 de 4.
+      await source.removeMember('2');
+
+      final p2 = (await source.getProjects()).firstWhere((p) => p.id == '2');
+      expect(p2.currentMembers, 1);
+    });
+
+    test('removeMember nunca baja de 1, que es el lider', () async {
+      await source.removeMember('2');
+      await source.removeMember('2');
+      await source.removeMember('2');
+
+      final p2 = (await source.getProjects()).firstWhere((p) => p.id == '2');
+      expect(p2.currentMembers, 1);
+    });
+
+    test('al salir alguien de un equipo lleno vuelve a haber cupo', () async {
+      // El '4' esta lleno: 5 de 5.
+      await source.removeMember('4');
+
+      final p4 = (await source.getProjects()).firstWhere((p) => p.id == '4');
+      expect(p4.currentMembers, 4);
+      expect(p4.isFull, isFalse);
+      expect(p4.acceptsApplications, isTrue);
+    });
+
+    test('removeMember de un proyecto que no existe no hace nada', () async {
+      await source.removeMember('no-existe');
+
+      expect((await source.getProjects()).length, 6);
+    });
+
+    test('updateStage cambia solo la etapa y deja el resto igual', () async {
+      final antes = (await source.getProjects()).firstWhere((p) => p.id == '2');
+      expect(antes.stage, ProjectStage.idea);
+
+      await source.updateStage('2', ProjectStage.research);
+
+      final despues =
+          (await source.getProjects()).firstWhere((p) => p.id == '2');
+      expect(despues.stage, ProjectStage.research);
+      expect(despues.title, antes.title);
+      expect(despues.leaderId, antes.leaderId);
+      expect(despues.currentMembers, antes.currentMembers);
+      expect(despues.maxMembers, antes.maxMembers);
+      expect(despues.skillsWanted, antes.skillsWanted);
+      expect(despues.tags, antes.tags);
+      expect(despues.recruitmentOpen, antes.recruitmentOpen);
+    });
+
+    test('updateStage deja el orden de la lista como estaba', () async {
+      await source.updateStage('3', ProjectStage.testing);
+
+      final ids = (await source.getProjects()).map((p) => p.id).toList();
+      expect(ids, ['1', '2', '3', '4', '5', '6']);
+    });
   });
 }

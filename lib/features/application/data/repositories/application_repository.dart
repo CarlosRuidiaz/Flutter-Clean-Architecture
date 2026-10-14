@@ -27,6 +27,10 @@ class ApplicationRepository implements IApplicationRepository {
       await source.withdraw(applicationId);
 
   @override
+  Future<void> leave(String applicationId) async =>
+      await source.leave(applicationId);
+
+  @override
   Future<void> decide(String applicationId, ApplicationStatus decision) async =>
       await source.decide(applicationId, decision);
 }

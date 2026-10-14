@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../../../../core/app_routes.dart';
 import '../../../../../core/app_tokens.dart';
+import '../../../../../core/widgets/pill.dart';
 import '../../../domain/models/progress_update.dart';
 import '../../../ui/viewmodels/workspace_controller.dart';
 
@@ -71,6 +72,11 @@ class WorkspaceProgressTab extends StatelessWidget {
                   Text(update.title, style: textTheme.titleMedium),
                   const SizedBox(height: AppTokens.gapXs),
                   Text(update.description, style: textTheme.bodyMedium),
+                  const SizedBox(height: AppTokens.gapS),
+                  Pill(
+                    label: '${update.completionPercentage} % al publicarse',
+                    background: AppColors.card,
+                  ),
                 ],
               ),
             ),
@@ -91,27 +97,42 @@ class WorkspaceProgressTab extends StatelessWidget {
       return Column(
         children: [
           Expanded(
-            child: updates.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppTokens.gapXl),
-                      child: Text(
-                        'Todavía no hay avances. Publica el primero para '
-                        'contarle al equipo en qué van.',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium,
+            child: RefreshIndicator(
+              onRefresh: controller.reload,
+              child: updates.isEmpty
+                  // Scrollable aunque este vacia, para poder deslizar.
+                  ? LayoutBuilder(
+                      builder: (context, constraints) => ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: constraints.maxHeight,
+                            child: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(AppTokens.gapXl),
+                                child: Text(
+                                  'Todavía no hay avances. Publica el primero '
+                                  'para contarle al equipo en qué van.',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(AppTokens.gapL),
+                      itemCount: updates.length,
+                      itemBuilder: (context, i) => _timelineItem(
+                        context,
+                        updates[i],
+                        i == updates.length - 1,
                       ),
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(AppTokens.gapL),
-                    itemCount: updates.length,
-                    itemBuilder: (context, i) => _timelineItem(
-                      context,
-                      updates[i],
-                      i == updates.length - 1,
-                    ),
-                  ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(AppTokens.gapL),

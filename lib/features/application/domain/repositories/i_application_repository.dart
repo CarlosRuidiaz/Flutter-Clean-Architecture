@@ -9,5 +9,8 @@ abstract class IApplicationRepository {
 
   Future<void> withdraw(String applicationId);
 
+  /// Un miembro aceptado sale del proyecto: la postulacion pasa a `left`.
+  Future<void> leave(String applicationId);
+
   Future<void> decide(String applicationId, ApplicationStatus decision);
 }

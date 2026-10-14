@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:f_clean_template/core/app_catalogs.dart';
 import 'package:f_clean_template/core/app_routes.dart';
 import 'package:f_clean_template/core/app_theme.dart';
 import 'package:f_clean_template/features/application/data/datasources/i_application_source.dart';
 import 'package:f_clean_template/features/application/data/datasources/local/local_application_source.dart';
 import 'package:f_clean_template/features/application/data/repositories/application_repository.dart';
+import 'package:f_clean_template/features/application/domain/models/application.dart';
 import 'package:f_clean_template/features/application/domain/repositories/i_application_repository.dart';
 import 'package:f_clean_template/features/management/management_dependencies.dart';
 import 'package:f_clean_template/features/management/ui/viewmodels/management_controller.dart';
@@ -13,6 +16,7 @@ import 'package:f_clean_template/features/profile/data/repositories/profile_repo
 import 'package:f_clean_template/features/profile/domain/repositories/i_profile_repository.dart';
 import 'package:f_clean_template/features/profile/ui/viewmodels/profile_controller.dart';
 import 'package:f_clean_template/features/project/data/datasources/i_project_source.dart';
+import 'package:f_clean_template/features/project/ui/viewmodels/project_controller.dart';
 import 'package:f_clean_template/features/project/data/datasources/local/local_project_source.dart';
 import 'package:f_clean_template/features/project/data/repositories/project_repository.dart';
 import 'package:f_clean_template/features/project/domain/models/project.dart';
@@ -29,6 +33,7 @@ import 'package:get/get.dart';
 Future<ManagementController> _montarGestion(
   WidgetTester tester, {
   String projectId = '2',
+  IApplicationRepository Function(IApplicationSource fuente)? crearRepositorio,
 }) async {
   Get.testMode = true;
   await Get.deleteAll(force: true);
@@ -43,7 +48,9 @@ Future<ManagementController> _montarGestion(
   Get.put<IProjectSource>(LocalProjectSource());
   Get.put<IProjectRepository>(ProjectRepository(Get.find()));
   Get.put<IApplicationSource>(LocalApplicationSource());
-  Get.put<IApplicationRepository>(ApplicationRepository(Get.find()));
+  Get.put<IApplicationRepository>(
+    crearRepositorio?.call(Get.find()) ?? ApplicationRepository(Get.find()),
+  );
   final controller = Get.put(
     ManagementController(
       Get.find<IApplicationRepository>(),
@@ -68,6 +75,20 @@ Future<ManagementController> _montarGestion(
   Get.toNamed(AppRoutes.applicants, arguments: project);
   await tester.pumpAndSettle();
   return controller;
+}
+
+/// Un repositorio de postulaciones que espera a que se le deje responder:
+/// deja una carga "en vuelo" para poder mirar la pantalla en ese momento.
+class _RepositorioLento extends ApplicationRepository {
+  _RepositorioLento(super.source);
+
+  Completer<void>? pausa;
+
+  @override
+  Future<List<Application>> getApplicationsFor(String projectId) async {
+    await pausa?.future;
+    return super.getApplicationsFor(projectId);
+  }
 }
 
 /// Crea un proyecto liderado por el perfil de prueba y sin postulaciones, para
@@ -270,6 +291,93 @@ void main() {
 
       expect(find.text('0 postulaciones pendientes'), findsOneWidget);
       expect(find.text('Todavía no hay postulantes.'), findsOneWidget);
+    });
+
+    testWidgets('aceptar tambien actualiza la copia de proyectos que ve el '
+        'detalle', (tester) async {
+      await _montarGestion(tester);
+      final proyectos = Get.put(
+        ProjectController(
+          Get.find<IProjectRepository>(),
+          Get.find<IProfileRepository>(),
+          FakeAuthRepository(),
+        ),
+      );
+      await proyectos.getProjects();
+      Project dos() => proyectos.projects.firstWhere((p) => p.id == '2');
+      expect(dos().currentMembers, 2);
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Aceptar').first);
+      await tester.pumpAndSettle();
+
+      // Sin esto el detalle, que lee esta copia, seguiria diciendo "2 de 4".
+      expect(dos().currentMembers, 3);
+    });
+
+    testWidgets('refrescar no reemplaza la lista por un spinner',
+        (tester) async {
+      late _RepositorioLento lento;
+      final controller = await _montarGestion(
+        tester,
+        crearRepositorio: (fuente) => lento = _RepositorioLento(fuente),
+      );
+      expect(find.text('Mariana Pérez'), findsOneWidget);
+
+      lento.pausa = Completer<void>();
+      final refrescando = controller.getApplicants('2');
+      await tester.pump();
+
+      // Mientras llega la lista nueva, la vieja sigue a la vista.
+      expect(controller.isLoading.value, isTrue);
+      expect(find.text('Mariana Pérez'), findsOneWidget);
+      expect(find.text('Felipe Gómez'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+
+      lento.pausa!.complete();
+      await refrescando;
+      await tester.pumpAndSettle();
+      expect(controller.isLoading.value, isFalse);
+      expect(find.text('Mariana Pérez'), findsOneWidget);
+    });
+
+    testWidgets('deslizar hacia abajo vuelve a pedir los postulantes',
+        (tester) async {
+      await _montarGestion(tester);
+      expect(find.text('Mariana Pérez'), findsOneWidget);
+
+      // Llega otra postulacion "desde fuera".
+      await Get.find<IApplicationRepository>().apply(
+        Application(
+          projectId: '2',
+          applicantId: 'u50',
+          applicantName: 'Sofía Rojas',
+          applicantProgram: AppCatalogs.programSystems,
+          applicantSemester: 4,
+          skillsOffered: const [],
+        ),
+      );
+      expect(find.text('Sofía Rojas'), findsNothing);
+
+      // La pantalla de prueba es alta: RefreshIndicator pide arrastrar un
+      // cuarto de su alto antes de refrescar.
+      await tester.drag(find.byType(ListView), const Offset(0, 1500));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sofía Rojas'), findsOneWidget);
+      expect(find.text('3 postulaciones pendientes'), findsOneWidget);
+    });
+
+    testWidgets('abrir la gestion de otro proyecto no deja ver lo del anterior',
+        (tester) async {
+      final controller = await _montarGestion(tester);
+      expect(controller.applicants, isNotEmpty);
+
+      final otroProyecto = controller.getApplicants('1');
+      // Antes de que lleguen los datos, la lista del '2' ya no esta.
+      expect(controller.applicants, isEmpty);
+      expect(controller.project, isNull);
+      await otroProyecto;
+      expect(controller.project?.id, '1');
     });
 
     testWidgets('9 · quien no lidera el proyecto no puede gestionarlo',

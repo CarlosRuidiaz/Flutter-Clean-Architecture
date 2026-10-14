@@ -5,20 +5,47 @@ import '../../../../core/app_tokens.dart';
 import '../../../../core/widgets/paper_card.dart';
 import '../../../../core/widgets/pill.dart';
 import '../../../application/domain/models/application.dart';
+import '../../../profile/domain/models/profile.dart';
 import '../../../profile/ui/viewmodels/profile_controller.dart';
 import '../../../project/domain/models/project.dart';
+import '../../../project/ui/viewmodels/project_controller.dart';
 import '../viewmodels/management_controller.dart';
 
 /// Pantalla 18 de Figma: gestion de postulantes, del lado del lider.
-class ApplicantsPage extends StatelessWidget {
+class ApplicantsPage extends StatefulWidget {
   const ApplicantsPage({super.key});
 
-  /// El perfil en sesion. El perfil de prueba es el '1'.
-  String _currentProfileId() {
-    final profile = Get.isRegistered<ProfileController>()
-        ? Get.find<ProfileController>().profile
-        : null;
-    return profile?.id ?? '1';
+  @override
+  State<ApplicantsPage> createState() => _ApplicantsPageState();
+}
+
+class _ApplicantsPageState extends State<ApplicantsPage> {
+  /// Los postulantes se piden una sola vez, y solo cuando ya se sabe que quien
+  /// mira es el lider.
+  bool _cargaPedida = false;
+
+  /// El perfil de quien tiene la sesion, o null mientras no haya cargado. Leerlo
+  /// dentro de un `Obx` repinta la pantalla cuando llegue.
+  Profile? _profile() => Get.isRegistered<ProfileController>()
+      ? Get.find<ProfileController>().profile
+      : null;
+
+  /// Aceptar suma un miembro y cerrar el reclutamiento cambia el proyecto: la
+  /// cartelera y el detalle guardan su propia copia, y sin esto seguirian
+  /// mostrando el contador de antes.
+  void _refrescarProyectos() {
+    if (Get.isRegistered<ProjectController>()) {
+      Get.find<ProjectController>().getProjects();
+    }
+  }
+
+  Future<void> _decidir(
+    ManagementController controller,
+    String applicationId,
+    ApplicationStatus decision,
+  ) async {
+    await controller.decide(applicationId, decision);
+    _refrescarProyectos();
   }
 
   String _initials(String name) {
@@ -68,6 +95,7 @@ class ApplicantsPage extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () async {
                     await controller.closeRecruitment(projectId);
+                    _refrescarProyectos();
                     if (sheetContext.mounted) {
                       Navigator.of(sheetContext).pop();
                     }
@@ -154,7 +182,8 @@ class ApplicantsPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => controller.decide(
+                    onPressed: () => _decidir(
+                      controller,
                       application.id ?? '',
                       ApplicationStatus.rejected,
                     ),
@@ -164,7 +193,8 @@ class ApplicantsPage extends StatelessWidget {
                 const SizedBox(width: AppTokens.gapM),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => controller.decide(
+                    onPressed: () => _decidir(
+                      controller,
                       application.id ?? '',
                       ApplicationStatus.accepted,
                     ),
@@ -187,6 +217,10 @@ class ApplicantsPage extends StatelessWidget {
         return 'Rechazada';
       case ApplicationStatus.withdrawn:
         return 'Cancelada';
+      case ApplicationStatus.left:
+        return 'Salió';
+      case ApplicationStatus.removed:
+        return 'Removido';
       case ApplicationStatus.pending:
         return 'Pendiente';
     }
@@ -206,33 +240,75 @@ class ApplicantsPage extends StatelessWidget {
       );
     }
 
-    if (project.leaderId != _currentProfileId()) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Gestión de postulantes')),
-        body: const Center(
-          child: Padding(
-            padding: EdgeInsets.all(AppTokens.gapL),
-            child: Text(
-              'No tienes permiso para gestionar los postulantes de este '
-              'proyecto: solo el líder puede hacerlo.',
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-      );
-    }
-
     final controller = Get.find<ManagementController>();
     final String projectId = project.id ?? '';
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.getApplicants(projectId);
-    });
+    // El permiso depende del perfil, que puede llegar despues de abrir la
+    // pantalla: por eso todo va dentro de un Obx.
+    return Obx(() {
+      final Profile? profile = _profile();
 
-    return Scaffold(
+      if (profile?.id == null) {
+        final bool cargando = Get.isRegistered<ProfileController>() &&
+            Get.find<ProfileController>().isLoading.value;
+        return Scaffold(
+          appBar: AppBar(title: const Text('Gestión de postulantes')),
+          body: Center(
+            child: cargando
+                ? const CircularProgressIndicator()
+                : Padding(
+                    padding: const EdgeInsets.all(AppTokens.gapL),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'No pudimos comprobar quién eres.',
+                          textAlign: TextAlign.center,
+                        ),
+                        if (Get.isRegistered<ProfileController>()) ...[
+                          const SizedBox(height: AppTokens.gapM),
+                          ElevatedButton(
+                            onPressed: () => Get.find<ProfileController>()
+                                .getCurrentProfile(),
+                            child: const Text('Reintentar'),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+          ),
+        );
+      }
+
+      if (project.leaderId != profile!.id) {
+        return Scaffold(
+          appBar: AppBar(title: const Text('Gestión de postulantes')),
+          body: const Center(
+            child: Padding(
+              padding: EdgeInsets.all(AppTokens.gapL),
+              child: Text(
+                'No tienes permiso para gestionar los postulantes de este '
+                'proyecto: solo el líder puede hacerlo.',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        );
+      }
+
+      if (!_cargaPedida) {
+        _cargaPedida = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          controller.getApplicants(projectId);
+        });
+      }
+
+      return Scaffold(
       appBar: AppBar(title: const Text('Gestión de postulantes')),
       body: Obx(() {
-        if (controller.isLoading.value) {
+        // El spinner a pantalla completa es solo para cuando aun no hay nada
+        // que enseñar: al aceptar o refrescar, la lista se queda como esta.
+        if (controller.isLoading.value && controller.project == null) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -251,15 +327,32 @@ class ApplicantsPage extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: controller.applicants.isEmpty
-                  ? const Center(child: Text('Todavía no hay postulantes.'))
-                  : ListView(
-                      padding: const EdgeInsets.only(bottom: AppTokens.gapL),
-                      children: [
-                        for (final application in controller.applicants)
-                          _buildApplicantCard(context, application),
-                      ],
-                    ),
+              child: RefreshIndicator(
+                onRefresh: () => controller.getApplicants(projectId),
+                child: controller.applicants.isEmpty
+                    // Scrollable aunque este vacia, para poder deslizar.
+                    ? LayoutBuilder(
+                        builder: (context, constraints) => ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            SizedBox(
+                              height: constraints.maxHeight,
+                              child: const Center(
+                                child: Text('Todavía no hay postulantes.'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: AppTokens.gapL),
+                        children: [
+                          for (final application in controller.applicants)
+                            _buildApplicantCard(context, application),
+                        ],
+                      ),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(AppTokens.gapL),
@@ -295,5 +388,6 @@ class ApplicantsPage extends StatelessWidget {
         );
       }),
     );
+    });
   }
 }

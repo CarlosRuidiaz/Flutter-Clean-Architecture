@@ -50,7 +50,9 @@ class RobleApplicationSource with UiLoggy implements IApplicationSource {
       if (app.projectId == application.projectId &&
           app.applicantId == application.applicantId &&
           (app.status == ApplicationStatus.pending ||
-              app.status == ApplicationStatus.accepted)) {
+              app.status == ApplicationStatus.accepted ||
+              // Un removido no vuelve a postularse: se devuelve la suya.
+              app.status == ApplicationStatus.removed)) {
         return app;
       }
     }
@@ -69,6 +71,16 @@ class RobleApplicationSource with UiLoggy implements IApplicationSource {
     );
     await roble.update('applications', applicationId, {
       'status': ApplicationStatus.withdrawn.name,
+    });
+  }
+
+  @override
+  Future<void> leave(String applicationId) async {
+    loggy.debug(
+      'RobleApplicationSource.leave: el miembro sale con la postulacion $applicationId',
+    );
+    await roble.update('applications', applicationId, {
+      'status': ApplicationStatus.left.name,
     });
   }
 

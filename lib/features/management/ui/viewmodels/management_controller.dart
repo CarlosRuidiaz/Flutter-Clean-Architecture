@@ -29,13 +29,23 @@ class ManagementController extends GetxController with UiLoggy {
 
   Future<void> getApplicants(String projectId) async {
     loggy.debug('ManagementController: pidiendo postulantes');
+    // Si es otro proyecto, lo que hubiera es de otro: se vacia para que no se
+    // vea. Si es el mismo (aceptar, refrescar), se deja la lista a la vista
+    // mientras llega la nueva, y la pantalla no parpadea.
+    if (_project.value?.id != projectId) {
+      _applicants.clear();
+      _project.value = null;
+    }
     isLoading.value = true;
-    _applicants.value = await applicationRepository.getApplicationsFor(
-      projectId,
-    );
-    final projects = await projectRepository.getProjects();
-    _project.value = projects.firstWhereOrNull((p) => p.id == projectId);
-    isLoading.value = false;
+    try {
+      _applicants.value = await applicationRepository.getApplicationsFor(
+        projectId,
+      );
+      final projects = await projectRepository.getProjects();
+      _project.value = projects.firstWhereOrNull((p) => p.id == projectId);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   Future<void> decide(String applicationId, ApplicationStatus decision) async {

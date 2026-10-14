@@ -42,6 +42,10 @@ class _RepositorioQueFalla implements IProjectRepository {
 
   @override
   Future<void> addMember(String projectId) async {}
+  @override
+  Future<void> removeMember(String projectId) async {}
+  @override
+  Future<void> updateStage(String projectId, ProjectStage stage) async {}
 }
 
 Future<ProjectController> _abrirCrearIdea(

@@ -134,11 +134,14 @@ class WorkspaceTasksTab extends StatelessWidget {
     final WorkspaceController controller = Get.find();
     final TextTheme textTheme = Theme.of(context).textTheme;
 
-    return Obx(() {
+    return RefreshIndicator(
+      onRefresh: controller.reload,
+      child: Obx(() {
       final int total = controller.totalMilestones;
       final int cumplidos = controller.completedMilestones;
 
       return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(AppTokens.gapL),
         children: [
           Text(
@@ -187,6 +190,7 @@ class WorkspaceTasksTab extends StatelessWidget {
           ],
         ],
       );
-    });
+    }),
+    );
   }
 }

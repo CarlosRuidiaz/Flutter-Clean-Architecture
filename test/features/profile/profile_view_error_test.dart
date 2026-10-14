@@ -55,6 +55,10 @@ class _FakeProjectRepo implements IProjectRepository {
   Future<void> closeRecruitment(String id) async {}
   @override
   Future<void> addMember(String id) async {}
+  @override
+  Future<void> removeMember(String id) async {}
+  @override
+  Future<void> updateStage(String id, ProjectStage stage) async {}
 }
 
 class _FakeAppRepo implements IApplicationRepository {
@@ -66,6 +70,8 @@ class _FakeAppRepo implements IApplicationRepository {
   Future<Application> apply(Application a) async => throw UnimplementedError();
   @override
   Future<void> withdraw(String id) async {}
+  @override
+  Future<void> leave(String id) async {}
   @override
   Future<void> decide(String id, ApplicationStatus d) async {}
 }

@@ -87,6 +87,10 @@ class _FakeProjectRepository implements IProjectRepository {
   Future<void> closeRecruitment(String id) async {}
   @override
   Future<void> addMember(String id) async {}
+  @override
+  Future<void> removeMember(String id) async {}
+  @override
+  Future<void> updateStage(String id, ProjectStage stage) async {}
 }
 
 class _FakeAppRepository implements IApplicationRepository {
@@ -104,6 +108,8 @@ class _FakeAppRepository implements IApplicationRepository {
   @override
   Future<void> withdraw(String id) async {}
   @override
+  Future<void> leave(String id) async {}
+  @override
   Future<void> decide(String id, ApplicationStatus d) async {}
 }
 
@@ -117,6 +123,10 @@ class _FailingProjectRepository implements IProjectRepository {
   Future<void> closeRecruitment(String id) async {}
   @override
   Future<void> addMember(String id) async {}
+  @override
+  Future<void> removeMember(String id) async {}
+  @override
+  Future<void> updateStage(String id, ProjectStage stage) async {}
 }
 
 // ───────────────────────────────────────────────────────────────────────────

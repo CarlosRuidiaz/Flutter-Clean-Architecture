@@ -47,6 +47,12 @@ class _FakeRepository implements IProjectRepository {
 
   @override
   Future<void> addMember(String projectId) async => throw UnimplementedError();
+  @override
+  Future<void> removeMember(String projectId) async =>
+      throw UnimplementedError();
+  @override
+  Future<void> updateStage(String projectId, ProjectStage stage) async =>
+      throw UnimplementedError();
 }
 
 /// Repositorio falso que se comporta como la fuente local: guarda en una lista
@@ -100,6 +106,18 @@ class _FakeMutableRepository implements IProjectRepository {
       currentMembers: _projects[index].currentMembers + 1,
     );
   }
+
+  @override
+  Future<void> removeMember(String projectId) async {
+    final index = _projects.indexWhere((p) => p.id == projectId);
+    if (index == -1 || _projects[index].currentMembers <= 1) return;
+    _projects[index] = _projects[index].copyWith(
+      currentMembers: _projects[index].currentMembers - 1,
+    );
+  }
+
+  @override
+  Future<void> updateStage(String projectId, ProjectStage stage) async {}
 }
 
 /// Repositorio que falla al crear, como Roble cuando responde 400.

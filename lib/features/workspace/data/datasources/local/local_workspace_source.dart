@@ -62,6 +62,7 @@ class LocalWorkspaceSource implements IWorkspaceSource {
       title: update.title,
       description: update.description,
       createdAt: update.createdAt,
+      completionPercentage: update.completionPercentage,
       videoUrl: update.videoUrl,
       milestoneId: update.milestoneId,
     );

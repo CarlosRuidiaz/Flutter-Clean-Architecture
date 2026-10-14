@@ -46,6 +46,10 @@ class _FakeApplicationRepository implements IApplicationRepository {
       throw UnimplementedError();
 
   @override
+  Future<void> leave(String applicationId) async =>
+      throw UnimplementedError();
+
+  @override
   Future<void> decide(String applicationId, ApplicationStatus decision) async {
     final index = applications.indexWhere((a) => a.id == applicationId);
     if (index != -1) {
@@ -89,6 +93,14 @@ class _FakeProjectRepository implements IProjectRepository {
   Future<void> addMember(String projectId) async {
     if (currentMembers < maxMembers) currentMembers++;
   }
+
+  @override
+  Future<void> removeMember(String projectId) async {
+    if (currentMembers > 1) currentMembers--;
+  }
+
+  @override
+  Future<void> updateStage(String projectId, ProjectStage stage) async {}
 }
 
 void main() {
