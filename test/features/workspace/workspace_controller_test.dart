@@ -94,6 +94,10 @@ class _FakeApplicationRepository implements IApplicationRepository {
       throw UnimplementedError();
 
   @override
+  Future<void> leave(String applicationId) async =>
+      throw UnimplementedError();
+
+  @override
   Future<void> decide(
     String applicationId,
     ApplicationStatus decision,

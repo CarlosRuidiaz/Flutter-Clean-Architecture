@@ -1,6 +1,8 @@
 import 'dart:convert';
 
-enum ApplicationStatus { pending, accepted, rejected, withdrawn }
+/// `left`: el miembro salio por su cuenta. `removed`: el lider lo saco, y por
+/// eso no puede volver a postularse a ese proyecto.
+enum ApplicationStatus { pending, accepted, rejected, withdrawn, left, removed }
 
 /// Una postulacion de un estudiante a un proyecto.
 ///

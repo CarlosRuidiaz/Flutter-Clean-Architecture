@@ -75,13 +75,15 @@ class LocalApplicationSource implements IApplicationSource {
   Future<Application> apply(Application application) async {
     // Un estudiante no puede tener dos postulaciones vivas al mismo proyecto.
     // Si ya la tiene, se devuelve esa en vez de crear un duplicado: la pantalla
-    // 18 mostraria al mismo candidato repetido.
+    // 18 mostraria al mismo candidato repetido. Lo mismo si el lider lo
+    // removio: esa postulacion se devuelve tal cual y no se crea otra.
     final vigente = _applications.firstWhere(
       (a) =>
           a.projectId == application.projectId &&
           a.applicantId == application.applicantId &&
           (a.status == ApplicationStatus.pending ||
-              a.status == ApplicationStatus.accepted),
+              a.status == ApplicationStatus.accepted ||
+              a.status == ApplicationStatus.removed),
       orElse: () => _sinPostulacion,
     );
     if (!identical(vigente, _sinPostulacion)) return vigente;
@@ -106,6 +108,16 @@ class LocalApplicationSource implements IApplicationSource {
     if (index != -1) {
       _applications[index] = _applications[index].copyWith(
         status: ApplicationStatus.withdrawn,
+      );
+    }
+  }
+
+  @override
+  Future<void> leave(String applicationId) async {
+    final index = _applications.indexWhere((a) => a.id == applicationId);
+    if (index != -1) {
+      _applications[index] = _applications[index].copyWith(
+        status: ApplicationStatus.left,
       );
     }
   }

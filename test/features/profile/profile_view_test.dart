@@ -80,6 +80,8 @@ class _FakeAppRepo implements IApplicationRepository {
   @override
   Future<void> withdraw(String applicationId) async {}
   @override
+  Future<void> leave(String applicationId) async {}
+  @override
   Future<void> decide(String applicationId, ApplicationStatus decision) async {}
 }
 

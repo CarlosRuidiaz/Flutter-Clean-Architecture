@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/app_routes.dart';
 import '../../../../core/app_tokens.dart';
 import '../../../../core/widgets/paper_card.dart';
 import '../../../../core/widgets/pill.dart';
@@ -104,6 +105,9 @@ class ApplicationStatusPage extends StatelessWidget {
             application.status == ApplicationStatus.accepted;
         final bool isWithdrawn =
             application.status == ApplicationStatus.withdrawn;
+        final bool isLeft = application.status == ApplicationStatus.left;
+        final bool isRemoved =
+            application.status == ApplicationStatus.removed;
 
         // Configuración según el estado (Pantalla 14 vs Pantalla 19)
         final IconData iconData;
@@ -130,6 +134,26 @@ class ApplicationStatusPage extends StatelessWidget {
           subtitle = 'Has cancelado tu postulación a este proyecto.';
           statusPill = const Pill(
             label: 'Cancelada',
+            background: AppColors.card,
+          );
+        } else if (isLeft) {
+          iconData = Icons.logout_rounded;
+          iconColor = AppColors.secondary;
+          title = 'Saliste del proyecto';
+          subtitle =
+              'Dejaste el equipo de este proyecto. Puedes volver a postularte mientras el reclutamiento siga abierto.';
+          statusPill = const Pill(
+            label: 'Salida',
+            background: AppColors.card,
+          );
+        } else if (isRemoved) {
+          iconData = Icons.person_remove_outlined;
+          iconColor = AppColors.persimmon;
+          title = 'Te removieron del proyecto';
+          subtitle =
+              'El líder del proyecto te sacó del equipo. No puedes volver a postularte a este proyecto.';
+          statusPill = const Pill(
+            label: 'Removido',
             background: AppColors.card,
           );
         } else if (isPending) {
@@ -213,8 +237,12 @@ class ApplicationStatusPage extends StatelessWidget {
                 ),
               ] else if (isAccepted) ...[
                 ElevatedButton(
-                  onPressed: () {
-                    // TODO(semana siguiente): navegar al espacio del proyecto.
+                  onPressed: () async {
+                    final project =
+                        await controller.getProject(application.projectId);
+                    if (project != null) {
+                      Get.toNamed(AppRoutes.workspace, arguments: project);
+                    }
                   },
                   child: const Text('Ir al espacio del proyecto'),
                 ),
@@ -225,7 +253,7 @@ class ApplicationStatusPage extends StatelessWidget {
                   },
                   child: const Text('Salir del proyecto'),
                 ),
-              ] else if (isWithdrawn) ...[
+              ] else if (isWithdrawn || isLeft) ...[
                 Text(
                   'Puedes volver a postularte mientras el reclutamiento siga abierto.',
                   style: textTheme.bodySmall,

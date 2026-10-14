@@ -46,6 +46,10 @@ class _FakeApplicationRepository implements IApplicationRepository {
       throw UnimplementedError();
 
   @override
+  Future<void> leave(String applicationId) async =>
+      throw UnimplementedError();
+
+  @override
   Future<void> decide(String applicationId, ApplicationStatus decision) async {
     final index = applications.indexWhere((a) => a.id == applicationId);
     if (index != -1) {

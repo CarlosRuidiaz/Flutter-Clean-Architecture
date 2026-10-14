@@ -187,6 +187,10 @@ class ApplicantsPage extends StatelessWidget {
         return 'Rechazada';
       case ApplicationStatus.withdrawn:
         return 'Cancelada';
+      case ApplicationStatus.left:
+        return 'Salió';
+      case ApplicationStatus.removed:
+        return 'Removido';
       case ApplicationStatus.pending:
         return 'Pendiente';
     }
