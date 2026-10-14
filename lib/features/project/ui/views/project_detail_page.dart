@@ -101,11 +101,12 @@ class ProjectDetailPage extends StatelessWidget {
   Widget _buildFooterButtons(BuildContext context, Project project) {
     final controller = Get.find<ApplicationController>();
     final followController = Get.isRegistered<FollowController>() ? Get.find<FollowController>() : null;
-    final String applicantId = _applicantId();
-    final bool esLider = project.leaderId == applicantId;
 
     return Obx(() {
       final profile = _profile();
+      // Sin perfil no se sabe quien mira: ni se sigue ni se adivina el lider.
+      final String? miId = profile?.id;
+      final bool esLider = miId != null && project.leaderId == miId;
 
       // Si ya hay una postulación viva a este proyecto, la pantalla 07 lleva a
       // verla en vez de ofrecer postularse otra vez. Es la única entrada a la
@@ -116,7 +117,7 @@ class ProjectDetailPage extends StatelessWidget {
 
       return Row(
         children: [
-          if (!esLider)
+          if (miId != null && !esLider)
             Expanded(
               child: OutlinedButton(
                 onPressed: () {
@@ -338,8 +339,10 @@ class ProjectDetailPage extends StatelessWidget {
                       // Botones del pie
                       _buildFooterButtons(context, project),
                       
-                      // Encuestas activas
-                      ActivePollsBlock(project: project),
+                      // Encuestas activas. Sin perfil no se piden: no hay
+                      // quien las responda.
+                      if (applicantId != null)
+                        ActivePollsBlock(project: project),
 
                       // Solo el lider del proyecto gestiona sus postulantes.
                       if (esLider) ...[
