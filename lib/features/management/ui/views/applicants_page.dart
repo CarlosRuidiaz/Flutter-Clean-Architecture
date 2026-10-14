@@ -284,7 +284,9 @@ class _ApplicantsPageState extends State<ApplicantsPage> {
       return Scaffold(
       appBar: AppBar(title: const Text('Gestión de postulantes')),
       body: Obx(() {
-        if (controller.isLoading.value) {
+        // El spinner a pantalla completa es solo para cuando aun no hay nada
+        // que enseñar: al aceptar o refrescar, la lista se queda como esta.
+        if (controller.isLoading.value && controller.project == null) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -303,15 +305,32 @@ class _ApplicantsPageState extends State<ApplicantsPage> {
               ),
             ),
             Expanded(
-              child: controller.applicants.isEmpty
-                  ? const Center(child: Text('Todavía no hay postulantes.'))
-                  : ListView(
-                      padding: const EdgeInsets.only(bottom: AppTokens.gapL),
-                      children: [
-                        for (final application in controller.applicants)
-                          _buildApplicantCard(context, application),
-                      ],
-                    ),
+              child: RefreshIndicator(
+                onRefresh: () => controller.getApplicants(projectId),
+                child: controller.applicants.isEmpty
+                    // Scrollable aunque este vacia, para poder deslizar.
+                    ? LayoutBuilder(
+                        builder: (context, constraints) => ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            SizedBox(
+                              height: constraints.maxHeight,
+                              child: const Center(
+                                child: Text('Todavía no hay postulantes.'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: AppTokens.gapL),
+                        children: [
+                          for (final application in controller.applicants)
+                            _buildApplicantCard(context, application),
+                        ],
+                      ),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(AppTokens.gapL),
