@@ -16,22 +16,15 @@ class ApplicationController extends GetxController with UiLoggy {
   final RxList<Application> _myApplications = <Application>[].obs;
   final RxBool isLoading = false.obs;
 
-  /// Estudiante cuyas postulaciones ya estan en [_myApplications].
-  String? _cargadasPara;
-
   List<Application> get myApplications => _myApplications;
 
-  /// Carga las postulaciones del estudiante solo la primera vez. La pantalla 07
-  /// la llama en cada apertura para saber si ya se postulo a ese proyecto, y
-  /// [apply] y [withdraw] mantienen la lista al dia despues.
-  Future<void> ensureMyApplications(String applicantId) async {
-    if (_cargadasPara == applicantId) return;
-    _cargadasPara = applicantId;
-    await getMyApplications(applicantId);
-  }
+  Future<void> ensureMyApplications(String applicantId) =>
+      getMyApplications(applicantId);
 
   /// La postulacion vigente del estudiante a [projectId], si la hay. Una
-  /// cancelada o rechazada no cuenta: puede volver a postularse.
+  /// cancelada, rechazada, o de la que salio, no cuenta: puede volver a
+  /// postularse. Una de la que lo removieron tampoco cuenta como vigente, pero
+  /// ver [fueRemovidoDe].
   Application? vigenteEn(String projectId) =>
       _myApplications.firstWhereOrNull(
         (a) =>
@@ -40,31 +33,63 @@ class ApplicationController extends GetxController with UiLoggy {
                 a.status == ApplicationStatus.accepted),
       );
 
+  /// True si el lider saco a este estudiante de [projectId]. No vuelve a
+  /// postularse a ese proyecto.
+  bool fueRemovidoDe(String projectId) => _myApplications.any(
+        (a) =>
+            a.projectId == projectId &&
+            a.status == ApplicationStatus.removed,
+      );
+
   Future<void> getMyApplications(String applicantId) async {
     loggy.debug('ApplicationController: pidiendo mis postulaciones');
     isLoading.value = true;
     _myApplications.value = await repository.getMyApplications(applicantId);
-    _cargadasPara = applicantId;
     isLoading.value = false;
   }
 
-  Future<Application> apply(Application application) async {
-    loggy.debug('ApplicationController: postulándose al proyecto ${application.projectId}');
+  /// Crea la postulacion y devuelve la que quedo guardada. Devuelve null si no
+  /// se creo nada: el lider no se postula a su propio proyecto.
+  ///
+  /// Si el estudiante ya esta en el proyecto, o lo removieron, la fuente
+  /// devuelve esa postulacion en vez de crear otra.
+  Future<Application?> apply(Application application) async {
+    loggy.debug(
+      'ApplicationController: postulándose al proyecto ${application.projectId}',
+    );
+
+    final project = await getProject(application.projectId);
+    if (project != null && project.leaderId == application.applicantId) {
+      loggy.warning(
+        'ApplicationController: el líder no se postula a su propio proyecto',
+      );
+      return null;
+    }
+
     isLoading.value = true;
     final created = await repository.apply(application);
-    _myApplications.value = await repository.getMyApplications(application.applicantId);
+    _myApplications.value = await repository.getMyApplications(
+      application.applicantId,
+    );
     isLoading.value = false;
     return created;
   }
 
   Future<void> withdraw(String applicationId, [String? applicantId]) async {
-    loggy.debug('ApplicationController: cancelando la postulación $applicationId');
+    loggy.debug(
+      'ApplicationController: cancelando la postulación $applicationId',
+    );
     isLoading.value = true;
     final existing =
         _myApplications.firstWhereOrNull((a) => a.id == applicationId);
-    final targetApplicantId = applicantId ?? existing?.applicantId ?? '1';
+    final targetApplicantId = applicantId ?? existing?.applicantId;
     await repository.withdraw(applicationId);
-    _myApplications.value = await repository.getMyApplications(targetApplicantId);
+    // Sin saber de quien es, no se adivina: la lista se vuelve a pedir la
+    // proxima vez que se abra un detalle.
+    if (targetApplicantId != null) {
+      _myApplications.value =
+          await repository.getMyApplications(targetApplicantId);
+    }
     isLoading.value = false;
   }
 
@@ -75,4 +100,3 @@ class ApplicationController extends GetxController with UiLoggy {
     return projects.firstWhereOrNull((p) => p.id == projectId);
   }
 }
-
