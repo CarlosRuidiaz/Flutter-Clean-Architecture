@@ -28,4 +28,39 @@ class ProgressUpdate {
 
   /// El hito que este avance cumple, si el autor marco alguno.
   final String? milestoneId;
+
+  factory ProgressUpdate.fromJson(Map<String, dynamic> json) {
+    return ProgressUpdate(
+      id: (json['_id'] ?? json['id'])?.toString(),
+      projectId: json['project_id']?.toString() ?? '',
+      authorId: json['author_id']?.toString() ?? '',
+      authorName: json['author_name']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      createdAt:
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+          DateTime.fromMillisecondsSinceEpoch(0),
+      videoUrl: _textoOpcional(json['video_url']),
+      milestoneId: _textoOpcional(json['milestone_id']),
+    );
+  }
+
+  /// Lo que se le manda a Roble al crear. La fecha viaja como texto ISO 8601 y
+  /// los dos campos opcionales como texto vacio cuando no hay valor.
+  Map<String, dynamic> toJsonNoId() => {
+        'project_id': projectId,
+        'author_id': authorId,
+        'author_name': authorName,
+        'title': title,
+        'description': description,
+        'created_at': createdAt.toIso8601String(),
+        'video_url': videoUrl ?? '',
+        'milestone_id': milestoneId ?? '',
+      };
+
+  /// Vacio y ausente son lo mismo: no hay valor que mostrar.
+  static String? _textoOpcional(dynamic value) {
+    final texto = value?.toString().trim() ?? '';
+    return texto.isEmpty ? null : texto;
+  }
 }
