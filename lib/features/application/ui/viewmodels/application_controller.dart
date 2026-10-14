@@ -18,9 +18,6 @@ class ApplicationController extends GetxController with UiLoggy {
 
   List<Application> get myApplications => _myApplications;
 
-  Future<void> ensureMyApplications(String applicantId) =>
-      getMyApplications(applicantId);
-
   /// La postulacion vigente del estudiante a [projectId], si la hay. Una
   /// cancelada, rechazada, o de la que salio, no cuenta: puede volver a
   /// postularse. Una de la que lo removieron tampoco cuenta como vigente, pero
