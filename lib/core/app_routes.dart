@@ -10,6 +10,9 @@ import '../features/showcase/ui/views/prototype_feedback_page.dart';
 import '../features/showcase/ui/views/showcase_view.dart';
 import '../features/workspace/ui/views/publish_update_page.dart';
 import '../features/workspace/ui/views/workspace_page.dart';
+import '../features/poll/ui/views/create_poll_page.dart';
+import '../features/poll/ui/views/respond_poll_page.dart';
+import '../features/poll/ui/views/poll_results_page.dart';
 
 /// Las rutas del flujo "crear una idea -> postularse -> aceptar la postulacion".
 ///
@@ -49,6 +52,9 @@ abstract class AppRoutes {
 
   /// Pantalla 29. Prototipo con retroalimentación. Recibe un `Project` por `Get.arguments`.
   static const String prototypeDetail = '/prototype-detail';
+  static const String createPoll = '/create-poll';
+  static const String respondPoll = '/respond-poll';
+  static const String pollResults = '/poll-results';
 
   static final List<GetPage> pages = [
     GetPage(name: projectDetail, page: () => const ProjectDetailPage()),
@@ -64,5 +70,8 @@ abstract class AppRoutes {
     GetPage(name: publishUpdate, page: () => const PublishUpdatePage()),
     GetPage(name: showcase, page: () => const ShowcaseView()),
     GetPage(name: prototypeDetail, page: () => const PrototypeFeedbackPage()),
+    GetPage(name: createPoll, page: () => const CreatePollPage()),
+    GetPage(name: respondPoll, page: () => const RespondPollPage()),
+    GetPage(name: pollResults, page: () => const PollResultsPage()),
   ];
 }

@@ -9,6 +9,7 @@ import '../../../ui/viewmodels/workspace_controller.dart';
 import 'leave_project_sheet.dart';
 import 'remove_member_sheet.dart';
 import 'stage_selector.dart';
+import '../../../../poll/ui/views/widgets/workspace_polls_block.dart';
 
 /// Pestania "Resumen": estado actual, equipo y tarjeta de reclutamiento.
 class WorkspaceSummaryTab extends StatelessWidget {
@@ -151,6 +152,8 @@ class WorkspaceSummaryTab extends StatelessWidget {
               child: const Text('Salir del proyecto'),
             ),
           ],
+          const SizedBox(height: AppTokens.gapXl),
+          WorkspacePollsBlock(project: project),
         ],
       );
     }),
