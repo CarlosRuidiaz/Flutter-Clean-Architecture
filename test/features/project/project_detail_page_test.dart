@@ -303,4 +303,34 @@ void main() {
       expect(nueva.skillsOffered, ['Python']);
     });
   });
+
+  group('ProjectDetailPage · seguir', () {
+    testWidgets('un visitante con perfil puede seguir el proyecto',
+        (tester) async {
+      // El '5' lo lidera 'u4': el perfil de prueba es solo un visitante.
+      await _abrirDetalle(tester, '5');
+
+      expect(find.widgetWithText(OutlinedButton, 'Seguir'), findsOneWidget);
+    });
+
+    testWidgets('sin perfil no se ofrece seguir ni postularse',
+        (tester) async {
+      await _abrirDetalle(tester, '5', conPerfil: false);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Seguir'), findsNothing);
+      expect(find.text('Siguiendo'), findsNothing);
+      final postularme = find.widgetWithText(ElevatedButton, 'Postularme');
+      expect(tester.widget<ElevatedButton>(postularme).onPressed, isNull);
+    });
+
+    testWidgets('el lider no ve "Seguir" ni "Postularme" en su proyecto',
+        (tester) async {
+      // El '2' lo lidera '1', el perfil de prueba, y sigue reclutando.
+      await _abrirDetalle(tester, '2');
+
+      expect(find.text('Seguir'), findsNothing);
+      expect(find.text('Postularme'), findsNothing);
+    });
+  });
 }

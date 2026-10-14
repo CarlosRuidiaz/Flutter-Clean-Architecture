@@ -7,6 +7,7 @@ import 'package:f_clean_template/features/application/data/datasources/local/loc
 import 'package:f_clean_template/features/application/data/repositories/application_repository.dart';
 import 'package:f_clean_template/features/application/domain/models/application.dart';
 import 'package:f_clean_template/features/application/domain/repositories/i_application_repository.dart';
+import 'package:f_clean_template/features/poll/ui/views/widgets/workspace_polls_block.dart';
 import 'package:f_clean_template/features/profile/domain/models/profile.dart';
 import 'package:f_clean_template/features/profile/domain/repositories/i_profile_repository.dart';
 import 'package:f_clean_template/features/project/data/datasources/i_project_source.dart';
@@ -329,6 +330,27 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Avance de otro miembro'), findsOneWidget);
+    });
+  });
+
+  group('WorkspacePage · encuestas en el resumen', () {
+    testWidgets('un miembro ve "Salir del proyecto" y el bloque de encuestas',
+        (tester) async {
+      await _abrir(tester, perfil: _mariana, preparar: _aceptarAMariana);
+
+      expect(
+        find.widgetWithText(OutlinedButton, 'Salir del proyecto'),
+        findsOneWidget,
+      );
+      expect(find.byType(WorkspacePollsBlock), findsOneWidget);
+    });
+
+    testWidgets('el lider ve el bloque de encuestas pero no "Salir"',
+        (tester) async {
+      await _abrir(tester, perfil: _lider, preparar: _aceptarAMariana);
+
+      expect(find.byType(WorkspacePollsBlock), findsOneWidget);
+      expect(find.text('Salir del proyecto'), findsNothing);
     });
   });
 }
