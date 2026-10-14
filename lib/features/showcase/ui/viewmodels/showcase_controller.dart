@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:loggy/loggy.dart';
 
 import '../../../application/domain/models/application.dart';
 import '../../../application/domain/repositories/i_application_repository.dart';
+import '../../../auth/domain/repositories/i_auth_repository.dart';
 import '../../../profile/domain/models/profile.dart';
 import '../../../profile/domain/repositories/i_profile_repository.dart';
 import '../../../project/domain/models/project.dart';
@@ -18,12 +21,16 @@ class ShowcaseController extends GetxController with UiLoggy {
     this.showcaseRepository,
     this.profileRepository,
     this.applicationRepository,
+    this.authRepository,
   );
 
   final IProjectRepository projectRepository;
   final IShowcaseRepository showcaseRepository;
   final IProfileRepository profileRepository;
   final IApplicationRepository applicationRepository;
+  final IAuthRepository authRepository;
+
+  StreamSubscription<bool>? _sesion;
 
   // Vitrina
   final RxList<Project> prototypeProjects = <Project>[].obs;
@@ -74,7 +81,31 @@ class ShowcaseController extends GetxController with UiLoggy {
   @override
   void onInit() {
     loadPrototypeProjects();
+    // El perfil, si es del equipo y "mi feedback" son de quien tenga la
+    // sesion: sin esto la cuenta siguiente los veia mientras cargaba el suyo.
+    _sesion = authRepository.sessionChanges.listen((haySesion) {
+      loggy.debug('ShowcaseController: cambio de sesion (activa: $haySesion)');
+      if (haySesion) {
+        loadPrototypeProjects();
+      } else {
+        _vaciarDelUsuario();
+      }
+    });
     super.onInit();
+  }
+
+  @override
+  void onClose() {
+    _sesion?.cancel();
+    super.onClose();
+  }
+
+  void _vaciarDelUsuario() {
+    currentProject.value = null;
+    currentProfile.value = null;
+    isTeamMember.value = false;
+    comments.clear();
+    feedbackList.clear();
   }
 
   Future<void> loadPrototypeProjects() async {

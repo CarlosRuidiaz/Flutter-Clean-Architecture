@@ -9,6 +9,8 @@ import 'package:f_clean_template/features/showcase/data/datasources/local/local_
 import 'package:f_clean_template/features/showcase/data/repositories/showcase_repository.dart';
 import 'package:f_clean_template/features/showcase/ui/viewmodels/showcase_controller.dart';
 
+import '../auth/fake_auth_repository.dart';
+
 class _FakeProjectRepository implements IProjectRepository {
   _FakeProjectRepository(this.projects);
   final List<Project> projects;
@@ -61,6 +63,7 @@ void main() {
     late _FakeProfileRepository profileRepo;
     late _FakeApplicationRepository applicationRepo;
     late ShowcaseController controller;
+    late FakeAuthRepository authRepo;
 
     final prototypeProject = Project(
       id: 'proto_1',
@@ -102,11 +105,13 @@ void main() {
       );
       applicationRepo = _FakeApplicationRepository([]);
 
+      authRepo = FakeAuthRepository();
       controller = ShowcaseController(
         projectRepo,
         showcaseRepo,
         profileRepo,
         applicationRepo,
+        authRepo,
       );
     });
 
@@ -269,6 +274,32 @@ void main() {
       expect(controller.feedbackSummary.isEmpty, isTrue);
       expect(controller.feedbackSummary.totalCount, 0);
       expect(controller.feedbackSummary.overallAverage, 0.0);
+    });
+
+    test('7 · cerrar sesion vacia el perfil, el equipo y el feedback',
+        () async {
+      profileRepo.profile = Profile(
+        id: 'leader_1',
+        fullName: 'Líder',
+        academicProgram: 'Diseño',
+        semester: 8,
+        skills: [],
+      );
+      controller.onInit();
+      await controller.openProject(prototypeProject);
+      expect(controller.currentProfile.value?.id, 'leader_1');
+      expect(controller.isTeamMember.value, isTrue);
+
+      authRepo.emitirSesion(false);
+      await Future<void>.delayed(Duration.zero);
+
+      // La cuenta siguiente no hereda nada de quien salio.
+      expect(controller.currentProfile.value, isNull);
+      expect(controller.isTeamMember.value, isFalse);
+      expect(controller.myFeedback, isNull);
+      expect(controller.comments, isEmpty);
+      controller.onClose();
+      await authRepo.cerrar();
     });
   });
 }
