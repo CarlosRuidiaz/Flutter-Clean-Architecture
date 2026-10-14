@@ -23,6 +23,7 @@ class _WorkspacePageState extends State<WorkspacePage>
   final WorkspaceController _controller = Get.find();
   late final TabController _tabController;
   Worker? _tabWorker;
+  bool _abierto = false;
 
   @override
   void initState() {
@@ -68,16 +69,45 @@ class _WorkspacePageState extends State<WorkspacePage>
     // El perfil se pide cada vez que se abre, no solo cuando se crea el
     // controlador: si guardara el de la primera vez, otra cuenta heredaria
     // los permisos de la anterior.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _controller.open(project);
-    });
+    //
+    // Una sola vez por pantalla: build puede repetirse, y volver a abrir
+    // vaciaria lo que ya se ve.
+    if (!_abierto) {
+      _abierto = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _controller.open(project);
+      });
+    }
 
     final TextTheme textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
       appBar: AppBar(title: Text(project.title)),
       body: Obx(() {
-        if (_controller.isLoading.value) {
+        // El spinner a pantalla completa es solo para cuando aun no hay nada
+        // que enseñar: al refrescar, la pantalla se queda como esta.
+        if (!_controller.hasData.value) {
+          if (_controller.failed.value) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppTokens.gapL),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'No pudimos cargar el espacio de trabajo.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppTokens.gapM),
+                    ElevatedButton(
+                      onPressed: () => _controller.open(project),
+                      child: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -94,6 +124,8 @@ class _WorkspacePageState extends State<WorkspacePage>
           );
         }
 
+        // La copia viva: la etapa pudo cambiar desde que se abrio la pantalla.
+        final Project actual = _controller.project ?? project;
         final int total = _controller.totalMilestones;
         final int cumplidos = _controller.completedMilestones;
         final int porcentaje = _controller.progressPercent;
@@ -114,12 +146,12 @@ class _WorkspacePageState extends State<WorkspacePage>
                     children: [
                       Expanded(
                         child: Text(
-                          project.title,
+                          actual.title,
                           style: textTheme.headlineMedium,
                         ),
                       ),
                       const SizedBox(width: AppTokens.gapS),
-                      StageChip(stage: project.stage),
+                      StageChip(stage: actual.stage),
                     ],
                   ),
                   const SizedBox(height: AppTokens.gapM),

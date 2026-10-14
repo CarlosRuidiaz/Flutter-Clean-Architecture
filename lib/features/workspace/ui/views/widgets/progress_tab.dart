@@ -97,27 +97,42 @@ class WorkspaceProgressTab extends StatelessWidget {
       return Column(
         children: [
           Expanded(
-            child: updates.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppTokens.gapXl),
-                      child: Text(
-                        'Todavía no hay avances. Publica el primero para '
-                        'contarle al equipo en qué van.',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium,
+            child: RefreshIndicator(
+              onRefresh: controller.reload,
+              child: updates.isEmpty
+                  // Scrollable aunque este vacia, para poder deslizar.
+                  ? LayoutBuilder(
+                      builder: (context, constraints) => ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: constraints.maxHeight,
+                            child: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(AppTokens.gapXl),
+                                child: Text(
+                                  'Todavía no hay avances. Publica el primero '
+                                  'para contarle al equipo en qué van.',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(AppTokens.gapL),
+                      itemCount: updates.length,
+                      itemBuilder: (context, i) => _timelineItem(
+                        context,
+                        updates[i],
+                        i == updates.length - 1,
                       ),
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(AppTokens.gapL),
-                    itemCount: updates.length,
-                    itemBuilder: (context, i) => _timelineItem(
-                      context,
-                      updates[i],
-                      i == updates.length - 1,
-                    ),
-                  ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(AppTokens.gapL),

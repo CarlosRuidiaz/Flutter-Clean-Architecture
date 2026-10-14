@@ -9,6 +9,7 @@ class TeamMember {
     required this.name,
     required this.academicProgram,
     required this.isLeader,
+    this.applicationId,
   });
 
   final String id;
@@ -18,6 +19,11 @@ class TeamMember {
   /// tiene la sesion.
   final String academicProgram;
   final bool isLeader;
+
+  /// La postulacion aceptada de la que sale este miembro. El lider no tiene:
+  /// es quien publico el proyecto, no quien se postulo. Hace falta para salir
+  /// o remover a alguien.
+  final String? applicationId;
 
   String get role => isLeader ? 'Líder' : 'Miembro';
 }
