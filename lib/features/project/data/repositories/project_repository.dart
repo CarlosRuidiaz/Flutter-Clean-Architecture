@@ -21,4 +21,12 @@ class ProjectRepository implements IProjectRepository {
   @override
   Future<void> addMember(String projectId) async =>
       await source.addMember(projectId);
+
+  @override
+  Future<void> removeMember(String projectId) async =>
+      await source.removeMember(projectId);
+
+  @override
+  Future<void> updateStage(String projectId, ProjectStage stage) async =>
+      await source.updateStage(projectId, stage);
 }

@@ -93,6 +93,14 @@ class _FakeProjectRepository implements IProjectRepository {
   Future<void> addMember(String projectId) async {
     if (currentMembers < maxMembers) currentMembers++;
   }
+
+  @override
+  Future<void> removeMember(String projectId) async {
+    if (currentMembers > 1) currentMembers--;
+  }
+
+  @override
+  Future<void> updateStage(String projectId, ProjectStage stage) async {}
 }
 
 void main() {

@@ -154,4 +154,40 @@ class LocalProjectSource implements IProjectSource {
       currentMembers: actual.currentMembers + 1,
     );
   }
+
+  @override
+  Future<void> removeMember(String projectId) async {
+    final index = _projects.indexWhere((p) => p.id == projectId);
+    if (index == -1) return;
+
+    final actual = _projects[index];
+    // El 1 es el lider: el equipo nunca baja de ahi.
+    if (actual.currentMembers <= 1) return;
+    _projects[index] = actual.copyWith(
+      currentMembers: actual.currentMembers - 1,
+    );
+  }
+
+  @override
+  Future<void> updateStage(String projectId, ProjectStage stage) async {
+    final index = _projects.indexWhere((p) => p.id == projectId);
+    if (index == -1) return;
+
+    // Project.copyWith no cambia la etapa, asi que se rearma la fila.
+    final actual = _projects[index];
+    _projects[index] = Project(
+      id: actual.id,
+      title: actual.title,
+      problem: actual.problem,
+      description: actual.description,
+      stage: stage,
+      academicProgram: actual.academicProgram,
+      currentMembers: actual.currentMembers,
+      maxMembers: actual.maxMembers,
+      skillsWanted: actual.skillsWanted,
+      tags: actual.tags,
+      leaderId: actual.leaderId,
+      recruitmentOpen: actual.recruitmentOpen,
+    );
+  }
 }

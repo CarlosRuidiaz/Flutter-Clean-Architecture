@@ -43,4 +43,28 @@ class RobleProjectSource with UiLoggy implements IProjectSource {
       });
     }
   }
+
+  @override
+  Future<void> removeMember(String projectId) async {
+    loggy.debug(
+      'RobleProjectSource.removeMember: restando miembro a $projectId',
+    );
+    final record = await roble.getById('projects', projectId);
+    if (record == null) return;
+    final project = Project.fromJson(record);
+    // El 1 es el lider: el equipo nunca baja de ahi.
+    if (project.currentMembers > 1) {
+      await roble.update('projects', projectId, {
+        'current_members': project.currentMembers - 1,
+      });
+    }
+  }
+
+  @override
+  Future<void> updateStage(String projectId, ProjectStage stage) async {
+    loggy.debug(
+      'RobleProjectSource.updateStage: $projectId pasa a ${stage.name}',
+    );
+    await roble.update('projects', projectId, {'stage': stage.name});
+  }
 }

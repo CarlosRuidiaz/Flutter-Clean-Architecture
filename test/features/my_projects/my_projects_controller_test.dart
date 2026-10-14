@@ -71,6 +71,12 @@ class _FakeProjectRepository implements IProjectRepository {
   Future<void> closeRecruitment(String projectId) async => throw UnimplementedError();
   @override
   Future<void> addMember(String projectId) async => throw UnimplementedError();
+  @override
+  Future<void> removeMember(String projectId) async =>
+      throw UnimplementedError();
+  @override
+  Future<void> updateStage(String projectId, ProjectStage stage) async =>
+      throw UnimplementedError();
 }
 
 class _FakeApplicationRepository implements IApplicationRepository {

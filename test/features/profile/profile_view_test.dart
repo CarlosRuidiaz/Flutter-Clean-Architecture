@@ -68,6 +68,10 @@ class _FakeProjectRepo implements IProjectRepository {
   Future<void> closeRecruitment(String projectId) async {}
   @override
   Future<void> addMember(String projectId) async {}
+  @override
+  Future<void> removeMember(String projectId) async {}
+  @override
+  Future<void> updateStage(String projectId, ProjectStage stage) async {}
 }
 
 class _FakeAppRepo implements IApplicationRepository {
