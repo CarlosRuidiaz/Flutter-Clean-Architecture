@@ -8,27 +8,40 @@ class FakeRobleDatabaseForApp extends RobleApiDataBase {
       : super(
           config: RobleApiConfig.fromContract(
             baseUrl: 'https://roble.test-openlab.uninorte.edu.co',
-            contractId: 'app_test_12345678',
+            contractId: 'proyecto_test_12345678',
           ),
         );
 
   final List<Map<String, dynamic>> applications = [];
+  String? lastReadTable;
+  Map<String, dynamic>? lastFilters;
+  String? lastCreateTable;
+  Map<String, dynamic>? lastCreateData;
+  String? lastUpdateTable;
+  dynamic lastUpdateId;
+  Map<String, dynamic>? lastUpdateData;
+  bool shouldThrowOnRead = false;
 
   @override
   Future<List<Map<String, dynamic>>> read(
     String tableName, {
     Map<String, dynamic>? filters,
   }) async {
+    lastReadTable = tableName;
+    lastFilters = filters;
+    if (shouldThrowOnRead) {
+      throw Exception('Fallo de red en Roble');
+    }
     if (tableName == 'applications') {
-      return applications.where((row) {
-        if (filters == null) return true;
-        for (final entry in filters.entries) {
-          if (row[entry.key]?.toString() != entry.value?.toString()) {
-            return false;
+      if (filters != null) {
+        return applications.where((app) {
+          for (final entry in filters.entries) {
+            if (app[entry.key] != entry.value) return false;
           }
-        }
-        return true;
-      }).toList();
+          return true;
+        }).toList();
+      }
+      return applications;
     }
     return [];
   }
@@ -38,6 +51,8 @@ class FakeRobleDatabaseForApp extends RobleApiDataBase {
     String tableName,
     Map<String, dynamic> data,
   ) async {
+    lastCreateTable = tableName;
+    lastCreateData = data;
     if (tableName == 'applications') {
       final record = Map<String, dynamic>.from(data);
       record['_id'] = 'app_${applications.length + 1}';
@@ -53,6 +68,9 @@ class FakeRobleDatabaseForApp extends RobleApiDataBase {
     dynamic id,
     Map<String, dynamic> data,
   ) async {
+    lastUpdateTable = tableName;
+    lastUpdateId = id;
+    lastUpdateData = data;
     if (tableName == 'applications') {
       for (final a in applications) {
         if (a['_id'] == id.toString()) {
@@ -75,7 +93,7 @@ void main() {
       source = RobleApplicationSource(fakeRoble);
     });
 
-    test('getMyApplications filtra por applicant_id', () async {
+    test('getMyApplications pide tabla applications y filtra por applicant_id', () async {
       fakeRoble.applications.addAll([
         {
           '_id': 'a1',
@@ -92,7 +110,7 @@ void main() {
           'project_id': 'p2',
           'applicant_id': 'u2',
           'applicant_name': 'User 2',
-          'applicant_program': 'Diseño',
+          'applicant_program': 'Diseno',
           'applicant_semester': 3,
           'skills_offered': [],
           'status': 'pending',
@@ -100,12 +118,19 @@ void main() {
       ]);
 
       final myApps = await source.getMyApplications('u1');
+      expect(fakeRoble.lastReadTable, 'applications');
+      expect(fakeRoble.lastFilters?['applicant_id'], 'u1');
       expect(myApps.length, 1);
       expect(myApps.first.id, 'a1');
       expect(myApps.first.applicantId, 'u1');
     });
 
-    test('getApplicationsFor filtra por project_id', () async {
+    test('getMyApplications propaga error cuando Roble falla', () async {
+      fakeRoble.shouldThrowOnRead = true;
+      expect(() => source.getMyApplications('u1'), throwsA(isA<Exception>()));
+    });
+
+    test('getApplicationsFor pide tabla applications y filtra por project_id', () async {
       fakeRoble.applications.addAll([
         {
           '_id': 'a1',
@@ -122,7 +147,7 @@ void main() {
           'project_id': 'p2',
           'applicant_id': 'u2',
           'applicant_name': 'User 2',
-          'applicant_program': 'Diseño',
+          'applicant_program': 'Diseno',
           'applicant_semester': 3,
           'skills_offered': [],
           'status': 'pending',
@@ -130,6 +155,8 @@ void main() {
       ]);
 
       final projApps = await source.getApplicationsFor('p2');
+      expect(fakeRoble.lastReadTable, 'applications');
+      expect(fakeRoble.lastFilters?['project_id'], 'p2');
       expect(projApps.length, 1);
       expect(projApps.first.id, 'a2');
       expect(projApps.first.projectId, 'p2');
@@ -161,7 +188,7 @@ void main() {
       expect(fakeRoble.applications.length, 1);
     });
 
-    test('apply crea postulacion nueva si no existe una vigente', () async {
+    test('apply crea postulacion nueva mandando skills_offered como texto JSON si no existe vigente', () async {
       final nueva = Application(
         projectId: 'p1',
         applicantId: 'u1',
@@ -172,11 +199,13 @@ void main() {
       );
 
       final resultado = await source.apply(nueva);
+      expect(fakeRoble.lastCreateTable, 'applications');
+      expect(fakeRoble.lastCreateData?['skills_offered'], isA<String>());
       expect(resultado.id, isNotNull);
       expect(fakeRoble.applications.length, 1);
     });
 
-    test('withdraw actualiza status a withdrawn', () async {
+    test('withdraw actualiza unicamente status a withdrawn', () async {
       fakeRoble.applications.add({
         '_id': 'a1',
         'project_id': 'p1',
@@ -189,6 +218,9 @@ void main() {
       });
 
       await source.withdraw('a1');
+      expect(fakeRoble.lastUpdateTable, 'applications');
+      expect(fakeRoble.lastUpdateId, 'a1');
+      expect(fakeRoble.lastUpdateData, {'status': 'withdrawn'});
       expect(fakeRoble.applications.first['status'], 'withdrawn');
     });
 
@@ -205,6 +237,7 @@ void main() {
       });
 
       await source.decide('a1', ApplicationStatus.accepted);
+      expect(fakeRoble.lastUpdateData, {'status': 'accepted'});
       expect(fakeRoble.applications.first['status'], 'accepted');
     });
 
@@ -221,6 +254,7 @@ void main() {
       });
 
       await source.leave('a1');
+      expect(fakeRoble.lastUpdateData, {'status': 'left'});
       expect(fakeRoble.applications.first['status'], 'left');
     });
 
@@ -237,6 +271,7 @@ void main() {
       });
 
       await source.decide('a1', ApplicationStatus.removed);
+      expect(fakeRoble.lastUpdateData, {'status': 'removed'});
       expect(fakeRoble.applications.first['status'], 'removed');
     });
 

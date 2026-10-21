@@ -16,11 +16,25 @@ class FakeRobleDatabaseForShowcase extends RobleApiDataBase {
   final List<Map<String, dynamic>> comments = [];
   final List<Map<String, dynamic>> feedback = [];
 
+  String? lastReadTable;
+  Map<String, dynamic>? lastFilters;
+  String? lastCreateTable;
+  Map<String, dynamic>? lastCreateData;
+  String? lastUpdateTable;
+  dynamic lastUpdateId;
+  Map<String, dynamic>? lastUpdateData;
+  bool shouldThrowOnRead = false;
+
   @override
   Future<List<Map<String, dynamic>>> read(
     String tableName, {
     Map<String, dynamic>? filters,
   }) async {
+    lastReadTable = tableName;
+    lastFilters = filters;
+    if (shouldThrowOnRead) {
+      throw Exception('Fallo de comunicacion con Roble');
+    }
     if (tableName == 'comments') {
       if (filters != null && filters.containsKey('project_id')) {
         return comments
@@ -48,6 +62,8 @@ class FakeRobleDatabaseForShowcase extends RobleApiDataBase {
     String tableName,
     Map<String, dynamic> data,
   ) async {
+    lastCreateTable = tableName;
+    lastCreateData = data;
     final record = Map<String, dynamic>.from(data);
     if (tableName == 'comments') {
       record['_id'] = 'c_${comments.length + 1}';
@@ -68,6 +84,9 @@ class FakeRobleDatabaseForShowcase extends RobleApiDataBase {
     dynamic id,
     Map<String, dynamic> data,
   ) async {
+    lastUpdateTable = tableName;
+    lastUpdateId = id;
+    lastUpdateData = data;
     if (tableName == 'feedback') {
       for (final f in feedback) {
         if (f['_id'] == id.toString()) {
@@ -90,7 +109,7 @@ void main() {
       source = RobleShowcaseSource(fakeRoble);
     });
 
-    test('addComment y getComments filtran por project_id', () async {
+    test('addComment inserta en tabla comments con toJsonNoId y getComments filtra por project_id', () async {
       final comment1 = ProjectComment(
         projectId: 'p1',
         authorId: 'u1',
@@ -105,17 +124,31 @@ void main() {
       );
 
       final guardado = await source.addComment(comment1);
+      expect(fakeRoble.lastCreateTable, 'comments');
+      expect(fakeRoble.lastCreateData?['project_id'], 'p1');
       expect(guardado.id, isNotNull);
+
       await source.addComment(comment2);
 
       final p1Comments = await source.getComments('p1');
+      expect(fakeRoble.lastReadTable, 'comments');
+      expect(fakeRoble.lastFilters, {'project_id': 'p1'});
       expect(p1Comments.length, 1);
       expect(p1Comments.first.text, 'Primer comentario');
       expect(p1Comments.first.authorName, 'Camilo');
     });
 
-    test('saveFeedback crea fila y actualizar sobreescribe sin duplicar',
-        () async {
+    test('getComments propaga error cuando Roble falla', () async {
+      fakeRoble.shouldThrowOnRead = true;
+      expect(() => source.getComments('p1'), throwsA(isA<Exception>()));
+    });
+
+    test('getFeedback pide tabla feedback y propaga error cuando Roble falla', () async {
+      fakeRoble.shouldThrowOnRead = true;
+      expect(() => source.getFeedback('p1'), throwsA(isA<Exception>()));
+    });
+
+    test('saveFeedback crea fila y actualizar sobreescribe sin duplicar', () async {
       final fbInicial = ProjectFeedback(
         projectId: 'p1',
         authorId: 'u1',
@@ -127,6 +160,7 @@ void main() {
       );
 
       final creado = await source.saveFeedback(fbInicial);
+      expect(fakeRoble.lastCreateTable, 'feedback');
       expect(creado.id, 'fb_1');
       expect(fakeRoble.feedback.length, 1);
 
@@ -138,11 +172,14 @@ void main() {
       );
 
       final actualizado = await source.saveFeedback(fbActualizado);
+      expect(fakeRoble.lastUpdateTable, 'feedback');
+      expect(fakeRoble.lastUpdateId, 'fb_1');
       expect(actualizado.id, 'fb_1');
       expect(actualizado.usability, 5);
-      expect(fakeRoble.feedback.length, 1); // No duplicó fila
+      expect(fakeRoble.feedback.length, 1); // No duplico fila
 
       final lista = await source.getFeedback('p1');
+      expect(fakeRoble.lastReadTable, 'feedback');
       expect(lista.length, 1);
       expect(lista.first.usability, 5);
       expect(lista.first.comment, 'Actualizado');

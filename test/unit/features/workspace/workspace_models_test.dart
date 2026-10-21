@@ -21,6 +21,20 @@ void main() {
       expect(hito.done, isTrue);
     });
 
+    test('fromJson con datos que faltan o vienen mal usa valores por defecto sin reventar', () {
+      final hito = Milestone.fromJson({
+        'title': null,
+        'due_date': null,
+        'done': 'invalido',
+      });
+
+      expect(hito.id, isNull);
+      expect(hito.projectId, isEmpty);
+      expect(hito.title, isEmpty);
+      expect(hito.dueDate, isNotNull);
+      expect(hito.done, isFalse);
+    });
+
     test('toJsonNoId manda la fecha como texto ISO 8601 y sin _id', () {
       final json = Milestone(
         id: 'm1',
@@ -35,6 +49,8 @@ void main() {
         'due_date': DateTime(2026, 10, 30).toIso8601String(),
         'done': false,
       });
+      expect(json.containsKey('_id'), isFalse);
+      expect(json.containsKey('id'), isFalse);
     });
 
     test('ida y vuelta: lo que se manda vuelve igual', () {
@@ -94,6 +110,26 @@ void main() {
       expect(avance.milestoneId, 'm1');
     });
 
+    test('fromJson con datos que faltan o vienen mal usa valores por defecto sin reventar', () {
+      final avance = ProgressUpdate.fromJson({
+        'title': null,
+        'description': null,
+        'created_at': 'no_es_fecha',
+        'completion_percentage': 'no_es_numero',
+      });
+
+      expect(avance.id, isNull);
+      expect(avance.projectId, isEmpty);
+      expect(avance.authorId, isEmpty);
+      expect(avance.authorName, isEmpty);
+      expect(avance.title, isEmpty);
+      expect(avance.description, isEmpty);
+      expect(avance.completionPercentage, 0);
+      expect(avance.videoUrl, isNull);
+      expect(avance.milestoneId, isNull);
+      expect(avance.createdAt, isNotNull);
+    });
+
     test('video y hito vacios se leen como ausentes', () {
       final avance = ProgressUpdate.fromJson({
         '_id': 'u1',
@@ -128,6 +164,7 @@ void main() {
       expect(json['completion_percentage'], 40);
       expect(json['created_at'], DateTime(2026, 9, 23).toIso8601String());
       expect(json.containsKey('_id'), isFalse);
+      expect(json.containsKey('id'), isFalse);
     });
 
     test('ida y vuelta: lo que se manda vuelve igual', () {
@@ -185,6 +222,40 @@ void main() {
       expect(tarea.title, 'Disenar logo');
       expect(tarea.assigneeName, 'Luis');
       expect(tarea.done, isFalse);
+    });
+
+    test('fromJson con datos que faltan o vienen mal usa valores por defecto sin reventar', () {
+      final tarea = ProjectTask.fromJson({
+        'title': null,
+        'assignee_name': null,
+        'done': 'falso_texto',
+      });
+
+      expect(tarea.id, isNull);
+      expect(tarea.projectId, isEmpty);
+      expect(tarea.title, isEmpty);
+      expect(tarea.assigneeName, isEmpty);
+      expect(tarea.done, isFalse);
+    });
+
+    test('toJsonNoId manda las columnas correctas sin id', () {
+      final task = ProjectTask(
+        id: 't_ignorar',
+        projectId: 'p5',
+        title: 'Crear pruebas',
+        assigneeName: 'Carlos',
+        done: true,
+      );
+
+      final json = task.toJsonNoId();
+      expect(json, {
+        'project_id': 'p5',
+        'title': 'Crear pruebas',
+        'assignee_name': 'Carlos',
+        'done': true,
+      });
+      expect(json.containsKey('_id'), isFalse);
+      expect(json.containsKey('id'), isFalse);
     });
 
     test('ida y vuelta: lo que se manda vuelve igual', () {

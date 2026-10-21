@@ -13,12 +13,22 @@ class FakeRobleDatabase extends RobleApiDataBase {
         );
 
   final List<Map<String, dynamic>> projects = [];
+  String? lastReadTable;
+  Map<String, dynamic>? lastFilters;
+  String? lastCreateTable;
+  Map<String, dynamic>? lastCreateData;
+  bool shouldThrowOnRead = false;
 
   @override
   Future<List<Map<String, dynamic>>> read(
     String tableName, {
     Map<String, dynamic>? filters,
   }) async {
+    lastReadTable = tableName;
+    lastFilters = filters;
+    if (shouldThrowOnRead) {
+      throw Exception('Fallo de comunicacion con Roble');
+    }
     if (tableName == 'projects') {
       return projects;
     }
@@ -30,6 +40,8 @@ class FakeRobleDatabase extends RobleApiDataBase {
     String tableName,
     Map<String, dynamic> data,
   ) async {
+    lastCreateTable = tableName;
+    lastCreateData = data;
     if (tableName == 'projects') {
       final record = Map<String, dynamic>.from(data);
       record['_id'] = 'p_${projects.length + 1}';
@@ -77,7 +89,7 @@ void main() {
       source = RobleProjectSource(fakeRoble);
     });
 
-    test('getProjects devuelve la lista mapeada desde Roble', () async {
+    test('getProjects pide la tabla projects y devuelve la lista mapeada', () async {
       fakeRoble.projects.add({
         '_id': 'p1',
         'title': 'Proyecto Roble',
@@ -94,25 +106,35 @@ void main() {
       });
 
       final list = await source.getProjects();
+      expect(fakeRoble.lastReadTable, 'projects');
       expect(list.length, 1);
       expect(list.first.id, 'p1');
       expect(list.first.title, 'Proyecto Roble');
     });
 
-    test('createProject inserta con toJsonNoId y devuelve el proyecto con _id', () async {
+    test('getProjects propaga el error cuando Roble falla', () async {
+      fakeRoble.shouldThrowOnRead = true;
+      expect(() => source.getProjects(), throwsA(isA<Exception>()));
+    });
+
+    test('createProject inserta con toJsonNoId mandando listas como texto JSON y devuelve _id', () async {
       final nuevo = Project(
         title: 'Nuevo Proyecto',
         problem: 'Prob',
         description: 'Desc',
         stage: ProjectStage.idea,
-        academicProgram: 'Diseño',
+        academicProgram: 'Diseno',
         currentMembers: 1,
         maxMembers: 3,
         skillsWanted: const ['UX'],
+        tags: const ['Mobile'],
         leaderId: 'l1',
       );
 
       final creado = await source.createProject(nuevo);
+      expect(fakeRoble.lastCreateTable, 'projects');
+      expect(fakeRoble.lastCreateData?['skills_wanted'], isA<String>());
+      expect(fakeRoble.lastCreateData?['tags'], isA<String>());
       expect(creado.id, isNotNull);
       expect(creado.title, 'Nuevo Proyecto');
       expect(fakeRoble.projects.length, 1);
@@ -208,7 +230,6 @@ void main() {
       await source.updateStage('p6', ProjectStage.prototype);
 
       expect(fakeRoble.projects.first['stage'], 'prototype');
-      // Y lo demas queda como estaba.
       expect(fakeRoble.projects.first['current_members'], 2);
     });
   });

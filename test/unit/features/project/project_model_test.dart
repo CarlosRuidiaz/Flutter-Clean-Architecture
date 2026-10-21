@@ -3,180 +3,223 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:f_clean_template/features/project/domain/models/project.dart';
 
 void main() {
-  group('Project model JSON', () {
-    test('fromJson y toJson ida y vuelta con listas como List', () {
-      final json = {
-        '_id': 'p100',
-        'title': 'Proyecto Test',
-        'problem': 'Problema test',
-        'description': 'Descripcion test',
-        'stage': 'research',
-        'academic_program': 'Ingeniería de Sistemas',
-        'current_members': 2,
-        'max_members': 4,
-        'skills_wanted': ['Flutter', 'Dart'],
-        'tags': ['Tech', 'Mobile'],
-        'leader_id': 'leader123',
-        'recruitment_open': true,
-      };
+  group('Project', () {
+    group('isFull', () {
+      test('es verdadero cuando los miembros llegan al maximo o lo superan', () {
+        final exactoLleno = Project(
+          title: 'Proyecto',
+          problem: '',
+          description: '',
+          stage: ProjectStage.idea,
+          academicProgram: '',
+          currentMembers: 4,
+          maxMembers: 4,
+          skillsWanted: const [],
+          leaderId: 'l1',
+        );
+        expect(exactoLleno.isFull, isTrue);
 
-      final project = Project.fromJson(json);
+        final superoLleno = exactoLleno.copyWith(currentMembers: 5);
+        expect(superoLleno.isFull, isTrue);
+      });
 
-      expect(project.id, 'p100');
-      expect(project.title, 'Proyecto Test');
-      expect(project.problem, 'Problema test');
-      expect(project.description, 'Descripcion test');
-      expect(project.stage, ProjectStage.research);
-      expect(project.academicProgram, 'Ingeniería de Sistemas');
-      expect(project.currentMembers, 2);
-      expect(project.maxMembers, 4);
-      expect(project.skillsWanted, ['Flutter', 'Dart']);
-      expect(project.tags, ['Tech', 'Mobile']);
-      expect(project.leaderId, 'leader123');
-      expect(project.recruitmentOpen, true);
-
-      final toJson = project.toJson();
-      expect(toJson['_id'], 'p100');
-      expect(toJson['title'], 'Proyecto Test');
-      expect(toJson['stage'], 'research');
-      expect(toJson['skills_wanted'], ['Flutter', 'Dart']);
-
-      final toJsonNoId = project.toJsonNoId();
-      expect(toJsonNoId.containsKey('_id'), false);
-      expect(toJsonNoId.containsKey('id'), false);
-      expect(toJsonNoId['title'], 'Proyecto Test');
-      // Texto JSON, no List: la columna jsonb convierte una lista de Dart en
-      // un array de PostgreSQL y el servidor responde 400.
-      expect(toJsonNoId['skills_wanted'], jsonEncode(['Flutter', 'Dart']));
-      expect(toJsonNoId['tags'], jsonEncode(['Tech', 'Mobile']));
-      expect(toJsonNoId['skills_wanted'], isA<String>());
-      expect(toJsonNoId['tags'], isA<String>());
+      test('es falso cuando todavia hay cupo disponible', () {
+        final conCupo = Project(
+          title: 'Proyecto',
+          problem: '',
+          description: '',
+          stage: ProjectStage.idea,
+          academicProgram: '',
+          currentMembers: 2,
+          maxMembers: 4,
+          skillsWanted: const [],
+          leaderId: 'l1',
+        );
+        expect(conCupo.isFull, isFalse);
+      });
     });
 
-    test('toJsonNoId manda las listas como texto JSON, y fromJson las devuelve',
-        () {
-      final original = Project(
-        title: 'Huerta urbana',
-        problem: 'Un problema',
-        description: 'Una descripcion',
-        stage: ProjectStage.teamFormation,
-        academicProgram: 'Arquitectura',
-        currentMembers: 1,
-        maxMembers: 5,
-        skillsWanted: const ['Diseño UX', 'Análisis de datos'],
-        tags: const ['Sostenibilidad'],
-        leaderId: 'u1',
-      );
-
-      final enviado = original.toJsonNoId();
-      final devuelto = Project.fromJson(enviado);
-
-      // Ida y vuelta: lo que sale codificado vuelve como la misma lista.
-      expect(devuelto.skillsWanted, original.skillsWanted);
-      expect(devuelto.tags, original.tags);
-      expect(devuelto.title, original.title);
-      expect(devuelto.stage, original.stage);
-      expect(devuelto.maxMembers, original.maxMembers);
-    });
-
-    test('una lista vacia tambien viaja como texto JSON', () {
-      final project = Project(
-        title: 'Sin habilidades',
-        problem: 'p',
-        description: 'd',
+    group('acceptsApplicationsFrom', () {
+      final base = Project(
+        id: 'p1',
+        title: 'Proyecto Abierto',
+        problem: '',
+        description: '',
         stage: ProjectStage.idea,
-        academicProgram: 'Psicología',
+        academicProgram: '',
         currentMembers: 1,
-        maxMembers: 2,
+        maxMembers: 4,
         skillsWanted: const [],
-        tags: const [],
-        leaderId: 'u1',
+        leaderId: 'lider1',
+        recruitmentOpen: true,
       );
 
-      final enviado = project.toJsonNoId();
+      test('el lider no puede postularse a su propio proyecto', () {
+        expect(base.acceptsApplicationsFrom('lider1'), isFalse);
+      });
 
-      expect(enviado['skills_wanted'], '[]');
-      expect(enviado['tags'], '[]');
-      expect(Project.fromJson(enviado).skillsWanted, isEmpty);
-      expect(Project.fromJson(enviado).tags, isEmpty);
+      test('un postulante distinto si puede mientras haya cupo y este abierto', () {
+        expect(base.acceptsApplicationsFrom('otro_usuario'), isTrue);
+      });
+
+      test('rechaza si el reclutamiento esta cerrado', () {
+        final cerrado = base.copyWith(recruitmentOpen: false);
+        expect(cerrado.acceptsApplicationsFrom('otro_usuario'), isFalse);
+      });
+
+      test('rechaza si el proyecto esta lleno', () {
+        final lleno = base.copyWith(currentMembers: 4);
+        expect(lleno.isFull, isTrue);
+        expect(lleno.acceptsApplicationsFrom('otro_usuario'), isFalse);
+      });
     });
 
-    test('fromJson maneja listas jsonb que llegan como texto JSON codificado', () {
-      final json = {
-        '_id': 'p101',
-        'title': 'Proyecto Texto JSON',
-        'problem': 'Problema',
-        'description': 'Descripcion',
-        'stage': 'prototype',
-        'academic_program': 'Diseño',
-        'current_members': 1,
-        'max_members': 3,
-        'skills_wanted': jsonEncode(['UI/UX', 'Figma']),
-        'tags': jsonEncode(['Design']),
-        'leader_id': 'l1',
-        'recruitment_open': false,
-      };
+    group('fromJson y toJson', () {
+      test('fromJson con datos completos mapea cada atributo', () {
+        final json = {
+          '_id': 'p100',
+          'title': 'Proyecto Test',
+          'problem': 'Problema test',
+          'description': 'Descripcion test',
+          'stage': 'research',
+          'academic_program': 'Ingenieria de Sistemas',
+          'current_members': 2,
+          'max_members': 4,
+          'skills_wanted': ['Flutter', 'Dart'],
+          'tags': ['Tech', 'Mobile'],
+          'leader_id': 'leader123',
+          'recruitment_open': true,
+        };
 
-      final project = Project.fromJson(json);
+        final project = Project.fromJson(json);
 
-      expect(project.skillsWanted, ['UI/UX', 'Figma']);
-      expect(project.tags, ['Design']);
-      expect(project.stage, ProjectStage.prototype);
-      expect(project.recruitmentOpen, false);
-    });
+        expect(project.id, 'p100');
+        expect(project.title, 'Proyecto Test');
+        expect(project.problem, 'Problema test');
+        expect(project.description, 'Descripcion test');
+        expect(project.stage, ProjectStage.research);
+        expect(project.academicProgram, 'Ingenieria de Sistemas');
+        expect(project.currentMembers, 2);
+        expect(project.maxMembers, 4);
+        expect(project.skillsWanted, ['Flutter', 'Dart']);
+        expect(project.tags, ['Tech', 'Mobile']);
+        expect(project.leaderId, 'leader123');
+        expect(project.recruitmentOpen, true);
+      });
 
-    test('fromJson usa etapa por defecto idea ante una etapa desconocida o nula', () {
-      final jsonUnknown = {
-        '_id': 'p102',
-        'title': 'Proyecto Desconocido',
-        'problem': '',
-        'description': '',
-        'stage': 'etapa_inventada',
-        'academic_program': '',
-        'current_members': 0,
-        'max_members': 2,
-        'skills_wanted': [],
-        'tags': [],
-        'leader_id': 'l2',
-        'recruitment_open': true,
-      };
+      test('fromJson con datos que faltan o vienen mal usa valores por defecto sin reventar', () {
+        final jsonIncompleto = <String, dynamic>{
+          'current_members': 'texto_invalido',
+          'max_members': null,
+          'skills_wanted': null,
+          'tags': 'cadena_no_json',
+          'stage': 'etapa_desconocida',
+          'recruitment_open': 'no_es_bool',
+        };
 
-      final projectUnknown = Project.fromJson(jsonUnknown);
-      expect(projectUnknown.stage, ProjectStage.idea);
+        final project = Project.fromJson(jsonIncompleto);
 
-      final jsonNull = {
-        ...jsonUnknown,
-        'stage': null,
-      };
-      final projectNull = Project.fromJson(jsonNull);
-      expect(projectNull.stage, ProjectStage.idea);
-    });
-  });
+        expect(project.id, isNull);
+        expect(project.title, isEmpty);
+        expect(project.problem, isEmpty);
+        expect(project.description, isEmpty);
+        expect(project.stage, ProjectStage.idea);
+        expect(project.academicProgram, isEmpty);
+        expect(project.currentMembers, 0);
+        expect(project.maxMembers, 0);
+        expect(project.skillsWanted, isEmpty);
+        expect(project.tags, isEmpty);
+        expect(project.leaderId, isEmpty);
+        expect(project.recruitmentOpen, isFalse);
+      });
 
-  group('Project · quien puede postularse', () {
-    final abierto = Project(
-      id: 'p1',
-      title: 'T',
-      problem: '',
-      description: '',
-      stage: ProjectStage.idea,
-      academicProgram: '',
-      currentMembers: 1,
-      maxMembers: 4,
-      skillsWanted: const [],
-      leaderId: 'lider',
-    );
+      test('fromJson maneja listas jsonb que llegan como texto JSON codificado', () {
+        final json = {
+          '_id': 'p101',
+          'title': 'Proyecto Texto JSON',
+          'problem': 'Problema',
+          'description': 'Descripcion',
+          'stage': 'prototype',
+          'academic_program': 'Diseno',
+          'current_members': 1,
+          'max_members': 3,
+          'skills_wanted': jsonEncode(['UI/UX', 'Figma']),
+          'tags': jsonEncode(['Design']),
+          'leader_id': 'l1',
+          'recruitment_open': 'true',
+        };
 
-    test('el lider no se postula a su propio proyecto', () {
-      expect(abierto.acceptsApplicationsFrom('lider'), isFalse);
-    });
+        final project = Project.fromJson(json);
 
-    test('cualquier otro si, mientras siga reclutando', () {
-      expect(abierto.acceptsApplicationsFrom('otro'), isTrue);
-      expect(
-        abierto.copyWith(recruitmentOpen: false).acceptsApplicationsFrom('otro'),
-        isFalse,
-      );
+        expect(project.skillsWanted, ['UI/UX', 'Figma']);
+        expect(project.tags, ['Design']);
+        expect(project.stage, ProjectStage.prototype);
+        expect(project.recruitmentOpen, isTrue);
+      });
+
+      test('toJsonNoId contiene las columnas correctas sin id y con listas en texto json', () {
+        final project = Project(
+          id: 'id_a_ignorar',
+          title: 'Huerta urbana',
+          problem: 'Un problema',
+          description: 'Una descripcion',
+          stage: ProjectStage.teamFormation,
+          academicProgram: 'Arquitectura',
+          currentMembers: 1,
+          maxMembers: 5,
+          skillsWanted: const ['Diseno UX', 'Analisis de datos'],
+          tags: const ['Sostenibilidad'],
+          leaderId: 'u1',
+          recruitmentOpen: true,
+        );
+
+        final jsonNoId = project.toJsonNoId();
+
+        expect(jsonNoId.containsKey('_id'), isFalse);
+        expect(jsonNoId.containsKey('id'), isFalse);
+        expect(jsonNoId['title'], 'Huerta urbana');
+        expect(jsonNoId['problem'], 'Un problema');
+        expect(jsonNoId['description'], 'Una descripcion');
+        expect(jsonNoId['stage'], 'teamFormation');
+        expect(jsonNoId['academic_program'], 'Arquitectura');
+        expect(jsonNoId['current_members'], 1);
+        expect(jsonNoId['max_members'], 5);
+        expect(jsonNoId['skills_wanted'], jsonEncode(['Diseno UX', 'Analisis de datos']));
+        expect(jsonNoId['tags'], jsonEncode(['Sostenibilidad']));
+        expect(jsonNoId['leader_id'], 'u1');
+        expect(jsonNoId['recruitment_open'], isTrue);
+      });
+
+      test('ida y vuelta: lo que se envia en toJsonNoId vuelve igual con fromJson', () {
+        final original = Project(
+          title: 'Huerta urbana',
+          problem: 'Un problema',
+          description: 'Una descripcion',
+          stage: ProjectStage.teamFormation,
+          academicProgram: 'Arquitectura',
+          currentMembers: 1,
+          maxMembers: 5,
+          skillsWanted: const ['Diseno UX', 'Analisis de datos'],
+          tags: const ['Sostenibilidad'],
+          leaderId: 'u1',
+          recruitmentOpen: true,
+        );
+
+        final enviado = original.toJsonNoId();
+        final devuelto = Project.fromJson(enviado);
+
+        expect(devuelto.title, original.title);
+        expect(devuelto.problem, original.problem);
+        expect(devuelto.description, original.description);
+        expect(devuelto.stage, original.stage);
+        expect(devuelto.academicProgram, original.academicProgram);
+        expect(devuelto.currentMembers, original.currentMembers);
+        expect(devuelto.maxMembers, original.maxMembers);
+        expect(devuelto.skillsWanted, original.skillsWanted);
+        expect(devuelto.tags, original.tags);
+        expect(devuelto.leaderId, original.leaderId);
+        expect(devuelto.recruitmentOpen, original.recruitmentOpen);
+      });
     });
   });
 }
