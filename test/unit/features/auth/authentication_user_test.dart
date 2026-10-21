@@ -32,7 +32,6 @@ void main() {
           expect(user.name, isEmpty);
           expect(user.password, isEmpty);
         },
-        skip: 'Error en la app: AuthenticationUser.fromJson no maneja campos faltantes o nulos y lanza TypeError porque email, name y password no aceptan null.',
       );
 
       test('toJson contiene las columnas id, email, name y password', () {

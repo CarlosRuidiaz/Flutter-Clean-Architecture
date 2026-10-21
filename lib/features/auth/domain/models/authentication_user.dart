@@ -25,12 +25,14 @@ class AuthenticationUser {
     this.bio,
   });
 
+  /// Un campo que falta o llega nulo queda vacio: una cuenta guardada a medias
+  /// no puede tumbar la lectura de todas las demas.
   factory AuthenticationUser.fromJson(Map<String, dynamic> json) {
     return AuthenticationUser(
       id: json['id'],
-      email: json['email'],
-      name: json['name'],
-      password: json['password'],
+      email: (json['email'] as String?) ?? '',
+      name: (json['name'] as String?) ?? '',
+      password: (json['password'] as String?) ?? '',
     );
   }
 
