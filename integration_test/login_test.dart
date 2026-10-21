@@ -32,6 +32,7 @@ void main() {
       await iniciarSesion(tester, email: _email, password: 'Otra!Clave9');
       expect(porLlave('LoginPage'), findsOneWidget);
       expect(porLlave('HomePage'), findsNothing);
+      await esperarA(tester, find.text('No se pudo entrar. Revisa tus datos.'));
       expect(find.text('No se pudo entrar. Revisa tus datos.'), findsOneWidget);
       expect(auth.cuentaConSesion, isNull);
 

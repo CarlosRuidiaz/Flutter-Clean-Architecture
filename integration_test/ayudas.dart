@@ -22,6 +22,22 @@ Future<void> escribir(WidgetTester tester, String llave, String texto) async {
   await tester.pumpAndSettle();
 }
 
+/// Bombea frames hasta que [finder] encuentre algo, o hasta [limite].
+///
+/// Para lo que aparece despues de una operacion asincrona, como un aviso
+/// tras un login fallido: `pumpAndSettle` puede volver antes de que la
+/// operacion termine, porque mientras espera no hay frames pendientes.
+Future<void> esperarA(
+  WidgetTester tester,
+  Finder finder, {
+  Duration limite = const Duration(seconds: 5),
+}) async {
+  final fin = DateTime.now().add(limite);
+  while (finder.evaluate().isEmpty && DateTime.now().isBefore(fin)) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
 /// Inicia sesion desde `LoginPage`, como lo haria una persona.
 Future<void> iniciarSesion(
   WidgetTester tester, {
