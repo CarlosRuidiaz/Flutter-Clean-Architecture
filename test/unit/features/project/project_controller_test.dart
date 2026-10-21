@@ -244,6 +244,7 @@ void main() {
             currentMembers: 4,
             maxMembers: 6,
             skillsWanted: const [AppCatalogs.skillUx],
+            tags: const [AppCatalogs.tagTechnology],
             leaderId: 'u3',
           ),
           Project(
@@ -256,6 +257,7 @@ void main() {
             currentMembers: 2,
             maxMembers: 4,
             skillsWanted: const [AppCatalogs.skillWeb, AppCatalogs.skillPython],
+            tags: const [AppCatalogs.tagEducation, AppCatalogs.tagTechnology],
             leaderId: '1',
           ),
           Project(
@@ -268,6 +270,7 @@ void main() {
             currentMembers: 5,
             maxMembers: 5, // lleno
             skillsWanted: const [AppCatalogs.skillManagement],
+            tags: const [AppCatalogs.tagSustainability],
             leaderId: 'u2',
           ),
           Project(
@@ -280,6 +283,7 @@ void main() {
             currentMembers: 3,
             maxMembers: 4,
             skillsWanted: const [AppCatalogs.skillUx],
+            tags: const [AppCatalogs.tagEducation],
             leaderId: 'u6',
             recruitmentOpen: false, // cerrado
           ),
@@ -366,6 +370,31 @@ void main() {
       );
 
       expect(controller.allVisibleProjects.map((p) => p.id), ['2']);
+    });
+
+    test('filtro combinado de texto, habilidades, programa, etapa y tags cruza todos los criterios',
+        () async {
+      final controller = await cargado();
+      controller.setSearchQuery('tutor');
+      controller.applyFilters(
+        skills: const [AppCatalogs.skillPython],
+        programs: const [AppCatalogs.programSystems],
+        stages: const [ProjectStage.idea],
+        tags: const [AppCatalogs.tagEducation],
+      );
+
+      expect(controller.allVisibleProjects.map((p) => p.id), ['2']);
+      expect(controller.activeFilterCount, 4);
+      expect(controller.hasActiveFilters, isTrue);
+
+      // Si cambiamos un criterio que no coincide (por ejemplo etapa de investigación), no queda ninguno
+      controller.applyFilters(
+        skills: const [AppCatalogs.skillPython],
+        programs: const [AppCatalogs.programSystems],
+        stages: const [ProjectStage.research],
+        tags: const [AppCatalogs.tagEducation],
+      );
+      expect(controller.allVisibleProjects, isEmpty);
     });
 
     test('el proyecto lleno y el cerrado siguen en la lista', () async {
