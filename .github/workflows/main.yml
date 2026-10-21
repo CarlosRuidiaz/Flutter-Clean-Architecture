@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unit-widget:
+    name: Pruebas unitarias y de widget
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.4
+          cache: true
+
+      - name: Dependencias
+        run: flutter pub get
+
+      - name: Analisis
+        run: flutter analyze --no-fatal-infos
+
+      - name: Pruebas unitarias
+        run: flutter test test/unit
+
+      - name: Pruebas de widget
+        run: flutter test test/widget
