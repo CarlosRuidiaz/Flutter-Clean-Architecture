@@ -65,14 +65,7 @@ void main() {
       });
 
       test('fromJson con datos que faltan o vienen mal usa valores por defecto sin reventar', () {
-        final jsonInvalido = <String, dynamic>{
-          'questions': 'no_es_json_valido',
-          'closes_at': 'fecha_invalida_no_parseable',
-          'audience_program': '',
-        };
-
-        // fecha_invalida_no_parseable causa FormatException en DateTime.parse si no es ISO.
-        // Pero si closes_at es null, usa DateTime.now().
+        // Si closes_at es null, usa DateTime.now().
         final jsonNullCloses = <String, dynamic>{
           'questions': null,
           'closes_at': null,
