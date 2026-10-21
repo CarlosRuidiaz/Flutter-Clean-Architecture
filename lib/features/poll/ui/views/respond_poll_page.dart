@@ -81,17 +81,19 @@ class _RespondPollPageState extends State<RespondPollPage> {
               style: theme.textTheme.titleMedium,
             ),
             const SizedBox(height: AppTokens.gapS),
-            Column(
-              children: [
-                for (int j = 0; j < poll.questions[i].options.length; j++)
-                  RadioListTile<int>(
-                    value: j,
-                    groupValue: _answers[i],
-                    onChanged: (v) => setState(() => _answers[i] = v),
-                    title: Text(poll.questions[i].options[j]),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-              ],
+            RadioGroup<int>(
+              groupValue: _answers[i],
+              onChanged: (v) => setState(() => _answers[i] = v),
+              child: Column(
+                children: [
+                  for (int j = 0; j < poll.questions[i].options.length; j++)
+                    RadioListTile<int>(
+                      value: j,
+                      title: Text(poll.questions[i].options[j]),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                ],
+              ),
             ),
             const SizedBox(height: AppTokens.gapM),
           ],
