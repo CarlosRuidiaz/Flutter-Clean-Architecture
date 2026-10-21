@@ -56,14 +56,18 @@ class _FakeProfileRepository implements IProfileRepository {
 }
 
 class _FakeProjectRepository implements IProjectRepository {
-  final projects = [
+  List<Project> projects = [
     Project(id: 'p1', title: 'Liderado', problem: '', description: '', stage: ProjectStage.idea, academicProgram: '', currentMembers: 1, maxMembers: 3, skillsWanted: [], leaderId: 'u1'),
-    Project(id: 'p2', title: 'Participa', problem: '', description: '', stage: ProjectStage.idea, academicProgram: '', currentMembers: 1, maxMembers: 3, skillsWanted: [], leaderId: 'u2'),
+    Project(id: 'p2', title: 'Participa', problem: '', description: '', stage: ProjectStage.prototype, academicProgram: '', currentMembers: 1, maxMembers: 3, skillsWanted: [], leaderId: 'u2'),
     Project(id: 'p3', title: 'Rechazado/Pendiente', problem: '', description: '', stage: ProjectStage.idea, academicProgram: '', currentMembers: 1, maxMembers: 3, skillsWanted: [], leaderId: 'u2'),
   ];
+  bool shouldThrow = false;
 
   @override
-  Future<List<Project>> getProjects() async => projects;
+  Future<List<Project>> getProjects() async {
+    if (shouldThrow) throw Exception('Fallo cargando proyectos');
+    return projects;
+  }
 
   @override
   Future<Project> createProject(Project project) async => throw UnimplementedError();
@@ -117,7 +121,7 @@ void main() {
       profileRepo = _FakeProfileRepository();
       projectRepo = _FakeProjectRepository();
       appRepo = _FakeApplicationRepository();
-      
+
       controller = MyProjectsController(projectRepo, appRepo, profileRepo, authRepo);
     });
 
@@ -127,7 +131,6 @@ void main() {
 
     test('carga inicial separa creados y participando', () async {
       controller.onInit();
-      // Esperar a que _loadData termine
       await Future.delayed(const Duration(milliseconds: 50));
 
       expect(controller.createdProjects.length, 1);
@@ -136,6 +139,42 @@ void main() {
 
       expect(controller.participatingProjects.length, 1);
       expect(controller.participatingProjects.first.id, 'p2');
+    });
+
+    test('activeProjectsCount cuenta proyectos sin finished y sin duplicados', () async {
+      controller.onInit();
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      // p1 (idea) + p2 (prototype) = 2 activos
+      expect(controller.activeProjectsCount, 2);
+
+      // Si p1 pasa a finished
+      projectRepo.projects = [
+        Project(id: 'p1', title: 'Liderado', problem: '', description: '', stage: ProjectStage.finished, academicProgram: '', currentMembers: 1, maxMembers: 3, skillsWanted: [], leaderId: 'u1'),
+        Project(id: 'p2', title: 'Participa', problem: '', description: '', stage: ProjectStage.prototype, academicProgram: '', currentMembers: 1, maxMembers: 3, skillsWanted: [], leaderId: 'u2'),
+      ];
+
+      await controller.reload();
+      expect(controller.activeProjectsCount, 1);
+    });
+
+    test('pendingFor devuelve conteo de solicitudes pendientes para un proyecto o 0 si es nulo', () async {
+      controller.onInit();
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      expect(controller.pendingFor('p1'), 1);
+      expect(controller.pendingFor('p2'), 0);
+      expect(controller.pendingFor(null), 0);
+    });
+
+    test('isLoading vuelve a false y guarda error cuando el repositorio falla', () async {
+      projectRepo.shouldThrow = true;
+
+      controller.onInit();
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      expect(controller.isLoading.value, isFalse);
+      expect(controller.error.value.isNotEmpty, isTrue);
     });
 
     test('limpia los datos al cerrar sesion y recarga al iniciar', () async {
