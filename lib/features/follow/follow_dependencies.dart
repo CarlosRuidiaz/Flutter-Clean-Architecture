@@ -10,11 +10,13 @@ import 'data/repositories/follow_repository.dart';
 import 'domain/repositories/i_follow_repository.dart';
 import 'ui/viewmodels/follow_controller.dart';
 
-void registerFollow() {
+void registerFollow({IFollowSource? source}) {
   Get.lazyPut<IFollowSource>(
-    () => kIsWeb || !Get.testMode
-        ? RobleFollowSource(Get.find<RobleApiDataBase>())
-        : LocalFollowSource(),
+    () =>
+        source ??
+        (kIsWeb || !Get.testMode
+            ? RobleFollowSource(Get.find<RobleApiDataBase>())
+            : LocalFollowSource()),
     fenix: true,
   );
   

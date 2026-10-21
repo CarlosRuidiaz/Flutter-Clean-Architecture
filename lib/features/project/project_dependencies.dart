@@ -14,8 +14,8 @@ import 'ui/viewmodels/project_controller.dart';
 /// `registerProfile()`. Por eso este va despues de aquel en `main.dart`, y
 /// antes de `registerApplication()` y `registerManagement()`, que resuelven
 /// `IProjectRepository` de aqui.
-void registerProject() {
-  Get.put<IProjectSource>(RobleProjectSource(Get.find()));
+void registerProject({IProjectSource? source}) {
+  Get.put<IProjectSource>(source ?? RobleProjectSource(Get.find()));
   Get.put<IProjectRepository>(ProjectRepository(Get.find()));
   Get.lazyPut(
     () => ProjectController(

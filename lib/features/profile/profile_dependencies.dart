@@ -13,9 +13,11 @@ import 'ui/viewmodels/profile_controller.dart';
 /// Composition root del feature `profile`: el unico archivo que nombra a la vez
 /// las clases concretas de las tres capas. Cambiar de fuente local a Roble se
 /// hace aqui, en una linea, sin tocar repositorio ni controlador.
-void registerProfile() {
+void registerProfile({IProfileSource? source}) {
   // La instancia de Roble la registro main.dart: aqui solo se recibe.
-  Get.put<IProfileSource>(RobleProfileSource(Get.find<RobleApiDataBase>()));
+  Get.put<IProfileSource>(
+    source ?? RobleProfileSource(Get.find<RobleApiDataBase>()),
+  );
   Get.put<IProfileRepository>(ProfileRepository(Get.find()));
   Get.lazyPut(
     () => ProfileController(

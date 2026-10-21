@@ -11,8 +11,8 @@ import 'ui/viewmodels/application_controller.dart';
 /// nombrar las clases concretas. Cambiar de fuente local a Roble es una linea
 /// aqui. `ManagementController` tambien resuelve `IApplicationRepository` de
 /// este registro.
-void registerApplication() {
-  Get.put<IApplicationSource>(RobleApplicationSource(Get.find()));
+void registerApplication({IApplicationSource? source}) {
+  Get.put<IApplicationSource>(source ?? RobleApplicationSource(Get.find()));
   Get.put<IApplicationRepository>(ApplicationRepository(Get.find()));
   // fenix: GetX descarta el controlador al cerrarse la ruta que lo uso. Sin
   // esto, el segundo `Get.find` tras volver de la pantalla 14 lanza

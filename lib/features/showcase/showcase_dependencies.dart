@@ -10,8 +10,8 @@ import 'data/repositories/showcase_repository.dart';
 import 'domain/repositories/i_showcase_repository.dart';
 import 'ui/viewmodels/showcase_controller.dart';
 
-void registerShowcase() {
-  Get.put<IShowcaseSource>(RobleShowcaseSource(Get.find()));
+void registerShowcase({IShowcaseSource? source}) {
+  Get.put<IShowcaseSource>(source ?? RobleShowcaseSource(Get.find()));
   Get.put<IShowcaseRepository>(ShowcaseRepository(Get.find()));
   Get.lazyPut(
     () => ShowcaseController(

@@ -13,11 +13,13 @@ import 'data/repositories/poll_repository.dart';
 import 'domain/repositories/i_poll_repository.dart';
 import 'ui/viewmodels/poll_controller.dart';
 
-void registerPoll() {
+void registerPoll({IPollSource? source}) {
   Get.lazyPut<IPollSource>(
-    () => kIsWeb || !Get.testMode
-        ? RoblePollSource(Get.find<RobleApiDataBase>())
-        : LocalPollSource(),
+    () =>
+        source ??
+        (kIsWeb || !Get.testMode
+            ? RoblePollSource(Get.find<RobleApiDataBase>())
+            : LocalPollSource()),
     fenix: true,
   );
   

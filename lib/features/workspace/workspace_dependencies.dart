@@ -17,8 +17,8 @@ import 'ui/viewmodels/workspace_controller.dart';
 /// `IProfileRepository` e `IProjectRepository`, que ya registraron
 /// `registerApplication()`, `registerProfile()` y `registerProject()`. Por eso
 /// este va despues de esos tres en `main.dart`.
-void registerWorkspace() {
-  Get.put<IWorkspaceSource>(RobleWorkspaceSource(Get.find()));
+void registerWorkspace({IWorkspaceSource? source}) {
+  Get.put<IWorkspaceSource>(source ?? RobleWorkspaceSource(Get.find()));
   Get.put<IWorkspaceRepository>(WorkspaceRepository(Get.find()));
   // fenix: igual que en registerManagement. Sin esto, volver del espacio de
   // trabajo y entrar de nuevo lanza "WorkspaceController not found".
