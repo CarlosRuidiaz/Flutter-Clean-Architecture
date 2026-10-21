@@ -257,11 +257,8 @@ void main() {
   });
 
   // ─── Tests de RespondPollPage ──────────────────────────────────────────────
-  // SKIP: respond_poll_page.dart usa `RadioGroup<int>` que no existe en Flutter
-  // ni en ningún paquete del pubspec. La pantalla no compila. Lo arregla
-  // la persona responsable de lib/.
 
-  group('RespondPollPage', skip: 'Bug: RadioGroup<int> no existe en Flutter ni en los paquetes del proyecto', () {
+  group('RespondPollPage', () {
     Future<void> _abrirResponder(WidgetTester tester, Poll poll) async {
       await Get.deleteAll(force: true);
       tester.view.physicalSize = const Size(1200, 3000);
