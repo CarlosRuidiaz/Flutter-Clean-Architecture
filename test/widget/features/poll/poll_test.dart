@@ -352,8 +352,11 @@ void main() {
 
       final ctrl = _setupControlador();
 
-      // Inyectar respuestas directamente en el mapa del controlador.
-      ctrl.pollResponses[poll.id!] = respuestas.obs;
+      // Las respuestas van al repositorio: la pantalla las vuelve a pedir al
+      // abrirse, y lo que se pusiera solo en el mapa del controlador se perderia.
+      for (final r in respuestas) {
+        await Get.find<IPollRepository>().createResponse(r);
+      }
 
       await tester.pumpWidget(
         GetMaterialApp(
@@ -399,8 +402,9 @@ void main() {
       ];
       await _abrirResultados(tester, poll, respuestas: respuestas);
 
-      // Opción A: 2 de 3 = 66.7%
-      expect(find.text('2 (66.7%)'), findsOneWidget);
+      // Opción A: 2 de 3 = 66.7%. En la pregunta 2, "Sí" tambien recibe 2 de
+      // 3 (las respuestas [0, 1, 0]), asi que el mismo texto sale dos veces.
+      expect(find.text('2 (66.7%)'), findsNWidgets(2));
       // Opción B: 1 de 3 = 33.3%
       expect(find.text('1 (33.3%)'), findsWidgets);
     });
@@ -414,8 +418,9 @@ void main() {
       ];
       await _abrirResultados(tester, poll, respuestas: respuestas);
 
-      // Solo hay 1 respuesta, Opción A = 1 (100%), C = 0 (0.0%).
-      expect(find.text('1 (100.0%)'), findsOneWidget);
+      // Solo hay 1 respuesta, Opción A = 1 (100%), C = 0 (0.0%). La pregunta 2
+      // tambien recibe su unica respuesta en "Sí": 1 (100.0%) sale dos veces.
+      expect(find.text('1 (100.0%)'), findsNWidgets(2));
       expect(find.text('0 (0.0%)'), findsWidgets);
     });
 
