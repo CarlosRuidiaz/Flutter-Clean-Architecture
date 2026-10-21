@@ -47,6 +47,7 @@ class ProfileView extends StatelessWidget {
                 ),
                 const SizedBox(height: AppTokens.gapXl),
                 ElevatedButton(
+                  key: const Key('ButtonLogoutConfirm'),
                   onPressed: () async {
                     await Get.find<AuthenticationController>().logOut();
                     if (sheetContext.mounted) {
@@ -75,6 +76,7 @@ class ProfileView extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
+      key: const Key('ProfileView'),
       appBar: AppBar(
         title: const Text('Perfil'),
       ),
@@ -229,6 +231,7 @@ class ProfileView extends StatelessWidget {
               ],
               const SizedBox(height: AppTokens.gapXl * 2),
               OutlinedButton(
+                key: const Key('ButtonLogout'),
                 onPressed: () => _confirmarCierreDeSesion(context),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.ink,

@@ -82,12 +82,14 @@ class _CompleteProfilePageState extends State<CompleteProfilePage>
   }
 
   Widget _chip({
+    Key? key,
     required String label,
     required bool selected,
     required Color selectedColor,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
+      key: key,
       onTap: onTap,
       child: Pill(
         label: label,
@@ -96,8 +98,13 @@ class _CompleteProfilePageState extends State<CompleteProfilePage>
     );
   }
 
-  Widget _grupo({required String titulo, required List<Widget> chips}) {
+  Widget _grupo({
+    Key? key,
+    required String titulo,
+    required List<Widget> chips,
+  }) {
     return Column(
+      key: key,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(titulo, style: Theme.of(context).textTheme.bodyLarge),
@@ -117,6 +124,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage>
     final TextTheme texto = Theme.of(context).textTheme;
 
     return Scaffold(
+      key: const Key('CompleteProfilePage'),
       appBar: AppBar(title: const Text('Completa tu perfil')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppTokens.gapL),
@@ -134,6 +142,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage>
               ),
               const SizedBox(height: AppTokens.gapXl),
               TextFormField(
+                key: const Key('TextFormFieldProfileName'),
                 controller: controllerName,
                 decoration: const InputDecoration(
                   labelText: 'Nombre completo',
@@ -144,6 +153,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage>
               ),
               const SizedBox(height: AppTokens.gapL),
               _grupo(
+                key: const Key('FieldProfileProgram'),
                 titulo: 'Programa académico',
                 chips: [
                   for (final programa in AppCatalogs.academicPrograms)
@@ -159,6 +169,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage>
                 children: [
                   Expanded(child: Text('Semestre', style: texto.bodyLarge)),
                   Container(
+                    key: const Key('FieldProfileSemester'),
                     decoration: BoxDecoration(
                       border: AppTokens.border(),
                       borderRadius: AppTokens.borderRadius,
@@ -186,6 +197,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage>
               ),
               const SizedBox(height: AppTokens.gapL),
               TextFormField(
+                key: const Key('TextFormFieldProfileBio'),
                 controller: controllerBio,
                 maxLines: 3,
                 maxLength: 200,
@@ -201,6 +213,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage>
                 chips: [
                   for (final habilidad in AppCatalogs.skills)
                     _chip(
+                      key: Key('ChipProfileSkill-$habilidad'),
                       label: habilidad,
                       selected: _habilidades.contains(habilidad),
                       selectedColor: AppColors.persimmon,
@@ -225,6 +238,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage>
                 ),
               Obx(
                 () => ElevatedButton(
+                  key: const Key('ButtonProfileSubmit'),
                   onPressed:
                       authenticationController.isLoading || !_perfilCompleto
                       ? null

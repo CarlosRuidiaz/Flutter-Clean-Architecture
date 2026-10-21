@@ -35,6 +35,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const Key('HomePage'),
       body: IndexedStack(
         index: _currentIndex,
         children: [
@@ -103,6 +104,7 @@ class _BottomBar extends StatelessWidget {
         children: [
           Expanded(
             child: _NavBarItem(
+              key: const Key('NavInicio'),
               icon: Icons.home_outlined,
               activeIcon: Icons.home,
               label: 'Inicio',
@@ -112,6 +114,7 @@ class _BottomBar extends StatelessWidget {
           ),
           Expanded(
             child: _NavBarItem(
+              key: const Key('NavMisProyectos'),
               icon: Icons.folder_outlined,
               activeIcon: Icons.folder,
               label: 'Mis proyectos',
@@ -120,10 +123,14 @@ class _BottomBar extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: _CreateActionItem(onTap: () => onTap(2)),
+            child: _CreateActionItem(
+              key: const Key('NavCrear'),
+              onTap: () => onTap(2),
+            ),
           ),
           Expanded(
             child: _NavBarItem(
+              key: const Key('NavNotificaciones'),
               icon: Icons.notifications_outlined,
               activeIcon: Icons.notifications,
               label: 'Notificaciones',
@@ -133,6 +140,7 @@ class _BottomBar extends StatelessWidget {
           ),
           Expanded(
             child: _NavBarItem(
+              key: const Key('NavPerfil'),
               icon: Icons.person_outline,
               activeIcon: Icons.person,
               label: 'Perfil',
@@ -148,6 +156,7 @@ class _BottomBar extends StatelessWidget {
 
 class _NavBarItem extends StatelessWidget {
   const _NavBarItem({
+    super.key,
     required this.icon,
     required this.activeIcon,
     required this.label,
@@ -200,7 +209,7 @@ class _NavBarItem extends StatelessWidget {
 }
 
 class _CreateActionItem extends StatelessWidget {
-  const _CreateActionItem({required this.onTap});
+  const _CreateActionItem({super.key, required this.onTap});
 
   final VoidCallback onTap;
 

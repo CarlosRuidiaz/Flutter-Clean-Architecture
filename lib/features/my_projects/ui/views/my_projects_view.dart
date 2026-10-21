@@ -22,6 +22,7 @@ class MyProjectsView extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
+      key: const Key('MyProjectsView'),
       appBar: AppBar(title: const Text('Mis proyectos')),
       body: DefaultTabController(
         length: 3,
@@ -29,9 +30,9 @@ class MyProjectsView extends StatelessWidget {
           children: [
             const TabBar(
               tabs: [
-                Tab(text: 'Creados por mí'),
-                Tab(text: 'Donde participo'),
-                Tab(text: 'Siguiendo'),
+                Tab(key: Key('TabCreados'), text: 'Creados por mí'),
+                Tab(key: Key('TabParticipo'), text: 'Donde participo'),
+                Tab(key: Key('TabSiguiendo'), text: 'Siguiendo'),
               ],
             ),
             Expanded(

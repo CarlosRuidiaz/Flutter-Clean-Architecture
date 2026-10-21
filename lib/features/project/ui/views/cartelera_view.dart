@@ -15,6 +15,7 @@ class CarteleraView extends StatelessWidget {
 
   Widget _tappableCard(Project project) {
     return ProjectCard(
+      key: Key('ProjectCard-${project.id}'),
       project: project,
       onTap: () => Get.toNamed(AppRoutes.projectDetail, arguments: project),
     );
@@ -141,12 +142,16 @@ class CarteleraView extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        key: const Key('CarteleraView'),
         appBar: AppBar(
           title: const Text('Innovation Hub'),
           bottom: const TabBar(
             tabs: [
-              Tab(text: 'Para tus habilidades'),
-              Tab(text: 'Explorar proyectos'),
+              Tab(
+                key: Key('TabParaTusHabilidades'),
+                text: 'Para tus habilidades',
+              ),
+              Tab(key: Key('TabExplorar'), text: 'Explorar proyectos'),
             ],
           ),
         ),

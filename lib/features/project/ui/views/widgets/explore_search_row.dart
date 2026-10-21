@@ -60,6 +60,7 @@ class _ExploreSearchRowState extends State<ExploreSearchRow> {
         children: [
           Expanded(
             child: TextField(
+              key: const Key('TextFieldSearch'),
               controller: _searchController,
               onChanged: _controller.setSearchQuery,
               decoration: const InputDecoration(
@@ -73,6 +74,7 @@ class _ExploreSearchRowState extends State<ExploreSearchRow> {
           Obx(() {
             final int marcados = _controller.activeFilterCount;
             return OutlinedButton.icon(
+              key: const Key('ButtonFilters'),
               onPressed: () => Get.toNamed(AppRoutes.projectFilters),
               icon: const Icon(Icons.tune, size: 18),
               label: Text(marcados > 0 ? 'Filtros ($marcados)' : 'Filtros'),

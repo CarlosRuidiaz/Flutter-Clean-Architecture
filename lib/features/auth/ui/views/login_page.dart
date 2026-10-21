@@ -56,6 +56,7 @@ class _LoginPageState extends State<LoginPage> with UiLoggy {
     final TextTheme texto = Theme.of(context).textTheme;
 
     return Scaffold(
+      key: const Key('LoginPage'),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -78,6 +79,7 @@ class _LoginPageState extends State<LoginPage> with UiLoggy {
                   ),
                   const SizedBox(height: AppTokens.gapXl),
                   TextFormField(
+                    key: const Key('TextFormFieldLoginEmail'),
                     controller: controllerEmail,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
@@ -98,6 +100,7 @@ class _LoginPageState extends State<LoginPage> with UiLoggy {
                   ),
                   const SizedBox(height: AppTokens.gapM),
                   TextFormField(
+                    key: const Key('TextFormFieldLoginPassword'),
                     controller: controllerPassword,
                     obscureText: true,
                     decoration: const InputDecoration(labelText: 'Contraseña'),
@@ -109,6 +112,7 @@ class _LoginPageState extends State<LoginPage> with UiLoggy {
                   const SizedBox(height: AppTokens.gapXl),
                   Obx(
                     () => ElevatedButton(
+                      key: const Key('ButtonLoginSubmit'),
                       onPressed:
                           authenticationController.isLoading ? null : _enviar,
                       child: Text(
@@ -120,6 +124,7 @@ class _LoginPageState extends State<LoginPage> with UiLoggy {
                   ),
                   const SizedBox(height: AppTokens.gapS),
                   OutlinedButton(
+                    key: const Key('ButtonLoginCreateAccount'),
                     onPressed: () => Get.to(() => const SignUpPage()),
                     child: const Text('Crear cuenta'),
                   ),

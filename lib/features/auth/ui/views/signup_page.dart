@@ -50,6 +50,7 @@ class _SignUpPageState extends State<SignUpPage> with UiLoggy {
     final TextTheme texto = Theme.of(context).textTheme;
 
     return Scaffold(
+      key: const Key('SignUpPage'),
       appBar: AppBar(title: const Text('Crear cuenta')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppTokens.gapL),
@@ -69,6 +70,7 @@ class _SignUpPageState extends State<SignUpPage> with UiLoggy {
               ),
               const SizedBox(height: AppTokens.gapXl),
               TextFormField(
+                key: const Key('TextFormFieldSignUpEmail'),
                 controller: controllerEmail,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
@@ -87,6 +89,7 @@ class _SignUpPageState extends State<SignUpPage> with UiLoggy {
               ),
               const SizedBox(height: AppTokens.gapM),
               TextFormField(
+                key: const Key('TextFormFieldSignUpPassword'),
                 controller: controllerPassword,
                 obscureText: true,
                 decoration: const InputDecoration(
@@ -99,6 +102,7 @@ class _SignUpPageState extends State<SignUpPage> with UiLoggy {
               ),
               const SizedBox(height: AppTokens.gapM),
               TextFormField(
+                key: const Key('TextFormFieldSignUpPasswordConfirm'),
                 controller: controllerConfirmacion,
                 obscureText: true,
                 decoration: const InputDecoration(
@@ -111,6 +115,7 @@ class _SignUpPageState extends State<SignUpPage> with UiLoggy {
               ),
               const SizedBox(height: AppTokens.gapXl),
               ElevatedButton(
+                key: const Key('ButtonSignUpContinue'),
                 onPressed: _continuar,
                 child: const Text('Continuar'),
               ),

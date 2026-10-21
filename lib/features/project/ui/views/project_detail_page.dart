@@ -120,6 +120,7 @@ class ProjectDetailPage extends StatelessWidget {
           if (miId != null && !esLider)
             Expanded(
               child: OutlinedButton(
+                key: const Key('ButtonFollow'),
                 onPressed: () {
                   if (project.id != null) {
                     followController?.toggleFollow(project.id!, !isFollowing);
@@ -153,6 +154,7 @@ class ProjectDetailPage extends StatelessWidget {
             const SizedBox(width: AppTokens.gapM),
             Expanded(
               child: ElevatedButton(
+                key: const Key('ButtonApply'),
                 // Sin perfil cargado el botón se ve deshabilitado: postularse
                 // ahora sería hacerlo a nombre de nadie.
                 onPressed: profile?.id == null
@@ -211,6 +213,7 @@ class ProjectDetailPage extends StatelessWidget {
     });
 
     return Scaffold(
+      key: const Key('ProjectDetailPage'),
       appBar: AppBar(title: Text(argumento.title)),
       body: Obx(() {
         // El proyecto del argumento es la foto que tenia la cartelera al
@@ -361,6 +364,7 @@ class ProjectDetailPage extends StatelessWidget {
                       if (esLider || esMiembro) ...[
                         const SizedBox(height: AppTokens.gapM),
                         ElevatedButton(
+                          key: const Key('ButtonWorkspace'),
                           onPressed: () => Get.toNamed(
                             AppRoutes.workspace,
                             arguments: project,

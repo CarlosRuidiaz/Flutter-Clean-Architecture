@@ -23,6 +23,7 @@ class IdeaPublishedPage extends StatelessWidget {
     }
 
     return Scaffold(
+      key: const Key('IdeaPublishedPage'),
       backgroundColor: AppColors.paper,
       appBar: AppBar(
         title: const Text('Idea publicada'),
@@ -101,6 +102,7 @@ class IdeaPublishedPage extends StatelessWidget {
               ),
               const SizedBox(height: AppTokens.gapM),
               OutlinedButton(
+                key: const Key('ButtonIdeaPublishedHome'),
                 onPressed: () {
                   Get.until((route) => route.isFirst);
                 },

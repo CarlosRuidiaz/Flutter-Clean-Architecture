@@ -148,6 +148,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const Key('CreateIdeaPage'),
       backgroundColor: AppColors.paper,
       appBar: AppBar(
         title: const Text('Nueva idea de proyecto'),
@@ -165,12 +166,14 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
             _buildSectionHeader('01 · Lo esencial'),
             const SizedBox(height: AppTokens.gapM),
             _buildTextField(
+              key: const Key('TextFormFieldIdeaTitle'),
               controller: _titleController,
               label: 'Título del proyecto',
               hint: 'Ej: App de movilidad sostenible para el campus',
             ),
             const SizedBox(height: AppTokens.gapM),
             _buildTextField(
+              key: const Key('TextFormFieldIdeaProblem'),
               controller: _problemController,
               label: 'Problema a resolver',
               hint: '¿Qué situación quieres mejorar o resolver?',
@@ -178,6 +181,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
             ),
             const SizedBox(height: AppTokens.gapM),
             _buildTextField(
+              key: const Key('TextFormFieldIdeaDescription'),
               controller: _descriptionController,
               label: 'Descripción',
               hint: 'Cuenta cómo funcionaría y qué ya tienes hecho.',
@@ -225,6 +229,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
                 const SizedBox(width: AppTokens.gapM),
                 Expanded(
                   child: ElevatedButton(
+                    key: const Key('ButtonIdeaPublish'),
                     onPressed: _canPublish && !_publicando ? _publish : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.persimmon,
@@ -280,12 +285,14 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
   }
 
   Widget _buildTextField({
+    Key? key,
     required TextEditingController controller,
     required String label,
     required String hint,
     int maxLines = 1,
   }) {
     return TextField(
+      key: key,
       controller: controller,
       maxLines: maxLines,
       decoration: InputDecoration(
@@ -309,12 +316,14 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
   /// Chip pulsable de seleccion. Marcado y sin marcar se distinguen por el
   /// fondo, no solo por el borde.
   Widget _selectableChip({
+    Key? key,
     required String label,
     required bool selected,
     required Color selectedColor,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
+      key: key,
       onTap: onTap,
       child: Pill(
         label: label,
@@ -324,6 +333,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
   }
 
   Widget _buildChipGroup({
+    required String keyPrefix,
     required String label,
     required List<String> options,
     required List<String> selection,
@@ -340,6 +350,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
           children: [
             for (final option in options)
               _selectableChip(
+                key: Key('$keyPrefix-$option'),
                 label: option,
                 selected: selection.contains(option),
                 selectedColor: selectedColor,
@@ -352,6 +363,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
   }
 
   Widget _buildSkillsInput() => _buildChipGroup(
+        keyPrefix: 'ChipIdeaSkill',
         label: 'Habilidades requeridas',
         options: AppCatalogs.skills,
         selection: _skillsWanted,
@@ -368,6 +380,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
           ),
         ),
         Container(
+          key: const Key('FieldIdeaMaxMembers'),
           decoration: BoxDecoration(
             border: AppTokens.border(),
             borderRadius: AppTokens.borderRadius,
@@ -413,6 +426,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
             // pinta con el color de su etapa, que lo da StageChip.
             for (final stage in ProjectStage.values)
               _selectableChip(
+                key: Key('ChipIdeaStage-${stage.name}'),
                 label: StageChip.labelOf(stage),
                 selected: _selectedStage == stage,
                 selectedColor: StageChip.colorOf(stage),
@@ -425,6 +439,7 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> with UiLoggy {
   }
 
   Widget _buildTagsInput() => _buildChipGroup(
+        keyPrefix: 'ChipIdeaTag',
         label: 'Tags del proyecto',
         options: AppCatalogs.tags,
         selection: _tags,
